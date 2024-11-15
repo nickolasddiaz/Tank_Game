@@ -6,13 +6,10 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
+import com.badlogic.gdx.math.Vector2;
+
 import java.awt.Point;
-import java.util.HashMap;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 import static java.lang.Math.max;
 
@@ -21,20 +18,19 @@ enum BiomeType {
 }
 
 public class MapGenerator {
-    public static final int MAP_SIZE = 100;
+    public static final int MAP_SIZE = 200;
     public static final int TILE_SIZE = 8;
-    public static final double FREQUENCY = 0.01;
+    public static final double FREQUENCY = 0.02;
 
     private final HashMap<Integer, BiomeType> biomes;
     private final HashMap<BiomeType, TextureRegion> biomeTextures;
     private final OpenSimplexNoise openSimplexNoise;
-    private final Random random;
     private final Long SEED;
 
 
 
     public MapGenerator(long seed) {
-        random = new Random();
+
         biomes = new HashMap<Integer, BiomeType>();
         biomeTextures = new HashMap<BiomeType, TextureRegion>();
         openSimplexNoise = new OpenSimplexNoise(seed);
@@ -52,27 +48,59 @@ public class MapGenerator {
         int[][] tileMap = new int[MAP_SIZE][MAP_SIZE];
         for (int x = 0; x < MAP_SIZE; x++) {
             for (int y = 0; y < MAP_SIZE; y++) {
-                double noiseValue = openSimplexNoise.eval((x+xoffset) * FREQUENCY, (y+yoffset) * FREQUENCY, FREQUENCY);
+                double noiseValue = openSimplexNoise.eval((x+xoffset) * FREQUENCY, (y+yoffset) * FREQUENCY, (x+xoffset + y+yoffset) * FREQUENCY);
                 tileMap[x][y] = assignBiomeType(noiseValue);
             }
         }
-        return fillinBiomeArray(tileMap);
+        return fillinBiomeArray(tileMap, xoffset, yoffset);
     }
 
-    private int[][] fillinBiomeArray(int[][] biomeArray) {
+    private int[][] fillinBiomeArray(int[][] biomeArray,int xoffset, int yoffset) {
         // Define the possible replacement biomes for NONE
         BiomeType[] replacementBiomes = {BiomeType.DESSERT, BiomeType.WILDWEST, BiomeType.TUNDRA};
+        Random random;
 
         for (int x = 0; x < MAP_SIZE; x++) {
             for (int y = 0; y < MAP_SIZE; y++) {
                 if (biomeArray[x][y] == BiomeType.NONE.ordinal()) {
                     // Choose a random replacement biome for this region
+                    random = new Random(getBiomeSize(x + xoffset,y+ yoffset));
                     BiomeType randomBiome = replacementBiomes[random.nextInt(replacementBiomes.length)];
                     fillRegionIteratively(biomeArray, x, y, BiomeType.NONE.ordinal(), randomBiome.ordinal());
                 }
             }
         }
         return biomeArray;
+    }
+    private int getBiomeSize(int startX, int startY) {
+        int count = 0;
+        Set<Vector2> visited = new HashSet<Vector2>();
+        int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+        Queue<int[]> queue = new LinkedList<int[]>();
+        queue.add(new int[]{startX, startY});
+        visited.add(new Vector2(startX, startY));
+
+        while (!queue.isEmpty() && count < 10000) {
+            int[] cell = queue.poll();
+            int x = cell[0];
+            int y = cell[1];
+
+            if (assignBiomeType(openSimplexNoise.eval(x * FREQUENCY, y * FREQUENCY, (x + y) * FREQUENCY)) == BiomeType.NONE.ordinal()) {
+                count++;
+
+                for (int[] dir : directions) {
+                    int newX = x + dir[0];
+                    int newY = y + dir[1];
+                    if (!visited.contains(new Vector2(newX,newY)) && assignBiomeType(openSimplexNoise.eval(newX * FREQUENCY, newY * FREQUENCY, (newX + newY) * FREQUENCY)) == BiomeType.NONE.ordinal()) {
+                        queue.add(new int[]{newX, newY});
+                        visited.add(new Vector2(newX, newY));
+                    }
+                }
+            }
+        }
+        System.out.println(count + " " + startX + " " + startY + " " + count);
+        return count;
     }
 
     private void fillRegionIteratively(int[][] biomeArray, int startX, int startY, int targetBiome, int replacementBiome) {

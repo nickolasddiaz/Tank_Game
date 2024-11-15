@@ -27,7 +27,7 @@ public class GameScreen implements Screen {
     yourgame game;
     private final OrthographicCamera camera;
     MapGenerator mapGenerator;
-    final private HashMap<Vector2, TiledMap> mapChunks = new HashMap<>();
+    final private HashMap<Vector2, TiledMap> mapChunks = new HashMap<Vector2, TiledMap>();
 
     private final float chunkSize; //100 * 8 * 8 = 6,400 // chunkSize = MAP_SIZE * TILE_SIZE * TILE_SIZE;
 
@@ -45,13 +45,13 @@ public class GameScreen implements Screen {
     private final Rectangle cameraBounds;
     private final ShapeRenderer shapeRenderer;
 
-    public static final float SPEED = 4000f;
+    public static final float SPEED = 800f;
 
 
     public GameScreen(final yourgame game) {
         this.game = game;
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, game.viewport.getWorldWidth() * TILE_SIZE * TILE_SIZE * TILE_SIZE, game.viewport.getWorldHeight() * TILE_SIZE * TILE_SIZE * TILE_SIZE);
+        camera.setToOrtho(false, game.viewport.getWorldWidth() * TILE_SIZE * TILE_SIZE *4, game.viewport.getWorldHeight() * TILE_SIZE * TILE_SIZE *4);
         cameraBounds = new Rectangle();
 
         mapGenerator = new MapGenerator(System.currentTimeMillis());
@@ -65,7 +65,7 @@ public class GameScreen implements Screen {
 
 
         tankSprite = new Sprite(tankTexture);
-        tankSprite.setSize(TILE_SIZE * TILE_SIZE * TILE_SIZE, TILE_SIZE * TILE_SIZE * TILE_SIZE); // Set appropriate size for the tank
+        tankSprite.setSize(TILE_SIZE * TILE_SIZE *4, TILE_SIZE * TILE_SIZE *4); // Set appropriate size for the tank
         touchPos = new Vector2();
         tankRectangle = new Rectangle();
         shapeRenderer = new ShapeRenderer();
@@ -97,7 +97,7 @@ public class GameScreen implements Screen {
     }
 
     private void updateLoadedChunks(Vector2 centerChunk) {
-        HashMap<Vector2, TiledMap> newChunks = new HashMap<>();
+        HashMap<Vector2, TiledMap> newChunks = new HashMap<Vector2, TiledMap>();
         for (int x = (int)centerChunk.x - CHUNK_LOAD_RADIUS; x <= centerChunk.x + CHUNK_LOAD_RADIUS; x++) {
             for (int y = (int)centerChunk.y - CHUNK_LOAD_RADIUS; y <= centerChunk.y + CHUNK_LOAD_RADIUS; y++) {
                 Vector2 chunkPos = new Vector2(x, y);
@@ -149,7 +149,7 @@ public class GameScreen implements Screen {
         game.batch.begin();
         tankSprite.draw(game.batch);
         game.batch.end();
-        /*
+
         // Debug: Draw chunk boundaries
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
@@ -160,7 +160,7 @@ public class GameScreen implements Screen {
             shapeRenderer.rect(x, y, chunkSize, chunkSize);
         }
         shapeRenderer.end();
-         */
+
     }
 
     private void renderChunks() {
@@ -214,8 +214,6 @@ public class GameScreen implements Screen {
         tankRectangle.set(tankSprite.getX(), tankSprite.getY(), tankWidth, tankHeight);
 
     }
-
-
 
     @Override
     public void resize(int width, int height) {
