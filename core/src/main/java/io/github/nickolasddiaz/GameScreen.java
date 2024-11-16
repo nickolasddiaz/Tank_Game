@@ -45,7 +45,7 @@ public class GameScreen implements Screen {
     private final Rectangle cameraBounds;
     private final ShapeRenderer shapeRenderer;
 
-    public static final float SPEED = 800f;
+    public static final float SPEED = 8000f;
 
 
     public GameScreen(final yourgame game) {
@@ -54,7 +54,7 @@ public class GameScreen implements Screen {
         camera.setToOrtho(false, game.viewport.getWorldWidth() * TILE_SIZE * TILE_SIZE *4, game.viewport.getWorldHeight() * TILE_SIZE * TILE_SIZE *4);
         cameraBounds = new Rectangle();
 
-        mapGenerator = new MapGenerator(System.currentTimeMillis());
+        mapGenerator = new MapGenerator((int)System.currentTimeMillis());
         chunkSize = MAP_SIZE * TILE_SIZE * TILE_SIZE;
 
         // Initialize with surrounding chunks
@@ -164,22 +164,33 @@ public class GameScreen implements Screen {
     }
 
     private void renderChunks() {
+        // Update chunkRenderer with the current camera matrix.
+        chunkRenderer.setView(camera);
+
         for (Map.Entry<Vector2, TiledMap> entry : mapChunks.entrySet()) {
             Vector2 chunkPos = entry.getKey();
             TiledMap chunk = entry.getValue();
+
             float offsetX = chunkPos.x * chunkSize;
             float offsetY = chunkPos.y * chunkSize;
 
-            if (!cameraBounds.overlaps(new Rectangle(offsetX, offsetY, chunkSize, chunkSize))) {
-                continue;
-            }
+            // Check if the chunk is within the camera's view (culling)
+            if (isChunkVisible(offsetX, offsetY)) {
+                chunkRenderer.setMap(chunk);
+                tempMatrix.set(camera.combined);
+                tempMatrix.translate(offsetX, offsetY, 0);
 
-            chunkRenderer.setMap(chunk);
-            tempMatrix.set(camera.combined);
-            tempMatrix.translate(offsetX, offsetY, 0);
-            chunkRenderer.setView(tempMatrix, 0, 0, (int) chunkSize, (int) chunkSize);
-            chunkRenderer.render();
+                // Set the matrix for the chunk and render it
+                chunkRenderer.setView(tempMatrix, 0, 0, (int) chunkSize, (int) chunkSize);
+
+                // Render the chunk
+                chunkRenderer.render();
+            }
         }
+    }
+
+    private boolean isChunkVisible(float offsetX, float offsetY) {
+        return cameraBounds.overlaps(new Rectangle(offsetX, offsetY, chunkSize, chunkSize));
     }
 
 
