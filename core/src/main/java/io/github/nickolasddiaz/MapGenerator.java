@@ -1,6 +1,8 @@
 package io.github.nickolasddiaz;
 
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
@@ -10,25 +12,17 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import java.util.*;
 
 enum BiomeType {
-    NONE(.0f), PLAINS(.9f), DESSERT(.3f), OCEAN(.0f), WILD_WEST(.5f), TUNDRA(.2f), ROAD(1f);
+    NONE, PLAINS, DESSERT, OCEAN, WILD_WEST, TUNDRA, ROAD;
 
-    private final float chance;
-    BiomeType(float chance) {
-        this.chance = chance;
-    }
-
-    public float getChance() {
-        return chance;
-    }
 }
 
 public class MapGenerator {
 
-    public static final int ROAD_SIZE = 4 * 2; //how wide/long will the road be in tiles the road will only be two tiles wide. It needs to be even
-    public static final int MAP_SIZE = 16 * ROAD_SIZE; //how many tiles will there be in a chunk
+    public static final int ROAD_SIZE = 5 * 2; //how wide/long will the road be in tiles the road will only be two tiles wide. It needs to be even
+    public static final int MAP_SIZE = 4 * ROAD_SIZE; //how many tiles will there be in a chunk
     public static final int TILE_SIZE = 8;
-    public static final float FREQUENCY = 0.02f; //how much noise will be generated
-    private static final double INITIAL_DENSITY = 0.07; //how many roads will there be
+    public static final float FREQUENCY = 0.01f; //how much noise will be generated
+    private static final double INITIAL_DENSITY = 0.1; //how many roads will there be
     public static final int TERRAIN_SIZE = MAP_SIZE / ROAD_SIZE;
 
 
@@ -38,10 +32,18 @@ public class MapGenerator {
     private final FastNoiseLite noise;
     private final TerrainGenerator roads;
     private final int seed;
+    private final TextureAtlas atlas;
 
 
 
     public MapGenerator(int seed) {
+        AssetManager assetManager = new AssetManager();
+
+        // Queue the atlas for loading
+        assetManager.load("tiles.txt", TextureAtlas.class);
+        assetManager.finishLoading(); // Blocks until loading is complete
+        atlas = assetManager.get("tiles.txt", TextureAtlas.class);
+
         biomes = new HashMap<>();
         biomeTextures = new HashMap<>();
         noise  = new FastNoiseLite();
@@ -54,7 +56,7 @@ public class MapGenerator {
         noise.SetDomainWarpAmp(50);
         roads = new TerrainGenerator(seed);
         initializeBiomes();
-        initializeBiomeTextures();
+        initializeBiomeTextures(atlas);
         this.seed = seed;
     }
 
@@ -136,21 +138,17 @@ public class MapGenerator {
             biomes.put(i, types[i]);
         }
     }
-    private void initializeBiomeTextures() {         // Converts textures to TextureRegions
-        for (BiomeType type : BiomeType.values()) {
-            Texture texture = new Texture(getBiomeTexturePath(type));
-            biomeTextures.put(type, new TextureRegion(texture));
-        }
-    }
 
-    private String getBiomeTexturePath(BiomeType type) {
-        switch (type) {
-            case PLAINS: return "plains.png";
-            case DESSERT: return "desert.png";
-            case OCEAN: return "ocean.png";
-            case WILD_WEST: return "wild_west.png";
-            case TUNDRA: return "tundra.png";
-            case ROAD: return "road.png";
-            default: return "road.png";     }
+    private void initializeBiomeTextures(TextureAtlas atlas) {
+        for (BiomeType type : BiomeType.values()) {
+            // Use the biome type's name as the region name (or adjust as necessary)
+            TextureRegion region = atlas.findRegion(type.name().toLowerCase());
+
+            if (region == null) {
+                continue;
+            }
+
+            biomeTextures.put(type, region);
+        }
     }
 }

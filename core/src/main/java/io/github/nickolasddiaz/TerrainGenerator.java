@@ -25,19 +25,39 @@ public class TerrainGenerator {
         }
 
         // Collapse the cell to a single option
-        public void collapse() {
+        public void collapse(int biome) {
+            int multiplier;
             if (!collapsed) {
                 List<Options> validOptions = getValidOptions();
+                if(biome == BiomeType.DESSERT.ordinal()) multiplier = 3;
+                else if(biome == BiomeType.WILD_WEST.ordinal()) multiplier = 2;
+                else if(biome == BiomeType.TUNDRA.ordinal()) multiplier = 3;
+                else if(biome == BiomeType.PLAINS.ordinal()) multiplier = 5;
+                else {
+                    multiplier = 1;
+                }
+
                 if (validOptions.isEmpty()) {
                     return;
                     //throw new IllegalStateException("No valid options to collapse.");
                 }
 
                 // Weighted random selection
-                int totalWeight = validOptions.stream().mapToInt(option -> option.chance).sum();
+                int totalWeight = validOptions.stream().mapToInt(option -> {
+                    if (option == Options.HORIZONTAL || option == Options.VERTICAL) {
+                        return option.chance * multiplier;
+                    }
+                    return option.chance;
+                }).sum();
+
                 int randomWeight = random.nextInt(totalWeight);
                 for (Options option : validOptions) {
-                    randomWeight -= option.chance;
+                    int adjustedChance = option.chance;
+                    if (option == Options.HORIZONTAL || option == Options.VERTICAL) {
+                        adjustedChance *= multiplier;
+                    }
+
+                    randomWeight -= adjustedChance;
                     if (randomWeight < 0) {
                         this.selectedOption = option;
                         break;
@@ -80,11 +100,6 @@ public class TerrainGenerator {
             if (down != null) this.down = down;
         }
 
-        // Check if the cell has a specific option as a valid choice
-        public boolean hasOption(Options option) {
-            return getValidOptions().contains(option);
-        }
-
         public int getOptionCount() {
             return getValidOptions().size();
         }
@@ -97,8 +112,8 @@ public class TerrainGenerator {
 
     enum Options {
         CROSS(true, true, true, true, 1),            // ╬
-        HORIZONTAL(false, true, true, false, 50),     // ═
-        VERTICAL(true, false, false, true, 50),       // ║
+        HORIZONTAL(false, true, true, false, 10),     // ═
+        VERTICAL(true, false, false, true, 10),       // ║
         RIGHT_DOWN(false, false, true, true, 1),     // ╔
         LEFT_DOWN(false, true, false, true, 1),      // ╗
         RIGHT_UP(true, false, true, false, 1),       // ╚
@@ -123,7 +138,6 @@ public class TerrainGenerator {
             this.chance = chance;
         }
     }
-
 
     PriorityQueue<Pair<Integer, Vector2>> Queue = new PriorityQueue<>(Comparator.comparingInt(Pair::getKey));
     private static final int ROAD = (int) BiomeType.OCEAN.ordinal();
@@ -185,7 +199,7 @@ public class TerrainGenerator {
             int y = (int) pair.getValue().y;
 
             if (!grid[x][y].collapsed) {
-                grid[x][y].collapse();
+                grid[x][y].collapse(biomeMap[x*ROAD_SIZE+ROAD_SIZE/2][y*ROAD_SIZE+ROAD_SIZE/2]);
                 insertRoad(x, y, grid[x][y].isUp(), grid[x][y].isLeft(), grid[x][y].isRight(), grid[x][y].isDown(), biomeMap);
                 getNewCells(x, y);
             }

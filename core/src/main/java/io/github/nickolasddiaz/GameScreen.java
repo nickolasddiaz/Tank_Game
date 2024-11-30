@@ -51,7 +51,7 @@ public class GameScreen implements Screen {
     public GameScreen(final yourgame game) {
         this.game = game;
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, game.viewport.getWorldWidth() * TILE_SIZE * TILE_SIZE *4, game.viewport.getWorldHeight() * TILE_SIZE * TILE_SIZE *4);
+        camera.setToOrtho(false, game.viewport.getWorldWidth() * TILE_SIZE * TILE_SIZE *6, game.viewport.getWorldHeight() * TILE_SIZE * TILE_SIZE *6);
         cameraBounds = new Rectangle();
 
         mapGenerator = new MapGenerator((int)System.currentTimeMillis());
@@ -252,4 +252,3 @@ public class GameScreen implements Screen {
         }
     }
 }
-
