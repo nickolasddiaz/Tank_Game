@@ -29,10 +29,10 @@ public class TerrainGenerator {
             int multiplier;
             if (!collapsed) {
                 List<Options> validOptions = getValidOptions();
-                if(biome == BiomeType.DESSERT.ordinal()) multiplier = 3;
-                else if(biome == BiomeType.WILD_WEST.ordinal()) multiplier = 2;
-                else if(biome == BiomeType.TUNDRA.ordinal()) multiplier = 3;
-                else if(biome == BiomeType.PLAINS.ordinal()) multiplier = 5;
+                if(biome == TileType.DESSERT.ordinal()) multiplier = 3;
+                else if(biome == TileType.WILD_WEST.ordinal()) multiplier = 2;
+                else if(biome == TileType.TUNDRA.ordinal()) multiplier = 3;
+                else if(biome == TileType.PLAINS.ordinal()) multiplier = 5;
                 else {
                     multiplier = 1;
                 }
@@ -111,17 +111,17 @@ public class TerrainGenerator {
     }
 
     enum Options {
-        CROSS(true, true, true, true, 1),            // ╬
-        HORIZONTAL(false, true, true, false, 10),     // ═
-        VERTICAL(true, false, false, true, 10),       // ║
-        RIGHT_DOWN(false, false, true, true, 1),     // ╔
-        LEFT_DOWN(false, true, false, true, 1),      // ╗
-        RIGHT_UP(true, false, true, false, 1),       // ╚
-        LEFT_UP(true, true, false, false, 1),        // ╝
-        LEFT_UP_DOWN(true, true, false, true, 1),    // ╣
-        RIGHT_UP_DOWN(true, false, true, true, 1),   // ╠
-        LEFT_RIGHT_DOWN(false, true, true, true, 1), // ╦
-        LEFT_RIGHT_UP(true, true, true, false, 1);   // ╩
+        CROSS(true, true, true, true, 1),               // ╬
+        HORIZONTAL(false, true, true, false, 10),       // ═
+        VERTICAL(true, false, false, true, 10),         // ║
+        RIGHT_DOWN(false, false, true, true, 1),        // ╔
+        LEFT_DOWN(false, true, false, true, 1),         // ╗
+        RIGHT_UP(true, false, true, false, 1),          // ╚
+        LEFT_UP(true, true, false, false, 1),           // ╝
+        LEFT_UP_DOWN(true, true, false, true, 1),       // ╣
+        RIGHT_UP_DOWN(true, false, true, true, 1),      // ╠
+        LEFT_RIGHT_DOWN(false, true, true, true, 1),    // ╦
+        LEFT_RIGHT_UP(true, true, true, false, 1);      // ╩
 
         public final Boolean up;
         public final Boolean left;
@@ -139,133 +139,143 @@ public class TerrainGenerator {
         }
     }
 
+    Queue<Vector2> Structure_Queue = new LinkedList<>();
     PriorityQueue<Pair<Integer, Vector2>> Queue = new PriorityQueue<>(Comparator.comparingInt(Pair::getKey));
-    private static final int ROAD = (int) BiomeType.OCEAN.ordinal();
+    private static final int ROAD = TileType.ROAD_LEFT.ordinal();
+    private static final int OCEAN = TileType.OCEAN.ordinal();
     private final Random random;
     Cell[][] grid = new Cell[TERRAIN_SIZE][TERRAIN_SIZE];
+
 
     public TerrainGenerator(int seed) {
         random = new Random(seed);
     }
 
-    public int[][] generate(int[][] biomeMap, boolean[] top, boolean[] left, boolean[] right, boolean[] down) {
-        grid = new Cell[TERRAIN_SIZE][TERRAIN_SIZE];
-        // Initialize grid with cells that have all possibilities
+    public Integer[][] generate(int[][] biomeMap, boolean[] top, boolean[] left, boolean[] right, boolean[] down) {
+        grid = new Cell[TERRAIN_SIZE][TERRAIN_SIZE];// Initialize grid with cells that have all possibilities
+        Integer[][] TerrainMap = new Integer[MAP_SIZE][MAP_SIZE];
         for (int i = 0; i < TERRAIN_SIZE; i++) { // TERRAIN_SIZE = MAP_SIZE/ROAD_SIZE
             for (int j = 0; j < TERRAIN_SIZE; j++) {
                 grid[i][j] = new Cell(null, null, null, null);
             }
         }
-        // Create initial random points
         for(int i = 0; i < TERRAIN_SIZE; i++){
             if(top[i]){
-                biomeUp(i, TERRAIN_SIZE-1, biomeMap);
+                biomeUp(i, TERRAIN_SIZE-1, TerrainMap, biomeMap);
                 grid[i][TERRAIN_SIZE-1].down = true;
                 grid[i][TERRAIN_SIZE-1].selectedOption = Options.VERTICAL;
                 grid[i][TERRAIN_SIZE-1].collapsed = true;
-                insertRoad(i, TERRAIN_SIZE-1, grid[i][TERRAIN_SIZE-1].isUp(), grid[i][TERRAIN_SIZE-1].isLeft(), grid[i][TERRAIN_SIZE-1].isRight(), grid[i][TERRAIN_SIZE-1].isDown(), biomeMap);
+                insertRoad(i, TERRAIN_SIZE-1, grid[i][TERRAIN_SIZE-1].isUp(), grid[i][TERRAIN_SIZE-1].isLeft(), grid[i][TERRAIN_SIZE-1].isRight(), grid[i][TERRAIN_SIZE-1].isDown(), TerrainMap, biomeMap);
                 getNewCells(i, TERRAIN_SIZE-1);
             }
             if(left[i]){
-                biomeLeft(0, i, biomeMap); //this line is to make sure the border between the edges are filled
+                biomeLeft(0, i, TerrainMap, biomeMap); //make sure the border between the edges are filled
                 grid[0][i].right = true;
                 grid[0][i].selectedOption = Options.HORIZONTAL;
                 grid[0][i].collapsed = true;
-                insertRoad(0, i, grid[0][i].isUp(), grid[0][i].isLeft(), grid[0][i].isRight(), grid[0][i].isDown(), biomeMap);
+                insertRoad(0, i, grid[0][i].isUp(), grid[0][i].isLeft(), grid[0][i].isRight(), grid[0][i].isDown(), TerrainMap, biomeMap);
                 getNewCells(0, i);
             }
             if(right[i]){
-                biomeRight(TERRAIN_SIZE-1, i, biomeMap); //this line is to make sure the border between the edges are filled
+                biomeRight(TERRAIN_SIZE-1, i, TerrainMap, biomeMap); //make sure the border between the edges are filled
                 grid[TERRAIN_SIZE-1][i].left = true;
                 grid[TERRAIN_SIZE-1][i].selectedOption = Options.HORIZONTAL;
                 grid[TERRAIN_SIZE-1][i].collapsed = true;
-                insertRoad(TERRAIN_SIZE-1, i, grid[TERRAIN_SIZE-1][i].isUp(), grid[TERRAIN_SIZE-1][i].isLeft(), grid[TERRAIN_SIZE-1][i].isRight(), grid[TERRAIN_SIZE-1][i].isDown(), biomeMap);
+                insertRoad(TERRAIN_SIZE-1, i, grid[TERRAIN_SIZE-1][i].isUp(), grid[TERRAIN_SIZE-1][i].isLeft(), grid[TERRAIN_SIZE-1][i].isRight(), grid[TERRAIN_SIZE-1][i].isDown(), TerrainMap, biomeMap);
                 getNewCells(TERRAIN_SIZE-1, i);
             }
             if(down[i]){
-                biomeDown(i, 0, biomeMap);
+                biomeDown(i, 0, TerrainMap, biomeMap);
                 grid[i][0].up = true;
                 grid[i][0].selectedOption = Options.VERTICAL;
                 grid[i][0].collapsed = true;
-                insertRoad(i, 0, grid[i][0].isUp(), grid[i][0].isLeft(), grid[i][0].isRight(), grid[i][0].isDown(), biomeMap);
+                insertRoad(i, 0, grid[i][0].isUp(), grid[i][0].isLeft(), grid[i][0].isRight(), grid[i][0].isDown(), TerrainMap, biomeMap);
                 getNewCells(i, 0);
             }
         }
 
-        // Process the queue until empty
-        while (!Queue.isEmpty()) {
+        while (!Queue.isEmpty()) {// collapsing cells
             Pair<Integer, Vector2> pair = Queue.poll();
             int x = (int) pair.getValue().x;
             int y = (int) pair.getValue().y;
 
             if (!grid[x][y].collapsed) {
                 grid[x][y].collapse(biomeMap[x*ROAD_SIZE+ROAD_SIZE/2][y*ROAD_SIZE+ROAD_SIZE/2]);
-                insertRoad(x, y, grid[x][y].isUp(), grid[x][y].isLeft(), grid[x][y].isRight(), grid[x][y].isDown(), biomeMap);
+                placeStructure(x*ROAD_SIZE, y*ROAD_SIZE, biomeMap, TerrainMap);
+                insertRoad(x, y, grid[x][y].isUp(), grid[x][y].isLeft(), grid[x][y].isRight(), grid[x][y].isDown(), TerrainMap, biomeMap);
                 getNewCells(x, y);
+                Structure_Queue.add(new Vector2(x, y));
+            }
+        }
+        while (!Structure_Queue.isEmpty()) {// placing structures
+            Vector2 pair = Structure_Queue.poll();
+            placeStructure((int) pair.x*ROAD_SIZE, (int) pair.y*ROAD_SIZE, biomeMap, TerrainMap);
+        }
+
+        for (int x = 0; x < MAP_SIZE; x++) {// placing decorations
+            for (int y = 0; y < MAP_SIZE; y++) {
+                if(TerrainMap[x][y] != null) continue;
+                int biome = biomeMap[x][y];
+                double densityLimit = random.nextDouble(); // random number between 0 and 1 meant for the density of decorations
+                int addition = random.nextInt(3); // random number between 0 and 2 meant for the three options of each decoration for each biome
+                switch (TileType.valueOf(TileType.values()[biome].name())) {
+                    case DESSERT: if (densityLimit < DECORATION_DENSITY * 1) TerrainMap[x][y] = TileType.PALM_TREE.ordinal() + addition; break;
+                    case WILD_WEST: if (densityLimit < DECORATION_DENSITY * 2) TerrainMap[x][y] = TileType.TUMBLEWEED.ordinal() + addition; break;
+                    case TUNDRA: if (densityLimit < DECORATION_DENSITY * 2) TerrainMap[x][y] = TileType.ICICLE.ordinal() + addition; break;
+                    case PLAINS: if (densityLimit < DECORATION_DENSITY * 5) TerrainMap[x][y] = TileType.PLAIN_TREE.ordinal() + addition; break;
+                }
             }
         }
 
-        return biomeMap;
+        return TerrainMap;
     }
 
-    private void insertRoad(int x, int y, Boolean up, Boolean left, Boolean right, Boolean down, int[][] biomeMap){
+    private void insertRoad(int x, int y, Boolean up, Boolean left, Boolean right, Boolean down, Integer[][] TerrainMap, int[][] BiomeMap){
         /*  01100110    01100110
             01101110 -> 01111110
             01101110 -> 01111110
-            01100110    01100110 1 represents the road if (checkIfOutOfBounds(x,y)) fixes the problem*/
+            01100110    01100110 1 represents the road on if (checkIfOutOfBounds(x,y)){} fixes the problem*/
 
-        if(up != null && up){
-            biomeUp(x, y, biomeMap);
-            if(checkIfOutOfBounds(x, y+1)){
-                biomeDown(x, y+1, biomeMap);
-            }
+        if(up != null && up){ biomeUp(x, y, TerrainMap, BiomeMap);
+            if(checkIfOutOfBounds(x, y+1)) biomeDown(x, y+1, TerrainMap, BiomeMap);
         }
-        if(left != null && left){
-            biomeLeft(x, y, biomeMap);
-            if(checkIfOutOfBounds(x-1, y)){
-                biomeRight(x-1, y, biomeMap);
-            }
+        if(left != null && left){ biomeLeft(x, y, TerrainMap, BiomeMap);
+            if(checkIfOutOfBounds(x-1, y)) biomeRight(x-1, y, TerrainMap, BiomeMap);
         }
-        if(right != null && right){
-            biomeRight(x, y, biomeMap);
-            if(checkIfOutOfBounds(x+1, y)){
-                biomeLeft(x+1, y, biomeMap);
-            }
+        if(right != null && right){ biomeRight(x, y, TerrainMap, BiomeMap);
+            if(checkIfOutOfBounds(x+1, y)) biomeLeft(x+1, y, TerrainMap, BiomeMap);
         }
-        if(down != null && down){
-            biomeDown(x, y, biomeMap);
-            if(checkIfOutOfBounds(x, y-1)){
-                biomeUp(x, y-1, biomeMap);
-            }
+        if(down != null && down){ biomeDown(x, y, TerrainMap, BiomeMap);
+            if(checkIfOutOfBounds(x, y-1))biomeUp(x, y-1, TerrainMap, BiomeMap);
         }
 
     }
-    private void biomeUp(int x, int y, int[][] biomeMap){
+    private void biomeUp(int x, int y, Integer[][] TerrainMap, int[][] BiomeMap){
         x *= ROAD_SIZE; y *= ROAD_SIZE;
         for(int i = ROAD_SIZE-1; i > ROAD_SIZE/2-2 ; i--){
-            biomeMap[x+ROAD_SIZE/2][y+i] =  ROAD;
-            biomeMap[x+ROAD_SIZE/2-1][y+i] =  ROAD;
+            if(BiomeMap[x+ROAD_SIZE/2][y+i] != OCEAN) TerrainMap[x+ROAD_SIZE/2][y+i] = TileType.ROAD_RIGHT.ordinal();
+            if(BiomeMap[x+ROAD_SIZE/2-1][y+i] != OCEAN) TerrainMap[x+ROAD_SIZE/2-1][y+i] =  TileType.ROAD_LEFT.ordinal();
         }
     }
-    private void biomeLeft(int x, int y, int[][] biomeMap){
+    private void biomeLeft(int x, int y, Integer[][] TerrainMap, int[][] BiomeMap){
         x *= ROAD_SIZE; y *= ROAD_SIZE;
         for(int i = 0; i < ROAD_SIZE/2+1; i++){
-            biomeMap[x+i][y+ROAD_SIZE/2] =  ROAD;
-            biomeMap[x+i][y+ROAD_SIZE/2-1] =  ROAD;
+            if(BiomeMap[x+i][y+ROAD_SIZE/2] != OCEAN) TerrainMap[x+i][y+ROAD_SIZE/2] =  TileType.ROAD_TOP.ordinal();
+            if(BiomeMap[x+i][y+ROAD_SIZE/2-1] != OCEAN) TerrainMap[x+i][y+ROAD_SIZE/2-1] =  TileType.ROAD_BOTTOM.ordinal();
         }
     }
-    private void biomeRight(int x, int y, int[][] biomeMap){
+    private void biomeRight(int x, int y, Integer[][] TerrainMap, int[][] BiomeMap){
         x *= ROAD_SIZE; y *= ROAD_SIZE;
         for(int i = ROAD_SIZE-1; i > ROAD_SIZE/2-2 ; i--){
-            biomeMap[x+i][y+ROAD_SIZE/2] =  ROAD;
-            biomeMap[x+i][y+ROAD_SIZE/2-1] =  ROAD;
+            if(BiomeMap[x+i][y+ROAD_SIZE/2] != OCEAN) TerrainMap[x+i][y+ROAD_SIZE/2] =  TileType.ROAD_TOP.ordinal();;
+            if(BiomeMap[x+i][y+ROAD_SIZE/2-1] != OCEAN) TerrainMap[x+i][y+ROAD_SIZE/2-1] =  TileType.ROAD_BOTTOM.ordinal();;
         }
     }
-    private void biomeDown(int x, int y, int[][] biomeMap){
+    private void biomeDown(int x, int y, Integer[][] TerrainMap, int[][] BiomeMap){
         x *= ROAD_SIZE; y *= ROAD_SIZE;
         for(int i = 0; i < ROAD_SIZE/2+1; i++){
-            biomeMap[x+ROAD_SIZE/2][y+i] = ROAD;
-            biomeMap[x+ROAD_SIZE/2-1][y+i] = ROAD;
+            if(BiomeMap[x+ROAD_SIZE/2][y+i] != OCEAN) TerrainMap[x+ROAD_SIZE/2][y+i] = TileType.ROAD_RIGHT.ordinal();
+            if(BiomeMap[x+ROAD_SIZE/2-1][y+i] != OCEAN) TerrainMap[x+ROAD_SIZE/2-1][y+i] = TileType.ROAD_LEFT.ordinal();
         }
     }
 
@@ -284,8 +294,8 @@ public class TerrainGenerator {
                 // For corners, ensure at least two connections are possible
                 grid[x][y].removeOptions(
                     (x == 0 && y == TERRAIN_SIZE - 1) || (x == TERRAIN_SIZE - 1 && y == TERRAIN_SIZE - 1), // up
-                    (x == 0 && y == 0) || (x == 0 && y == TERRAIN_SIZE - 1), // left
-                    (x == TERRAIN_SIZE - 1 && y == 0) || (x == TERRAIN_SIZE - 1 && y == TERRAIN_SIZE - 1), // right
+                    x == 0, // left
+                    x == TERRAIN_SIZE - 1, // right
                     (x == 0 && y == 0) || (x == TERRAIN_SIZE - 1 && y == 0) // down
                 );
                 Queue.add(Pair.of(grid[x][y].getOptionCount(), new Vector2(x, y)));
@@ -320,6 +330,44 @@ public class TerrainGenerator {
             Queue.add(Pair.of(grid[x][y].getOptionCount(), new Vector2(x, y)));
         }
     }
+
+    private void placeStructure(int x, int y, int[][] biomeMap, Integer[][] TerrainMap){
+        if(random.nextInt(3) == 0) return; // one third chance of placing a structure
+        if(y > MAP_SIZE -5) return;
+        int start_x = x - ROAD_SIZE/4;
+        if(start_x < 0) start_x = 0;
+        int end_x = start_x + 5;
+        int start_y = y + ROAD_SIZE/2 +1;
+        int end_y = start_y + 3;
+
+        if(TerrainMap[x+1][start_y-1] == null)  return; // if the structure is on a road
+        int biome = biomeMap[x][y];
+        if(biome >= OCEAN) return; // if the biome is a decoration or structure or terrain
+        for(int i = start_x; i < end_x; i++){
+            for(int j = start_y; j < end_y; j++){
+                if(biomeMap[i][j] != biome) return; // if the structure is not in the same biome
+            }
+        }
+        int structure;
+        switch (TileType.valueOf(TileType.values()[biome].name())){
+            case DESSERT: structure = TileType.DESSERT_BUILDING1.ordinal() + random.nextInt(3) * 12; break;
+            case WILD_WEST: structure = TileType.WILD_WEST_BUILDING1.ordinal() + random.nextInt(3) * 12; break;
+            case TUNDRA: structure = TileType.TUNDRA_BUILDING1.ordinal() + random.nextInt(3) * 12; break;
+            default: structure = TileType.PLAINS_BUILDING1.ordinal() + random.nextInt(3) * 12; break;
+        }
+
+
+        int i = start_x; int j = start_y;
+        while (j < end_y){
+            if(i == end_x -1){
+                i = start_x;
+                j++;
+            }
+            if(j == end_y) break;
+            TerrainMap[i][j] = structure; structure++;
+            i++;
+        }
+        }
 
     private boolean checkIfOutOfBounds(int x, int y) {
         return x >= 0 && x < TERRAIN_SIZE && y >= 0 && y < TERRAIN_SIZE;
