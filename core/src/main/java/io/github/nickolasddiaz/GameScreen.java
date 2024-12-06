@@ -51,7 +51,7 @@ public class GameScreen implements Screen {
     public GameScreen(final yourgame game) {
         this.game = game;
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, game.viewport.getWorldWidth() * TILE_SIZE * TILE_SIZE *6, game.viewport.getWorldHeight() * TILE_SIZE * TILE_SIZE *6);
+        camera.setToOrtho(false, game.viewport.getWorldWidth() * TILE_SIZE * TILE_SIZE * TILE_SIZE, game.viewport.getWorldHeight() * TILE_SIZE * TILE_SIZE * TILE_SIZE);
         cameraBounds = new Rectangle();
 
         mapGenerator = new MapGenerator((int)System.currentTimeMillis());
@@ -87,7 +87,6 @@ public class GameScreen implements Screen {
 
         camera.position.set(cameraX, cameraY, 0);
         camera.update();
-
         cameraBounds.set(
             camera.position.x - camera.viewportWidth / 2,
             camera.position.y - camera.viewportHeight / 2,
@@ -166,6 +165,8 @@ public class GameScreen implements Screen {
     private void renderChunks() {
         // Update chunkRenderer with the current camera matrix.
         chunkRenderer.setView(camera);
+        float cameraHeight = camera.viewportHeight / 2;
+        float cameraWidth = camera.viewportWidth / 2;
 
         for (Map.Entry<Vector2, TiledMap> entry : mapChunks.entrySet()) {
             Vector2 chunkPos = entry.getKey();
@@ -174,16 +175,19 @@ public class GameScreen implements Screen {
             float offsetX = chunkPos.x * chunkSize;
             float offsetY = chunkPos.y * chunkSize;
 
-            // Check if the chunk is within the camera's view (culling)
-            if (isChunkVisible(offsetX, offsetY)) {
-                chunkRenderer.setMap(chunk);
-                tempMatrix.set(camera.combined);
-                tempMatrix.translate(offsetX, offsetY, 0);
+            if (!isChunkVisible(offsetX, offsetY)) continue; // if the chunk is within the camera's view (culling)
 
-                // Set the matrix for the chunk and render it
-                chunkRenderer.setView(tempMatrix, 0, 0, (int) chunkSize, (int) chunkSize);
+            chunkRenderer.setMap(chunk);
+            tempMatrix.set(camera.combined);
+            tempMatrix.translate(offsetX, offsetY, 0);
 
-                // Render the chunk
+            float left = Math.max(0, camera.position.x - cameraWidth - offsetX);
+            float bottom = Math.max(0, camera.position.y - cameraHeight - offsetY);
+            float right = Math.min(chunkSize, camera.position.x + cameraWidth - offsetX);
+            float top = Math.min(chunkSize, camera.position.y + cameraHeight - offsetY);
+
+            if (right > left && top > bottom) {
+                chunkRenderer.setView(tempMatrix, left, bottom, right, top);
                 chunkRenderer.render();
             }
         }
@@ -192,9 +196,6 @@ public class GameScreen implements Screen {
     private boolean isChunkVisible(float offsetX, float offsetY) {
         return cameraBounds.overlaps(new Rectangle(offsetX, offsetY, chunkSize, chunkSize));
     }
-
-
-
 
     private void input() {
         float delta = Gdx.graphics.getDeltaTime();

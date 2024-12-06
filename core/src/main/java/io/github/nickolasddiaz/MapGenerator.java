@@ -36,12 +36,12 @@ enum TileType {
     TUNDRA_BUILDING2_1, TUNDRA_BUILDING2_2, TUNDRA_BUILDING2_3, TUNDRA_BUILDING2_4, TUNDRA_BUILDING2_5, TUNDRA_BUILDING2_6, TUNDRA_BUILDING2_7, TUNDRA_BUILDING2_8, TUNDRA_BUILDING2_9, TUNDRA_BUILDING2_10, TUNDRA_BUILDING2_11, TUNDRA_BUILDING2_12,
     //roads; biome >= TileType.OCEAN.ordinal()
     OCEAN,
-    ROAD_LEFT,ROAD_RIGHT,ROAD_TOP,ROAD_BOTTOM,ROAD_TOP_LEFT,ROAD_TOP_RIGHT,ROAD_BOTTOM_LEFT,ROAD_BOTTOM_RIGHT,
-}//169 tiles
+    ROAD_LEFT,ROAD_RIGHT,ROAD_TOP,ROAD_BOTTOM,ROAD_CROSSWALK_HEIGHT,ROAD_CROSSWALK_WIDTH,ROAD
+}//168 tiles
 
 public class MapGenerator {
     public static final int ROAD_SIZE = 5 * 2; //how wide/long will the road be in tiles the road will only be two tiles wide. It needs to be even
-    public static final int MAP_SIZE = 16 * ROAD_SIZE; //how many tiles will there be in a chunk
+    public static final int MAP_SIZE = 8 * ROAD_SIZE; //how many tiles will there be in a chunk
     public static final int TILE_SIZE = 8;
     public static final float FREQUENCY = 0.01f; //how much noise will be generated
     public static final double ROAD_DENSITY = 0.1;
@@ -108,19 +108,18 @@ public class MapGenerator {
     }
 
     private int assignTileType(double noiseValue) {
-        if (noiseValue < -0.9) {
-            return TileType.OCEAN.ordinal();
-        } else if (noiseValue < -0.75) {
-            return TileType.WILD_WEST.ordinal();
-        } else if(noiseValue < -0.35) {
-            return TileType.TUNDRA.ordinal();
-        }else if (noiseValue < 0.30) {
-            return TileType.PLAINS.ordinal();
-        } else if (noiseValue < 0.80) {
-            return TileType.DESSERT.ordinal();
+        if (noiseValue < -0.70) {
+            return TileType.OCEAN.ordinal();    // 15% for Ocean
+        } else if (noiseValue < -0.30) {
+            return TileType.WILD_WEST.ordinal();// 20% for Wild West
+        } else if (noiseValue < 0.10) {
+            return TileType.TUNDRA.ordinal();   // 20% for Tundra
+        } else if (noiseValue < 0.60) {
+            return TileType.PLAINS.ordinal();   // 25% for Plains
         } else {
-            return TileType.PLAINS.ordinal();
+            return TileType.DESSERT.ordinal();  // 20% for Desert
         }
+
     }
 
     //functions below to convert int[][] biomeMap and terrainMap to a TiledMap
@@ -189,8 +188,8 @@ public class MapGenerator {
             decorationObject.setName("DECORATION");
             objectLayer.add(decorationObject);
         }
-        if (terrainNumber >= TileType.PLAINS_BUILDING1.ordinal() && terrainNumber <= TileType.TUNDRA_BUILDING2_12.ordinal()) {
-            MapObject structureObject = new RectangleMapObject(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        if (terrainNumber == TileType.PLAINS_BUILDING9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING1_9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING2_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING1_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING2_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING1_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING2_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING1_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING2_9.ordinal()){
+            MapObject structureObject = new RectangleMapObject(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE*4, TILE_SIZE*3);
             structureObject.setName("STRUCTURE");
             objectLayer.add(structureObject);
         }
@@ -216,8 +215,10 @@ public class MapGenerator {
 
     private void initializeTileTextures(TextureAtlas atlas) {
         for (TileType type : TileType.values()) {
-            // Use the biome type's name as the region name (or adjust as necessary)
             TextureRegion region = atlas.findRegion(type.name().toUpperCase());
+//            if(region == null){
+//                Gdx.app.log("ERROR", "Texture not found for " + type.name().toUpperCase());
+//            }
             tileTextures.put(type, region);
         }
     }

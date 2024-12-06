@@ -26,26 +26,27 @@ TILE_NAMES = [
  	"TUNDRA_BUILDING1_1", "TUNDRA_BUILDING1_2", "TUNDRA_BUILDING1_3", "TUNDRA_BUILDING1_4", "TUNDRA_BUILDING1_5", "TUNDRA_BUILDING1_6", "TUNDRA_BUILDING1_7", "TUNDRA_BUILDING1_8", "TUNDRA_BUILDING1_9", "TUNDRA_BUILDING1_10", "TUNDRA_BUILDING1_11", "TUNDRA_BUILDING1_12",  
 	"TUNDRA_BUILDING2_1", "TUNDRA_BUILDING2_2", "TUNDRA_BUILDING2_3", "TUNDRA_BUILDING2_4", "TUNDRA_BUILDING2_5", "TUNDRA_BUILDING2_6", "TUNDRA_BUILDING2_7", "TUNDRA_BUILDING2_8", "TUNDRA_BUILDING2_9", "TUNDRA_BUILDING2_10", "TUNDRA_BUILDING2_11", "TUNDRA_BUILDING2_12",
     	"OCEAN",
-    	"ROAD_LEFT","ROAD_RIGHT","ROAD_TOP","ROAD_BOTTOM","ROAD_TOP_LEFT","ROAD_TOP_RIGHT","ROAD_BOTTOM_LEFT","ROAD_BOTTOM_RIGHT"
+    	    "ROAD_LEFT","ROAD_RIGHT","ROAD_TOP","ROAD_BOTTOM","ROAD_CROSSWALK_HEIGHT","ROAD_CROSSWALK_WIDTH","ROAD","ROAD_TEMP"
+
 ]
 
 if len(TILE_NAMES) != TILES_TOTAL:
     raise ValueError(f"Expected {TILES_TOTAL} names, but got {len(TILE_NAMES)}.")
 
 # Load the tile atlas
-atlas_path = "C:\\Users\\nicko\\Desktop\\Newfolder\\tank_game.png"
+atlas_path = "C:\\Users\\nicko\\Documents\\game\\other\\tank_game.png"
 atlas_image = Image.open(atlas_path)
 
 # Validate dimensions
 width, height = atlas_image.size
 expected_width = TILES_PER_ROW * TILE_SIZE
-expected_height = TILES_TOTAL // TILES_PER_ROW * TILE_SIZE
+expected_height = TILES_TOTAL // TILES_PER_ROW * TILE_SIZE 
 
 if width < expected_width or height < expected_height:
     raise ValueError("Atlas image dimensions are smaller than expected.")
 
 
-output_dir = r"C:\Users\nicko\Desktop\Newfolder\output"
+output_dir = r"C:\Users\nicko\Documents\game\other\temp"
 os.makedirs(output_dir, exist_ok=True)
 
 # Save the tiles
