@@ -9,227 +9,214 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
-import java.util.HashMap;
-import java.util.Map;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-import static io.github.nickolasddiaz.MapGenerator.MAP_SIZE;//100
-import static io.github.nickolasddiaz.MapGenerator.TILE_SIZE;//8
-
-import static java.lang.Math.signum;
+import static io.github.nickolasddiaz.MainMenuScreen.IS_MOBILE;
+import static io.github.nickolasddiaz.MapGenerator.TILE_SIZE;
 
 public class GameScreen implements Screen {
-    yourgame game;
-    private final OrthographicCamera camera;
-    MapGenerator mapGenerator;
-    final private HashMap<Vector2, TiledMap> mapChunks = new HashMap<Vector2, TiledMap>();
-
-    private final float chunkSize; //100 * 8 * 8 = 6,400 // chunkSize = MAP_SIZE * TILE_SIZE * TILE_SIZE;
+    private final yourgame game;
+    private final ChunkManager chunkManager;
 
     Texture tankTexture;
     Sprite tankSprite;
-    Vector2 touchPos;
     Rectangle tankRectangle;
     float tankWidth;
     float tankHeight;
 
-    private final Vector2 currentChunk = new Vector2(0, 0);
-    private static final int CHUNK_LOAD_RADIUS = 1;
-    private final OrthogonalTiledMapRenderer chunkRenderer;
-    private final Matrix4 tempMatrix = new Matrix4();
-    private final Rectangle cameraBounds;
-    private final ShapeRenderer shapeRenderer;
 
+    private Texture joyStickTexture;
+    private Texture joyStickBaseTexture;
+    private Circle joyStickBaseCircle;
+    private Circle joyStickTouchCircle;
+    private ShapeRenderer shapeRendererCircle;
+    private ShapeRenderer shapeRendererTouchLocation;
+
+    private Vector2 stickPosition;
+    private Vector2 stickPositionMovement;
+
+    private final ScreenViewport screenViewport;
+
+    OrthographicCamera screenCamera;
     public static final float SPEED = 8000f;
-
+    private static final float JOYSTICK_SCREEN_MARGIN_PERCENT = 0.1f;
+    private static final float JOYSTICK_BASE_DIAMETER_PERCENT = 0.15f;
+    private static final float JOYSTICK_TOUCH_DIAMETER_MULTIPLIER = 2f;
 
     public GameScreen(final yourgame game) {
         this.game = game;
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, game.viewport.getWorldWidth() * TILE_SIZE * TILE_SIZE * TILE_SIZE, game.viewport.getWorldHeight() * TILE_SIZE * TILE_SIZE * TILE_SIZE);
-        cameraBounds = new Rectangle();
+        chunkManager = new ChunkManager(game);
 
-        mapGenerator = new MapGenerator((int)System.currentTimeMillis());
-        chunkSize = MAP_SIZE * TILE_SIZE * TILE_SIZE;
-
-        // Initialize with surrounding chunks
-        loadInitialChunks();
-
-        chunkRenderer = new OrthogonalTiledMapRenderer(null, TILE_SIZE);
+        // Initialize tank
         tankTexture = new Texture("tank.png");
-
-
         tankSprite = new Sprite(tankTexture);
-        tankSprite.setSize(TILE_SIZE * TILE_SIZE *4, TILE_SIZE * TILE_SIZE *4); // Set appropriate size for the tank
-        touchPos = new Vector2();
+        tankSprite.setSize(TILE_SIZE * TILE_SIZE * 4, TILE_SIZE * TILE_SIZE * 4);
+
+        // Initialize screen viewport for UI elements
+        screenCamera = new OrthographicCamera();
+        screenViewport = new ScreenViewport(screenCamera);
+        screenViewport.setWorldSize(1920, 1080);
+        screenCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
         tankRectangle = new Rectangle();
-        shapeRenderer = new ShapeRenderer();
 
+        // Initialize joystick
+        initializeJoystick();
     }
+    private void initializeJoystick() {
+        if (!IS_MOBILE) return;
 
-    private void updateCamera() {
-        float cameraX = tankSprite.getX() + tankSprite.getWidth() / 2;
-        float cameraY = tankSprite.getY() + tankSprite.getHeight() / 2;
+        // Calculate joystick dimensions based on screen size
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
 
-        int chunkX = (int) Math.floor(cameraX / chunkSize);
-        int chunkY = (int) Math.floor(cameraY / chunkSize);
-        Vector2 newChunk = new Vector2(chunkX, chunkY);
+        // Calculate joystick base size (diameter)
+        float joystickBaseDiameter = screenWidth * JOYSTICK_BASE_DIAMETER_PERCENT;
+        float joystickBaseRadius = joystickBaseDiameter / 2;
 
-        if (!newChunk.equals(currentChunk)) {
-            updateLoadedChunks(newChunk);
-            currentChunk.set(newChunk);
-        }
+        // Calculate joystick position with margin
+        float marginX = screenWidth * JOYSTICK_SCREEN_MARGIN_PERCENT;
+        float marginY = screenHeight * JOYSTICK_SCREEN_MARGIN_PERCENT;
 
-        camera.position.set(cameraX, cameraY, 0);
-        camera.update();
-        cameraBounds.set(
-            camera.position.x - camera.viewportWidth / 2,
-            camera.position.y - camera.viewportHeight / 2,
-            camera.viewportWidth,
-            camera.viewportHeight
+        // Position joystick at bottom-left with margin
+        Vector2 joyStickBasePosition = new Vector2(
+            marginX + joystickBaseRadius,
+            marginY + joystickBaseRadius
         );
+
+        joyStickTexture = new Texture("handle.png");
+        joyStickBaseTexture = new Texture("handle_background.png");
+
+
+        // Initialize shape renderers for joystick
+        shapeRendererTouchLocation = new ShapeRenderer();
+        shapeRendererCircle = new ShapeRenderer();
+
+        // Create circles for joystick interaction
+        joyStickBaseCircle = new Circle(joyStickBasePosition.x, joyStickBasePosition.y, joystickBaseRadius);
+
+        // Create a larger touch area
+        joyStickTouchCircle = new Circle(joyStickBasePosition.x, joyStickBasePosition.y, joystickBaseRadius * JOYSTICK_TOUCH_DIAMETER_MULTIPLIER);
+
+        // Initial stick position
+        stickPosition = new Vector2(joyStickBasePosition);
+        stickPositionMovement = new Vector2(stickPosition);
     }
 
-    private void updateLoadedChunks(Vector2 centerChunk) {
-        HashMap<Vector2, TiledMap> newChunks = new HashMap<Vector2, TiledMap>();
-        for (int x = (int)centerChunk.x - CHUNK_LOAD_RADIUS; x <= centerChunk.x + CHUNK_LOAD_RADIUS; x++) {
-            for (int y = (int)centerChunk.y - CHUNK_LOAD_RADIUS; y <= centerChunk.y + CHUNK_LOAD_RADIUS; y++) {
-                Vector2 chunkPos = new Vector2(x, y);
-                if (!mapChunks.containsKey(chunkPos)) {
-                    TiledMap newChunk = mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE);
-                    newChunks.put(chunkPos, newChunk);
-                } else {
-                    newChunks.put(chunkPos, mapChunks.get(chunkPos));
-                }
-            }
-        }
-
-        for (Vector2 key : mapChunks.keySet()) {
-            if (!newChunks.containsKey(key)) {
-                mapChunks.get(key).dispose();
-            }
-        }
-
-        mapChunks.clear();
-        mapChunks.putAll(newChunks);
-    }
-
-    private void loadInitialChunks(){
-        for (int x = -CHUNK_LOAD_RADIUS; x <= CHUNK_LOAD_RADIUS; x++) {
-            for (int y = -CHUNK_LOAD_RADIUS; y <= CHUNK_LOAD_RADIUS; y++) {
-                Vector2 chunkPos = new Vector2(x, y);
-                mapChunks.put(chunkPos, mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE));
-            }
-        }
-    }
 
     @Override
     public void show() {
     }
 
-
     @Override
     public void render(float delta) {
         input();
         logic();
-        updateCamera();
+        chunkManager.updateCamera(tankSprite.getX() + tankSprite.getWidth() / 2, tankSprite.getY() + tankSprite.getHeight() / 2);
+
         ScreenUtils.clear(Color.BLACK);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         game.viewport.apply();
-        game.batch.setProjectionMatrix(camera.combined);
-        renderChunks();
+        game.batch.setProjectionMatrix(chunkManager.getCamera().combined);
+
+        chunkManager.renderChunks();
 
         game.batch.begin();
+
         tankSprite.draw(game.batch);
+
         game.batch.end();
 
-        // Debug: Draw chunk boundaries
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.RED);
-        for (Vector2 chunkPos : mapChunks.keySet()) {
-            float x = chunkPos.x * chunkSize;
-            float y = chunkPos.y * chunkSize;
-            shapeRenderer.rect(x, y, chunkSize, chunkSize);
-        }
-        shapeRenderer.end();
+        if(IS_MOBILE) {
+            screenViewport.apply();
+            game.batch.setProjectionMatrix(screenCamera.combined);
+            game.batch.begin();
+            renderJoystick();
+            game.batch.end();
+            shapeRendererTouchLocation.begin(ShapeRenderer.ShapeType.Line); // shapeRenderer cannot be within the game.batch.begin() and game.batch.end() block
+            shapeRendererTouchLocation.setColor(Color.BLUE);
+            shapeRendererTouchLocation.circle(joyStickTouchCircle.x, joyStickTouchCircle.y, joyStickTouchCircle.radius);
+            shapeRendererTouchLocation.end();
 
-    }
-
-    private void renderChunks() {
-        // Update chunkRenderer with the current camera matrix.
-        chunkRenderer.setView(camera);
-        float cameraHeight = camera.viewportHeight / 2;
-        float cameraWidth = camera.viewportWidth / 2;
-
-        for (Map.Entry<Vector2, TiledMap> entry : mapChunks.entrySet()) {
-            Vector2 chunkPos = entry.getKey();
-            TiledMap chunk = entry.getValue();
-
-            float offsetX = chunkPos.x * chunkSize;
-            float offsetY = chunkPos.y * chunkSize;
-
-            if (!isChunkVisible(offsetX, offsetY)) continue; // if the chunk is within the camera's view (culling)
-
-            chunkRenderer.setMap(chunk);
-            tempMatrix.set(camera.combined);
-            tempMatrix.translate(offsetX, offsetY, 0);
-
-            float left = Math.max(0, camera.position.x - cameraWidth - offsetX);
-            float bottom = Math.max(0, camera.position.y - cameraHeight - offsetY);
-            float right = Math.min(chunkSize, camera.position.x + cameraWidth - offsetX);
-            float top = Math.min(chunkSize, camera.position.y + cameraHeight - offsetY);
-
-            if (right > left && top > bottom) {
-                chunkRenderer.setView(tempMatrix, left, bottom, right, top);
-                chunkRenderer.render();
-            }
+            shapeRendererCircle.begin(ShapeRenderer.ShapeType.Line);
+            shapeRendererCircle.setColor(Color.ORANGE);
+            shapeRendererCircle.circle(joyStickBaseCircle.x, joyStickBaseCircle.y, joyStickBaseCircle.radius);
+            shapeRendererCircle.end();
+            chunkManager.debugRenderChunkBoundaries(game);
         }
     }
+    private void renderJoystick() {
+        if (!IS_MOBILE) return;
 
-    private boolean isChunkVisible(float offsetX, float offsetY) {
-        return cameraBounds.overlaps(new Rectangle(offsetX, offsetY, chunkSize, chunkSize));
+        // Render joystick only if not touched or touch is within joystick area
+        if(!Gdx.input.isTouched() || !joyStickTouchCircle.contains(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY())) {
+            stickPositionMovement.set(stickPosition);
+        }
+
+        // Draw joystick sprites/shapes for debugging
+        game.batch.draw(joyStickBaseTexture, stickPosition.x - joyStickBaseCircle.radius, stickPosition.y - joyStickBaseCircle.radius, joyStickBaseCircle.radius*2, joyStickBaseCircle.radius * 2);
+        game.batch.draw(joyStickTexture, stickPositionMovement.x - joyStickBaseCircle.radius/2, stickPositionMovement.y - joyStickBaseCircle.radius/2, joyStickBaseCircle.radius, joyStickBaseCircle.radius);
     }
 
     private void input() {
+        Vector2 direction = new Vector2(0, 0);
+        float speedMultiplier = 1f;
+
+        if (IS_MOBILE && Gdx.input.isTouched()) {
+            Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
+
+            if (joyStickTouchCircle.contains(touchPos)) {
+                Vector2 center = new Vector2(joyStickBaseCircle.x, joyStickBaseCircle.y);
+
+                if (joyStickBaseCircle.contains(touchPos)) {
+                    // Touch is within the base circle
+                    stickPositionMovement = touchPos.cpy();
+                    speedMultiplier = touchPos.dst(center) / joyStickBaseCircle.radius;
+                } else {
+                    // Touch is outside base circle but within touch area
+                    Vector2 offset = touchPos.cpy().sub(center);
+                    offset.nor().scl(joyStickBaseCircle.radius);
+                    stickPositionMovement = center.cpy().add(offset);
+                    speedMultiplier = 1f; // Maximum speed when at circle's edge
+                }
+
+                direction = stickPositionMovement.cpy().sub(center).nor();
+            }
+        } else {
+            // Keyboard input (unchanged)
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) direction.x += 1f;
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) direction.x -= 1f;
+            if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W)) direction.y += 1f;
+            if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) direction.y -= 1f;
+        }
+
+        // Movement calculation (unchanged)
         float delta = Gdx.graphics.getDeltaTime();
-
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            tankSprite.translateX(SPEED * delta);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            tankSprite.translateX(-SPEED * delta);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            tankSprite.translateY(SPEED * delta);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            tankSprite.translateY(-SPEED * delta);
-        }
-
-        if (Gdx.input.isTouched()) {
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY());
-            game.viewport.unproject(touchPos);
-            tankSprite.translateX(signum(touchPos.x) * SPEED * delta);
-            tankSprite.translateY(signum(touchPos.y) * SPEED * delta);
+        if (direction.len() > 0) {
+            direction.nor();
+            float adjustedSpeed = IS_MOBILE ? SPEED * speedMultiplier : SPEED;
+            direction.scl(adjustedSpeed * delta);
+            tankSprite.translate(direction.x, direction.y);
         }
     }
 
     private void logic() {
-        float delta = Gdx.graphics.getDeltaTime();
         tankRectangle.set(tankSprite.getX(), tankSprite.getY(), tankWidth, tankHeight);
-
     }
 
     @Override
     public void resize(int width, int height) {
         game.viewport.update(width, height, true);
+        screenViewport.update(width, height, true);
+        screenCamera.setToOrtho(false, screenViewport.getWorldWidth(), screenViewport.getWorldHeight());
+        if (IS_MOBILE) {
+            initializeJoystick();
+        }
     }
 
     @Override
@@ -247,9 +234,9 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         tankTexture.dispose();
-        shapeRenderer.dispose();
-        for (TiledMap map : mapChunks.values()) {
-            map.dispose();
-        }
+        joyStickTexture.dispose();
+        chunkManager.dispose();
+        shapeRendererCircle.dispose();
+        shapeRendererTouchLocation.dispose();
     }
 }
