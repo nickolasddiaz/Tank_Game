@@ -14,9 +14,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
@@ -55,7 +53,9 @@ public class GameScreen implements Screen {
 
     private final Stage stage;
     private int score = 0;
-    private Label scoreLabel;
+    private final Label scoreLabel;
+    private final StatsRenderer statsRenderer;
+    private boolean paused = false;
 
 
 
@@ -76,10 +76,13 @@ public class GameScreen implements Screen {
         initializeJoystick();
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
-        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
-        TextButton pauseButton = new TextButton("Pause", skin);
-        pauseButton.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 10f);
-        pauseButton.setPosition(Gdx.graphics.getWidth() - pauseButton.getWidth()*1.2f, Gdx.graphics.getHeight() - pauseButton.getHeight()*1.2f);
+        Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
+        Button pauseButton = new Button(skin);
+        pauseButton.setStyle(skin.get("pause", Button.ButtonStyle.class));
+        pauseButton.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 7f);
+        float iconsHeight = Gdx.graphics.getHeight() - pauseButton.getHeight()*1.2f;
+
+        pauseButton.setPosition(Gdx.graphics.getWidth() - pauseButton.getWidth()*1.2f, iconsHeight);
         stage.addActor(pauseButton);
         pauseButton.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
             @Override
@@ -89,9 +92,11 @@ public class GameScreen implements Screen {
         });
 
         scoreLabel = new Label("Score: " + score, skin);
-        scoreLabel.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 10f);
-        scoreLabel.setPosition((float) Gdx.graphics.getWidth() /2 - scoreLabel.getWidth()/2, Gdx.graphics.getHeight() - pauseButton.getHeight()*1.2f);
+        scoreLabel.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 8f);
+        scoreLabel.setPosition((float) Gdx.graphics.getWidth() /2 - scoreLabel.getWidth()/2, iconsHeight);
         stage.addActor(scoreLabel);
+
+        statsRenderer = new StatsRenderer(Gdx.graphics.getWidth() / 25f, iconsHeight);
 
     }
     private void initializeJoystick() {
@@ -139,6 +144,8 @@ public class GameScreen implements Screen {
         input();
         logic();
         game.chunkManager.updateCamera(tankSprite.getX() + tankSprite.getWidth() / 2, tankSprite.getY() + tankSprite.getHeight() / 2);
+
+        if(paused) return;
         ScreenUtils.clear(Color.BLACK);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         game.viewport.apply();
@@ -146,7 +153,9 @@ public class GameScreen implements Screen {
         game.chunkManager.renderChunks();
         game.batch.begin();
         tankSprite.draw(game.batch);
+        statsRenderer.render(game.batch,screenCamera);
         game.batch.end();
+
 
         if(game.IS_MOBILE) {
             screenViewport.apply();
@@ -189,6 +198,9 @@ public class GameScreen implements Screen {
     }
 
     private void input() {
+        if(Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isKeyJustPressed(Input.Keys.P)) paused = !paused;
+        if(paused) return;
+
         Vector2 direction = new Vector2(0, 0);
         float delta = Gdx.graphics.getDeltaTime();
         float speedMultiplier = 1f;
@@ -217,7 +229,7 @@ public class GameScreen implements Screen {
                     float angleDifference = ((targetAngle - tankSpin + 540) % 360) - 180;
                     // Gradually adjust rotation speed
                     if (Math.abs(angleDifference) > 5) {
-                        float turnSpeed = Math.min(SPEED_OF_SPIN * delta, Math.abs(angleDifference) * 0.1f) * speedMultiplier;
+                        float turnSpeed = Math.min(SPEED_OF_SPIN * delta, Math.abs(angleDifference) * 0.8f) * speedMultiplier;
                         tankSpin += Math.signum(angleDifference) * turnSpeed;
                     } else {
                         tankSpin = targetAngle;
@@ -248,6 +260,13 @@ public class GameScreen implements Screen {
                 tankSprite.translate(MathUtils.cos(angleRad) * movement.y, MathUtils.sin(angleRad) * movement.y);
             }
         }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.M)){
+            statsRenderer.addStarLevel(1);
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.N)){
+            statsRenderer.addHealthLevel(1);
+        }
     }
 
     private void logic() {
@@ -276,10 +295,12 @@ public class GameScreen implements Screen {
 
     @Override
     public void pause() {
+        paused = true;
     }
 
     @Override
     public void resume() {
+        paused = false;
     }
 
     @Override
@@ -289,5 +310,6 @@ public class GameScreen implements Screen {
         game.chunkManager.dispose();
         shapeRendererCircle.dispose();
         shapeRendererTouchLocation.dispose();
-    }
+        stage.dispose();
+        }
 }

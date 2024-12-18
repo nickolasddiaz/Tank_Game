@@ -5,16 +5,19 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.github.tommyettinger.textra.FWSkin;
 
 
 public class MainMenuScreen implements Screen {
 
     final yourgame game;
     private final Stage stage;
+    Skin skin;
 
 
     public MainMenuScreen(final yourgame game) {
@@ -27,20 +30,32 @@ public class MainMenuScreen implements Screen {
         this.game = game;
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
-        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
-        TextButton startButton = new TextButton("Start", skin);
-        TextButton optionsButton = new TextButton("Options", skin);
-        TextButton leaderboardButton = new TextButton("Leaderboard", skin);
-        TextButton aboutButton = new TextButton("About", skin);
 
+        //Skin skin = game.assetManager.get("ui_tank_game.json");
+        Skin skin = new FWSkin(Gdx.files.internal("ui_tank_game.json"));
+
+        Label titleLabel = new Label("GTA Tank", skin);
+        ImageTextButton startButton = new ImageTextButton("Start", skin);
+        ImageTextButton optionsButton = new ImageTextButton("Options", skin);
+        ImageTextButton leaderboardButton = new ImageTextButton("Leaderboard", skin);
+        ImageTextButton aboutButton = new ImageTextButton("About", skin);
+        titleLabel.setStyle(skin.get("title", Label.LabelStyle.class));
+
+        titleLabel.setAlignment(1);
+        titleLabel.setFontScale(2);
+        titleLabel.setSize(buttonWidth, buttonHeight);
         startButton.setSize(buttonWidth, buttonHeight);
         optionsButton.setSize(buttonWidth, buttonHeight);
         leaderboardButton.setSize(buttonWidth, buttonHeight);
         aboutButton.setSize(buttonWidth, buttonHeight);
+
+        titleLabel.setPosition(buttonInitialX, buttonInitialY + buttonSpacing * 3);
         startButton.setPosition(buttonInitialX, buttonInitialY + buttonSpacing * 2);
         optionsButton.setPosition(buttonInitialX, buttonInitialY + buttonSpacing);
         leaderboardButton.setPosition(buttonInitialX, buttonInitialY);
         aboutButton.setPosition(buttonInitialX, buttonInitialY - buttonSpacing);
+
+        stage.addActor(titleLabel);
         stage.addActor(startButton);
         stage.addActor(optionsButton);
         stage.addActor(leaderboardButton);

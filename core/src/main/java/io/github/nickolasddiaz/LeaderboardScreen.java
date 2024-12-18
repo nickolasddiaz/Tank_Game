@@ -17,49 +17,51 @@ public class LeaderboardScreen implements Screen {
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
 
-        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+        Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
 
-        Table table = new Table();
+        // Main root table
+        Table rootTable = new Table();
+        rootTable.setFillParent(true);
+        stage.addActor(rootTable);
 
+        // Top section for title and button
         Table topTable = new Table();
-        topTable.setFillParent(true);
-        topTable.top();
-        Label titleLabel = new Label("Leaderboard", skin);
-        titleLabel.setAlignment(Align.center);
-        TextButton backButton = new TextButton("Back to Main Menu", skin);
+        rootTable.add(topTable).top().expandX().pad(10).row();
 
-        topTable.add(backButton).expandX().pad(10); // Add padding for aesthetics
-        stage.addActor(topTable);
+        Label titleLabel = new Label("Leaderboard", skin, "title");
+        topTable.add(titleLabel).expandX().padBottom(10);
 
-        table.add(titleLabel).padBottom(20);
-        String[] players = {"Player 1", "Player 2", "Player 3", "Player 4", "Player 5","Player 6", "Player 7", "Player 8", "Player 9", "Player 10, Player 11"};
+        // Back button
+        ImageTextButton backButton = new ImageTextButton("Back to Main Menu", skin);
+        topTable.row();
+        topTable.add(backButton).center().padTop(10);
+
+        // Leaderboard Table inside a ScrollPane
+        Table leaderboardTable = new Table();
+        ScrollPane scrollPane = new ScrollPane(leaderboardTable, skin);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollbarsVisible(true);
+        scrollPane.getStyle().background = null;
+
+        rootTable.add(scrollPane).expand().fill().pad(20).row();
+
+        // Player data
+        String[] players = {"Player 1", "Player 2", "Player 3", "Player 4", "Player 5",
+            "Player 6", "Player 7", "Player 8", "Player 9", "Player 10", "Player 11"};
         int[] scores = {1000, 850, 750, 600, 500, 450, 400, 350, 300, 250, 200};
-        for(int x = 0; x < 10; x++)
-        for (int i = 0; i < players.length; i+=2) {
+
+        // Add player leaderboard entries
+        for (int i = 0; i < players.length; i++) {
             Label rankLabel = new Label((i + 1) + ".", skin);
             Label playerLabel = new Label(players[i], skin);
             Label scoreLabel = new Label(String.valueOf(scores[i]), skin);
-            Label rankLabel2 = new Label((i + 1) + ".", skin);
-            Label playerLabel2 = new Label(players[i+1], skin);
-            Label scoreLabel2 = new Label(String.valueOf(scores[i+1]), skin);
-            table.add(rankLabel).padRight(20);
-            table.add(playerLabel).expandX().left();
-            table.add(scoreLabel).padLeft(20);
-            table.add(rankLabel2).padRight(20);
-            table.add(playerLabel2).expandX().left();
-            table.add(scoreLabel2).padLeft(20);
-            table.row().padTop(0);
+
+            leaderboardTable.add(rankLabel).padRight(10).width(50).align(Align.left);
+            leaderboardTable.add(playerLabel).expandX().align(Align.left).padRight(20);
+            leaderboardTable.add(scoreLabel).align(Align.right).width(100).row();
         }
-        table.row().padTop(20);
 
-        ScrollPane scrollPane = new ScrollPane(table, skin);
-        scrollPane.setFillParent(true);
-        scrollPane.setFadeScrollBars(false);
-        scrollPane.setFillParent(true);
-        scrollPane.getStyle().background = null;
-        topTable.add(backButton).expandX().pad(10); // Add padding for aesthetics
-        stage.addActor(scrollPane);
-
+        // Back button functionality
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -70,18 +72,17 @@ public class LeaderboardScreen implements Screen {
     }
 
     @Override
-    public void show() {
-    }
+    public void show() {}
 
     @Override
     public void render(float delta) {
-
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
         game.chunkManager.updateCamera(0, 0);
+
         game.batch.begin();
         game.chunkManager.renderChunks();
-        if(game.DEBUG)
+        if (game.DEBUG)
             game.chunkManager.debugRenderChunkBoundaries(game);
         game.batch.end();
 
@@ -95,16 +96,13 @@ public class LeaderboardScreen implements Screen {
     }
 
     @Override
-    public void pause() {
-    }
+    public void pause() {}
 
     @Override
-    public void resume() {
-    }
+    public void resume() {}
 
     @Override
-    public void hide() {
-    }
+    public void hide() {}
 
     @Override
     public void dispose() {

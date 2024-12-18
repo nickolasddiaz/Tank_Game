@@ -1,0 +1,125 @@
+
+ui_tank_game.png
+size: 1024, 1024
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+U811sIwHbPWRhkkOdY3XvMr5.ttf_0
+  rotate: false
+  xy: 387, 691
+  size: 256, 128
+  orig: 256, 128
+  offset: 0, 0
+  index: -1
+bottom_left_heart
+  rotate: false
+  xy: 259, 482
+  size: 24, 27
+  orig: 24, 27
+  offset: 0, 0
+  index: -1
+bottom_right_heart
+  rotate: false
+  xy: 349, 596
+  size: 24, 27
+  orig: 24, 27
+  offset: 0, 0
+  index: -1
+check_mark
+  rotate: false
+  xy: 349, 625
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
+home
+  rotate: false
+  xy: 259, 601
+  size: 88, 88
+  orig: 88, 88
+  offset: 0, 0
+  index: -1
+left_star
+  rotate: false
+  xy: 415, 649
+  size: 21, 40
+  orig: 21, 40
+  offset: 0, 0
+  index: -1
+ouLiJS4iu4ylyojldWZspG21.ttf_0
+  rotate: false
+  xy: 1, 433
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+pause
+  rotate: false
+  xy: 645, 731
+  size: 88, 88
+  orig: 88, 88
+  offset: 0, 0
+  index: -1
+play
+  rotate: false
+  xy: 1, 325
+  size: 88, 88
+  orig: 88, 88
+  offset: 0, 0
+  index: -1
+redo
+  rotate: false
+  xy: 259, 511
+  size: 88, 88
+  orig: 88, 88
+  offset: 0, 0
+  index: -1
+right_star
+  rotate: false
+  xy: 801, 779
+  size: 20, 40
+  orig: 20, 40
+  offset: 0, 0
+  index: -1
+silver_rectangle
+  rotate: false
+  xy: 1, 691
+  size: 384, 128
+  orig: 384, 128
+  offset: 0, 0
+  index: -1
+slide_dot
+  rotate: false
+  xy: 645, 697
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+slider
+  rotate: false
+  xy: 1, 415
+  size: 192, 16
+  orig: 192, 16
+  offset: 0, 0
+  index: -1
+top_left_heart
+  rotate: false
+  xy: 1, 302
+  size: 24, 21
+  orig: 24, 21
+  offset: 0, 0
+  index: -1
+top_right_heart
+  rotate: false
+  xy: 91, 392
+  size: 24, 21
+  orig: 24, 21
+  offset: 0, 0
+  index: -1
+unchecked_mark
+  rotate: false
+  xy: 735, 755
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1

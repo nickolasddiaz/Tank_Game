@@ -27,14 +27,15 @@ public class OptionsScreen implements Screen {
         float buttonWidth = Gdx.graphics.getWidth() / 2f;
         float buttonInitialX = Gdx.graphics.getWidth() / 2f - buttonWidth / 2f;
         float buttonInitialY = Gdx.graphics.getHeight() / 2f;
+        float buttonSpacing = buttonHeight/2;
 
-        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+        Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
 
         // Volume Controls
-        musicVolumeLabel = new TextButton("Music Volume " + game.musicVolume, skin).getLabel();
+        musicVolumeLabel = new ImageTextButton("Music Volume " + game.musicVolume, skin).getLabel();
         musicVolumeSlider = new Slider(0,100,1,false, skin);
         setMusicVolume(game.musicVolume);
-        sxfVolumeLabel = new TextButton("SFX Volume "+ game.sfxVolume, skin).getLabel();
+        sxfVolumeLabel = new ImageTextButton("SFX Volume "+ game.sfxVolume, skin).getLabel();
         sxfVolumeSlider = new Slider(0,100,1,false, skin);
         setSFXVolume(game.sfxVolume);
 
@@ -43,8 +44,9 @@ public class OptionsScreen implements Screen {
         CheckBox debugCheckBox = new CheckBox("Debug Mode", skin);
         debugCheckBox.setChecked(game.DEBUG);
 
-        TextButton ContinueButton = new TextButton("Continue to the Game", skin);
-        TextButton mainMenuButton = new TextButton("Back to Main Menu", skin);
+        Button ContinueButton = new Button(skin);
+        Button mainMenuButton = new Button(skin);
+        ContinueButton.setStyle(skin.get("play", Button.ButtonStyle.class));
 
 
 
@@ -55,17 +57,17 @@ public class OptionsScreen implements Screen {
         sxfVolumeSlider.setSize(buttonWidth, buttonHeight);
         mobileCheckBox.setSize(buttonWidth/2, buttonHeight);
         debugCheckBox.setSize(buttonWidth/2, buttonHeight);
-        ContinueButton.setSize(buttonWidth/2, buttonHeight);
-        mainMenuButton.setSize(buttonWidth/2, buttonHeight);
+        ContinueButton.setSize(buttonWidth/4, buttonHeight*1.5f);
+        mainMenuButton.setSize(buttonWidth/4, buttonHeight*1.5f);
 
         musicVolumeLabel.setPosition(buttonInitialX, buttonInitialY + buttonHeight * 3);
         musicVolumeSlider.setPosition(buttonInitialX, buttonInitialY + buttonHeight * 2);
         sxfVolumeLabel.setPosition(buttonInitialX, buttonInitialY + buttonHeight);
         sxfVolumeSlider.setPosition(buttonInitialX, buttonInitialY);
-        mobileCheckBox.setPosition(buttonInitialX, buttonInitialY- buttonHeight);
-        debugCheckBox.setPosition(buttonInitialX + buttonWidth/2, buttonInitialY- buttonHeight);
-        ContinueButton.setPosition(buttonInitialX, buttonInitialY - buttonHeight*2);
-        mainMenuButton.setPosition(buttonInitialX + buttonWidth/2, buttonInitialY - buttonHeight*2);
+        mobileCheckBox.setPosition(buttonInitialX, buttonInitialY- buttonHeight - buttonSpacing);
+        debugCheckBox.setPosition(buttonInitialX + buttonWidth/2 +buttonSpacing, buttonInitialY- buttonHeight - buttonSpacing);
+        ContinueButton.setPosition((float) Gdx.graphics.getWidth() /2 - buttonSpacing*4.5f, buttonInitialY - buttonHeight*2 - buttonSpacing*3);
+        mainMenuButton.setPosition((float) Gdx.graphics.getWidth() /2+ buttonSpacing, buttonInitialY - buttonHeight*2 - buttonSpacing*3);
 
         // Add buttons to stage
         stage.addActor(musicVolumeLabel);
@@ -144,13 +146,13 @@ public class OptionsScreen implements Screen {
             game.chunkManager.debugRenderChunkBoundaries(game);
         game.batch.end();
 
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.UP)) {
             if (lastClickedVolumeSFX) {
                 setMusicVolume(game.musicVolume+1);
             } else {
                 setSFXVolume(game.sfxVolume+1);
             }
-        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
+        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             if (lastClickedVolumeSFX) {
                 setMusicVolume(game.musicVolume-1);
             } else {
