@@ -1,16 +1,21 @@
 package io.github.nickolasddiaz;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.objects.PolygonMapObject;
+import com.badlogic.gdx.maps.objects.PolylineMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
+import com.badlogic.gdx.math.Vector2;
+
 import java.util.*;
 
 enum TileType {
@@ -44,9 +49,11 @@ public class MapGenerator {
     public static final int MAP_SIZE = 8 * ROAD_SIZE; //how many tiles will there be in a chunk
     public static final int TILE_SIZE = 8;
     public static final float FREQUENCY = 0.01f; //how much noise will be generated
-    public static final double ROAD_DENSITY = 0.1;
-    public static final double DECORATION_DENSITY = 0.01;//how many roads will there be
+    public static final double ROAD_DENSITY = 0.1; //how many roads will there be
+    public static final double DECORATION_DENSITY = 0.002; //how many decorations will there be
     public static final int TERRAIN_SIZE = MAP_SIZE / ROAD_SIZE;
+    private static final int itemSize = TILE_SIZE*TILE_SIZE;
+    public static final int chunkSize = MAP_SIZE * itemSize;
 
     private final HashMap<Integer, TileType> biomes;
     private final HashMap<TileType, TextureRegion> tileTextures;
@@ -85,7 +92,7 @@ public class MapGenerator {
             generateRoads(xOffset, yOffset), generateRoads(xOffset +MAP_SIZE, yOffset),
             generateRoads(xOffset, yOffset -MAP_SIZE));
 
-        return convertToTiledMap(biomeMap, TerrainMap);
+        return convertToTiledMap(biomeMap, TerrainMap, xOffset * chunkSize/MAP_SIZE, yOffset * chunkSize/MAP_SIZE);
     }
     private boolean[] generateRoads(int xOffset, int yOffset) {
         boolean[] road = new boolean[TERRAIN_SIZE];
@@ -123,7 +130,7 @@ public class MapGenerator {
     }
 
     //functions below to convert int[][] biomeMap and terrainMap to a TiledMap
-    private TiledMap convertToTiledMap(int[][] biomeMap, Integer[][] terrainMap) {
+    private TiledMap convertToTiledMap(int[][] biomeMap, Integer[][] terrainMap, int xOffset, int yOffset) {
         TiledMap map = new TiledMap();
 
         TiledMapTileLayer biomeLayer = new TiledMapTileLayer(MAP_SIZE, MAP_SIZE, TILE_SIZE, TILE_SIZE);
@@ -151,20 +158,86 @@ public class MapGenerator {
             cell.setTile(new StaticTiledMapTile(texture));
             precomputedTerrainCells.put(terrainType, cell);
         }
+        Stack<Vector2> points = new Stack<>();
+        boolean[][] visited = new boolean[MAP_SIZE][MAP_SIZE];
 
-        // Populate layers and objects
         for (int x = 0; x < MAP_SIZE; x++) {
-            for (int y = 0; y < MAP_SIZE; y++) {
-                // Biome layer
-                biomeLayer.setCell(x, y, precomputedBiomeCells.getOrDefault(biomeMap[x][y], precomputedBiomeCells.get(TileType.OCEAN.ordinal())));
 
-                // Terrain layer
+            for (int y = 0; y < MAP_SIZE; y++) {
+                biomeLayer.setCell(x, y, precomputedBiomeCells.getOrDefault(biomeMap[x][y], precomputedBiomeCells.get(TileType.OCEAN.ordinal())));
                 if (terrainMap[x][y] != null) {
                     int terrainNumber = terrainMap[x][y];
                     terrainLayer.setCell(x, y, precomputedTerrainCells.getOrDefault(terrainNumber, precomputedTerrainCells.get(TileType.OCEAN.ordinal())));
 
-                    // Object layer logic
-                    addObjectToLayer(objectLayer, x, y, terrainNumber, biomeMap[x][y]);
+                    if (terrainNumber >= TileType.PLAIN_TREE.ordinal() && terrainNumber <= TileType.TUNDRA_ROCK.ordinal()) {
+                        MapObject decorationObject = new RectangleMapObject(x * itemSize + xOffset, y * itemSize + yOffset, itemSize, itemSize);
+                        decorationObject.setName("DECORATION");
+                        objectLayer.add(decorationObject);
+                    }
+                    if (terrainNumber == TileType.PLAINS_BUILDING9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING1_9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING2_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING1_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING2_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING1_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING2_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING1_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING2_9.ordinal()){
+                        MapObject structureObject = new RectangleMapObject(x * itemSize + xOffset, y * itemSize + yOffset, 4 * itemSize, 3 * itemSize);
+                        structureObject.setName("STRUCTURE");
+                        objectLayer.add(structureObject);
+                    }
+                }
+
+                if (terrainMap[x][y] != null && terrainMap[x][y] >= TileType.ROAD_LEFT.ordinal()) {
+                    boolean isEndOfMap = (y == MAP_SIZE - 1);
+                    boolean isRoadStart = (y < MAP_SIZE - 1) &&
+                        (terrainMap[x][y + 1] == null || terrainMap[x][y + 1] < TileType.ROAD_LEFT.ordinal()) &&
+                        (y >= 4 && terrainMap[x][y-4] != null && terrainMap[x][y - 4] == TileType.ROAD_LEFT.ordinal());
+
+                    if (!isEndOfMap && isRoadStart || (y == MAP_SIZE - 1 && x > 0 && (terrainMap[x-1][y] == null || terrainMap[x-1][y] < TileType.ROAD_LEFT.ordinal()))) {
+                        int i = y;
+                        while (i >= 0 && terrainMap[x][i] != null && terrainMap[x][i] >= TileType.ROAD_LEFT.ordinal()) {
+                            i--;
+                        }
+                        MapObject roadObject = new RectangleMapObject(x * itemSize + xOffset, (i + 1) * itemSize +yOffset, 2 * itemSize, (y - i) * itemSize);
+                        roadObject.setName("VERTICAL");
+                        objectLayer.add(roadObject);
+                    }
+                    isEndOfMap = (x == MAP_SIZE - 1);
+                    isRoadStart = (x < MAP_SIZE - 1) &&
+                        (terrainMap[x+1][y] == null || terrainMap[x+1][y] < TileType.ROAD_LEFT.ordinal()) &&
+                        (x >= 4 && terrainMap[x-4][y] != null && terrainMap[x-4][y] == TileType.ROAD_BOTTOM.ordinal());
+
+                    if (!isEndOfMap && isRoadStart || (x == MAP_SIZE - 1 && y > 0 && (terrainMap[x][y-1] == null || terrainMap[x][y-1] < TileType.ROAD_LEFT.ordinal()))) {
+                        int i = x;
+                        while (i >= 0 && terrainMap[i][y] != null && terrainMap[i][y] >= TileType.ROAD_LEFT.ordinal()) {
+                            i--;
+                        }
+                        MapObject roadObject = new RectangleMapObject((i + 1) * itemSize + xOffset, y * itemSize + yOffset, (x - i) * itemSize, 2 * itemSize);
+                        roadObject.setName("HORIZONTAL");
+                        objectLayer.add(roadObject);
+                    }
+                }
+
+                if (biomeMap[x][y] == TileType.OCEAN.ordinal() && !visited[x][y]) {
+                    boolean isBoundary = false;
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            int nx = x + dx;
+                            int ny = y + dy;
+                            if (nx >= 0 && nx < MAP_SIZE && ny >= 0 && ny < MAP_SIZE) {
+                                if (biomeMap[nx][ny] != TileType.OCEAN.ordinal()) {
+                                    isBoundary = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isBoundary) break;
+                    }
+
+                    if (isBoundary) {
+                        points.push(new Vector2(x, y));
+                        visited[x][y] = true;
+                        float[] temp = addOceanVectors(points, biomeMap, visited, xOffset, yOffset);
+                        if(temp.length > 4) {
+                            PolygonMapObject oceanObject = new PolygonMapObject(temp);
+                            oceanObject.setName("OCEAN");
+                            objectLayer.add(oceanObject);
+                        }
+                    }
                 }
 
             }
@@ -177,32 +250,73 @@ public class MapGenerator {
         for (MapObject object : objectLayer) {
             objectLayerContainer.getObjects().add(object);
         }
+        objectLayerContainer.setName("OBJECTS");
         map.getLayers().add(objectLayerContainer);
 
         return map;
     }
 
-    private void addObjectToLayer(MapObjects objectLayer, int x, int y, int terrainNumber, int biomeNumber) {
-        if (terrainNumber >= TileType.PLAIN_TREE.ordinal() && terrainNumber <= TileType.TUNDRA_ROCK.ordinal()) {
-            MapObject decorationObject = new RectangleMapObject(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            decorationObject.setName("DECORATION");
-            objectLayer.add(decorationObject);
+    private float[] addOceanVectors(Stack<Vector2> points, int[][] biomeMap, boolean[][] visited, int xOffset, int yOffset) {
+        ArrayList<Float> vertices = new ArrayList<>();
+        int[][] directions = {
+            {0, 1},   // top
+            {1, 1},   // top-right
+            {1, 0},   // right
+            {1, -1},  // bottom-right
+            {0, -1},  // bottom
+            {-1, -1}, // bottom-left
+            {-1, 0},  // left
+            {-1, 1}   // top-left
+        };
+
+        while (!points.empty()) {
+            Vector2 current = points.pop();
+            int x = (int) current.x;
+            int y = (int) current.y;
+
+            vertices.add((float) (x * itemSize) + xOffset);
+            vertices.add((float) (y * itemSize) + yOffset);
+
+            boolean foundNext = false;
+            for (int[] dir : directions) {
+                int newX = x + dir[0];
+                int newY = y + dir[1];
+
+                if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
+                    if (biomeMap[newX][newY] == TileType.OCEAN.ordinal() && !visited[newX][newY]) {
+                        boolean isBoundary = false;
+                        for (int[] checkDir : directions) {
+                            int checkX = newX + checkDir[0];
+                            int checkY = newY + checkDir[1];
+
+                                if (!(checkX >= 0 && checkX < MAP_SIZE && checkY >= 0 && checkY < MAP_SIZE) || biomeMap[checkX][checkY] != TileType.OCEAN.ordinal()) {
+                                    isBoundary = true;
+                                    break;
+
+                            }
+                        }
+
+                        if (isBoundary) {
+                            points.push(new Vector2(newX, newY));
+                            visited[newX][newY] = true;
+                            foundNext = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!foundNext && !points.empty()) {
+                vertices.add(Float.NaN);
+                vertices.add(Float.NaN);
+            }
         }
-        if (terrainNumber == TileType.PLAINS_BUILDING9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING1_9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING2_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING1_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING2_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING1_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING2_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING1_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING2_9.ordinal()){
-            MapObject structureObject = new RectangleMapObject(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE*4, TILE_SIZE*3);
-            structureObject.setName("STRUCTURE");
-            objectLayer.add(structureObject);
+        float[] result = new float[vertices.size()];
+        for (int i = 0; i < vertices.size(); i++) {
+            result[i] = vertices.get(i);
         }
-        if (terrainNumber >= TileType.ROAD_LEFT.ordinal()) {
-            MapObject roadObject = new RectangleMapObject(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            roadObject.setName("ROAD");
-            objectLayer.add(roadObject);
-        }
-        if (biomeNumber == TileType.OCEAN.ordinal()) {
-            MapObject oceanObject = new RectangleMapObject(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            oceanObject.setName("OCEAN");
-            objectLayer.add(oceanObject);
-        }
+
+        return result;
     }
 
 
@@ -216,9 +330,6 @@ public class MapGenerator {
     private void initializeTileTextures(TextureAtlas atlas) {
         for (TileType type : TileType.values()) {
             TextureRegion region = atlas.findRegion(type.name().toUpperCase());
-//            if(region == null){
-//                Gdx.app.log("ERROR", "Texture not found for " + type.name().toUpperCase());
-//            }
             tileTextures.put(type, region);
         }
     }

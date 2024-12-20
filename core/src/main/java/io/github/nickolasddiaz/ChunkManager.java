@@ -2,29 +2,26 @@ package io.github.nickolasddiaz;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.objects.PolygonMapObject;
+import com.badlogic.gdx.maps.objects.PolylineMapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.math.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.github.nickolasddiaz.MapGenerator.MAP_SIZE;
-import static io.github.nickolasddiaz.MapGenerator.TILE_SIZE;
+import static io.github.nickolasddiaz.MapGenerator.*;
 
 public class ChunkManager {
     private final OrthographicCamera camera;
     private final MapGenerator mapGenerator;
     private final HashMap<Vector2, TiledMap> mapChunks = new HashMap<>();
 
-    private final float chunkSize; // MAP_SIZE * TILE_SIZE * TILE_SIZE = 80 * 8 * 8 = 5120
     private static final int CHUNK_LOAD_RADIUS = 1;
 
     private final OrthogonalTiledMapRenderer chunkRenderer;
@@ -40,7 +37,6 @@ public class ChunkManager {
         cameraBounds = new Rectangle();
 
         mapGenerator = new MapGenerator((int)System.currentTimeMillis());
-        chunkSize = MAP_SIZE * TILE_SIZE * TILE_SIZE;
 
         // Initialize with surrounding chunks
         loadInitialChunks();
@@ -134,15 +130,28 @@ public class ChunkManager {
     }
 
     public void debugRenderChunkBoundaries(yourgame game) {
+        AtomicInteger objects = new AtomicInteger();
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.RED);
-        for (Vector2 chunkPos : mapChunks.keySet()) {
-            float x = chunkPos.x * chunkSize;
-            float y = chunkPos.y * chunkSize;
-            shapeRenderer.rect(x, y, chunkSize, chunkSize);
+        for (Map.Entry<Vector2, TiledMap> entry : mapChunks.entrySet()) {
+            shapeRenderer.rect(entry.getKey().x * chunkSize, entry.getKey().y * chunkSize, chunkSize, chunkSize);
+
+           entry.getValue().getLayers().get("OBJECTS").getObjects().forEach(obj -> {
+                if (obj instanceof RectangleMapObject) {
+                    Rectangle rect = ((RectangleMapObject) obj).getRectangle();
+                    shapeRenderer.rect(rect.x, rect.y, rect.width, rect.height);
+                    objects.getAndIncrement();
+                } else if (obj instanceof PolygonMapObject) {
+                    Polygon poly = ((PolygonMapObject) obj).getPolygon();
+                    shapeRenderer.polygon(poly.getTransformedVertices());
+                    objects.getAndIncrement();
+                }
+           });
         }
         shapeRenderer.end();
+        Gdx.app.log("ChunkManager", "Objects: " + objects.get());
+
     }
 
     private boolean isChunkVisible(float offsetX, float offsetY) {
