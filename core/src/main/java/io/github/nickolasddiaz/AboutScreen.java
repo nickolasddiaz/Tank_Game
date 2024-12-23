@@ -133,13 +133,8 @@ public class AboutScreen implements Screen {
     public void render(float delta) {
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
-        game.chunkManager.updateCamera(0, 0);
-        game.batch.begin();
-        game.chunkManager.renderChunks();
-        if (game.DEBUG)
-            game.chunkManager.debugRenderChunkBoundaries(game);
+        game.engine.update(delta);
 
-        game.batch.end();
         stage.act(delta);
         stage.draw();
     }

@@ -71,7 +71,7 @@ public class MainMenuScreen implements Screen {
         optionsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new OptionsScreen(game));
+                game.setScreen(new OptionsScreen(game, true));
                 dispose();
             }
         });
@@ -103,13 +103,8 @@ public class MainMenuScreen implements Screen {
 
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
-        game.chunkManager.updateCamera(0, 0);
-        game.batch.begin();
-        game.chunkManager.renderChunks();
-        if(game.DEBUG)
-            game.chunkManager.debugRenderChunkBoundaries(game);
-        game.batch.end();
 
+        game.engine.update(delta);
         stage.act(delta);
         stage.draw();
     }

@@ -1,10 +1,10 @@
-package io.github.nickolasddiaz;
+package io.github.nickolasddiaz.systems;
 
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.*;
 
-import static io.github.nickolasddiaz.MapGenerator.*;
+import static io.github.nickolasddiaz.systems.MapGenerator.*;
 
 public class TerrainGenerator {
     class Cell {
@@ -460,4 +460,28 @@ public class TerrainGenerator {
     private boolean checkIfOutOfBounds(int x, int y) {
         return x >= 0 && x < TERRAIN_SIZE && y >= 0 && y < TERRAIN_SIZE;
     }
+
+    public static class Pair<K, V> {
+        private final K key;
+        private final V value;
+
+        public Pair(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public static <K, V> Pair<K, V> of(K key, V value) {
+            return new Pair<>(key, value);
+        }
+
+        public K getKey() {
+            return key;
+        }
+
+        public V getValue() {
+            return value;
+        }
+    }
 }
+
+
