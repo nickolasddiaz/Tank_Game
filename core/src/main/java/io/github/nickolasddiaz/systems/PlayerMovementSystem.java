@@ -9,10 +9,10 @@ import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
 
 public class PlayerMovementSystem extends IteratingSystem {
-    private ComponentMapper<PlayerComponent> playerMapper;
-    private ComponentMapper<TransformComponent> transformMapper;
-    private ComponentMapper<JoystickComponent> joystickMapper;
-    private ComponentMapper<SettingsComponent> settingsMapper;
+    private final ComponentMapper<PlayerComponent> playerMapper;
+    private final ComponentMapper<TransformComponent> transformMapper;
+    private final ComponentMapper<JoystickComponent> joystickMapper;
+    private final ComponentMapper<SettingsComponent> settingsMapper;
 
     public PlayerMovementSystem() {
         super(Family.all(PlayerComponent.class, TransformComponent.class, JoystickComponent.class, SettingsComponent.class).get());

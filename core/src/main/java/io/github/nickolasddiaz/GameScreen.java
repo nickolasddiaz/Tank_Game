@@ -13,6 +13,7 @@ public class GameScreen implements Screen {
 
     public GameScreen(final yourgame game) {
         this.game = game;
+        game.engine.removeEntity(game.car);
         game.engine.addSystem(new PlayerMovementSystem());
         game.engine.addSystem(new StatsRenderSystem(game.batch));
         if(game.settings.IS_MOBILE) {

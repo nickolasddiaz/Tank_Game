@@ -50,8 +50,8 @@ public class MapGenerator {
     public static final double ROAD_DENSITY = 0.1; //how many roads will there be
     public static final double DECORATION_DENSITY = 0.002; //how many decorations will there be
     public static final int TERRAIN_SIZE = MAP_SIZE / ROAD_SIZE;
-    private static final int itemSize = TILE_SIZE*TILE_SIZE;
-    public static final int chunkSize = MAP_SIZE * itemSize;
+    public static final int itemSize = TILE_SIZE*TILE_SIZE;
+    public static final int chunkSize = MAP_SIZE * itemSize; // unit of one chunk length
 
     private final HashMap<Integer, TileType> biomes;
     private final HashMap<TileType, TextureRegion> tileTextures;
@@ -90,7 +90,7 @@ public class MapGenerator {
             generateRoads(xOffset, yOffset), generateRoads(xOffset +MAP_SIZE, yOffset),
             generateRoads(xOffset, yOffset -MAP_SIZE));
 
-        return convertToTiledMap(biomeMap, TerrainMap, xOffset * chunkSize/MAP_SIZE, yOffset * chunkSize/MAP_SIZE);
+        return convertToTiledMap(biomeMap, TerrainMap, xOffset * itemSize, yOffset * itemSize);
     }
     private boolean[] generateRoads(int xOffset, int yOffset) {
         boolean[] road = new boolean[TERRAIN_SIZE];

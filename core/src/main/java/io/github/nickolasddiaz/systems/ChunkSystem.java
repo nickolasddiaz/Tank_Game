@@ -1,9 +1,10 @@
 package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -16,7 +17,6 @@ import io.github.nickolasddiaz.components.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.github.nickolasddiaz.systems.MapGenerator.*;
 import static io.github.nickolasddiaz.systems.MapGenerator.MAP_SIZE;
@@ -24,7 +24,6 @@ import static io.github.nickolasddiaz.systems.MapGenerator.MAP_SIZE;
 public class ChunkSystem extends EntitySystem {
     private final ComponentMapper<ChunkComponent> chunkMapper;
     private final ComponentMapper<CameraComponent> cameraMapper;
-    private final ComponentMapper<SpriteComponent> spriteMapper;
     private final ComponentMapper<SettingsComponent> settingsMapper;
 
     private final ShapeRenderer shapeRenderer;
@@ -34,17 +33,20 @@ public class ChunkSystem extends EntitySystem {
     private final int CHUNK_LOAD_RADIUS = 1;
 
     // Cache components to avoid repeated lookups
-    private ChunkComponent chunkComponent;
+    private ChunkComponent chunk;
     private CameraComponent cameraComponent;
-    private SpriteComponent spriteComponent;
+    private final TransformComponent tankComponent;
     private SettingsComponent settingsComponent;
 
-    public ChunkSystem() {
+    CarFactory carFactory;
+
+    public ChunkSystem(CarFactory carFactory, TransformComponent transformComponent) {
+        this.carFactory = carFactory;
 
         // Initialize mappers
         chunkMapper = ComponentMapper.getFor(ChunkComponent.class);
         cameraMapper = ComponentMapper.getFor(CameraComponent.class);
-        spriteMapper = ComponentMapper.getFor(SpriteComponent.class);
+        tankComponent = transformComponent;
         settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
 
         // Initialize rendering tools
@@ -57,25 +59,21 @@ public class ChunkSystem extends EntitySystem {
     @Override
     public void addedToEngine(Engine engine) {
         Entity player = engine.getEntitiesFor(Family.all(
-            PlayerComponent.class,
             ChunkComponent.class,
             CameraComponent.class,
-            SpriteComponent.class,
             SettingsComponent.class
         ).get()).first();
 
-        chunkComponent = chunkMapper.get(player);
+        chunk = chunkMapper.get(player);
         cameraComponent = cameraMapper.get(player);
-        spriteComponent = spriteMapper.get(player);
         settingsComponent = settingsMapper.get(player);
-
 
         loadInitialChunks();
     }
 
     @Override
     public void update(float deltaTime) {
-        updateCamera(spriteComponent.tankSprite.getX(), spriteComponent.tankSprite.getY());
+        updateCamera(tankComponent.position.x, tankComponent.position.y);
         renderChunks();
 
         if (settingsComponent.DEBUG) {
@@ -88,9 +86,9 @@ public class ChunkSystem extends EntitySystem {
         int chunkY = (int) Math.floor(cameraY / chunkSize);
         Vector2 newChunk = new Vector2(chunkX, chunkY);
 
-        if (!newChunk.equals(chunkComponent.currentChunk)) {
+        if (!newChunk.equals(chunk.currentChunk)) {
             updateLoadedChunks(newChunk);
-            chunkComponent.currentChunk.set(newChunk);
+            chunk.currentChunk.set(newChunk);
         }
 
         cameraComponent.camera.position.set(cameraX, cameraY, 0);
@@ -109,35 +107,57 @@ public class ChunkSystem extends EntitySystem {
 
     private void updateLoadedChunks(Vector2 centerChunk) {
         HashMap<Vector2, TiledMap> newChunks = new HashMap<>();
-
         // Load new chunks
         for (int x = (int)centerChunk.x - CHUNK_LOAD_RADIUS; x <= centerChunk.x + CHUNK_LOAD_RADIUS; x++) {
             for (int y = (int)centerChunk.y - CHUNK_LOAD_RADIUS; y <= centerChunk.y + CHUNK_LOAD_RADIUS; y++) {
                 Vector2 chunkPos = new Vector2(x, y);
-                if (!chunkComponent.mapChunks.containsKey(chunkPos)) {
-                    newChunks.put(chunkPos, mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE));
+                if (!chunk.mapChunks.containsKey(chunkPos)) {
+                    TiledMap temp = mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE);
+                    spawnCars(temp.getLayers().get("OBJECTS").getObjects());
+                    newChunks.put(chunkPos, temp);
                 } else {
-                    newChunks.put(chunkPos, chunkComponent.mapChunks.get(chunkPos));
+                    newChunks.put(chunkPos, chunk.mapChunks.get(chunkPos));
                 }
             }
         }
+        chunk.clearCache();
 
-        // Dispose old chunks
-        for (TiledMap map : chunkComponent.mapChunks.values()) {
-            if (!newChunks.containsValue(map)) {
-                map.dispose();
-            }
+        for(Map.Entry<Vector2, TiledMap> entry : newChunks.entrySet()) {
+            chunk.cacheObjects(entry.getKey(), entry.getValue());
         }
-
-        chunkComponent.mapChunks.clear();
-        chunkComponent.mapChunks.putAll(newChunks);
     }
 
     private void loadInitialChunks() {
         for (int x = -CHUNK_LOAD_RADIUS; x <= CHUNK_LOAD_RADIUS; x++) {
             for (int y = -CHUNK_LOAD_RADIUS; y <= CHUNK_LOAD_RADIUS; y++) {
                 Vector2 chunkPos = new Vector2(x, y);
-                chunkComponent.mapChunks.put(chunkPos, mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE));
+                TiledMap temp = mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE);
+                spawnCars(temp.getLayers().get("OBJECTS").getObjects());
+                chunk.cacheObjects(chunkPos, temp);
+            }
+        }
+    }
+    private void spawnCars(MapObjects objects) {
+        for (MapObject object : objects) {
+            if (object instanceof RectangleMapObject) {
+                //if(chunk.random.nextFloat() < .6) continue; // 1/3 chance
+                if ("HORIZONTAL".equals(object.getName())) {
+                    Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                    boolean isRight = chunk.random.nextBoolean();
+                    float spawnY = rect.y + ((isRight) ? 0 : rect.height - chunk.carWidth);
+                    float spawnX = rect.x + chunk.random.nextFloat() * rect.width; // random x between rect.x and rect.x + rect.width
+                    carFactory.createCar(new Vector2(spawnX, spawnY), isRight,
+                        (isRight ? rect.x + rect.width - (float)MAP_SIZE / 2 : rect.x + (float)MAP_SIZE / 2),
+                        true, chunk.random.nextInt(10));
+                } else if ("VERTICAL".equals(object.getName())) {
+                    Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                    boolean isUp = chunk.random.nextBoolean();
+                    float spawnX = rect.x + ((isUp) ? rect.width - chunk.carWidth : 0);
+                    float spawnY = rect.y + chunk.random.nextFloat() * rect.height; // random y between rect.y and rect.y + rect.height
+                    carFactory.createCar(new Vector2(spawnX, spawnY), isUp,
+                        (isUp ? rect.y + rect.height - (float)MAP_SIZE / 2 : rect.y + (float)MAP_SIZE / 2),
+                        false, chunk.random.nextInt(10));
+                }
             }
         }
     }
@@ -147,7 +167,7 @@ public class ChunkSystem extends EntitySystem {
         float cameraHeight = cameraComponent.camera.viewportHeight / 2;
         float cameraWidth = cameraComponent.camera.viewportWidth / 2;
 
-        for (Map.Entry<Vector2, TiledMap> entry : chunkComponent.mapChunks.entrySet()) {
+        for (Map.Entry<Vector2, TiledMap> entry : chunk.mapChunks.entrySet()) {
             Vector2 chunkPos = entry.getKey();
             float offsetX = chunkPos.x * chunkSize;
             float offsetY = chunkPos.y * chunkSize;
@@ -173,29 +193,24 @@ public class ChunkSystem extends EntitySystem {
         }
     }
 
-    public void debugRenderChunkBoundaries() {
-        AtomicInteger objects = new AtomicInteger();
+    public void debugRenderChunkBoundaries() { // around 250 to 500 tiledMapObjects total
         shapeRenderer.setProjectionMatrix(cameraComponent.camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.RED);
-        for (Map.Entry<Vector2, TiledMap> entry : chunkComponent.mapChunks.entrySet()) {
+        for (Map.Entry<Vector2, TiledMap> entry : chunk.mapChunks.entrySet()) {
             shapeRenderer.rect(entry.getKey().x * chunkSize, entry.getKey().y * chunkSize, chunkSize, chunkSize);
 
             entry.getValue().getLayers().get("OBJECTS").getObjects().forEach(obj -> {
                 if (obj instanceof RectangleMapObject) {
                     Rectangle rect = ((RectangleMapObject) obj).getRectangle();
                     shapeRenderer.rect(rect.x, rect.y, rect.width, rect.height);
-                    objects.getAndIncrement();
                 } else if (obj instanceof PolygonMapObject) {
                     Polygon poly = ((PolygonMapObject) obj).getPolygon();
                     shapeRenderer.polygon(poly.getTransformedVertices());
-                    objects.getAndIncrement();
                 }
             });
         }
         shapeRenderer.end();
-        Gdx.app.log("ChunkManager", "Objects: " + objects.get());
-
     }
 
     private boolean isChunkVisible(float offsetX, float offsetY) {
