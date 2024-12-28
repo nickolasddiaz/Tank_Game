@@ -6,6 +6,7 @@ dependencies {
   api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   api "com.github.tommyettinger:textratypist:1.1.0"
+  implementation 'com.github.implicit-invocation:jbump:v1.0.2'
 
 
 

@@ -6,7 +6,6 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
@@ -20,7 +19,6 @@ public class CarSystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
 
     private final Engine engine;
-    ShapeRenderer shapeRenderer = new ShapeRenderer();
 
 
     public CarSystem(Engine engine) {
@@ -47,16 +45,6 @@ public class CarSystem extends IteratingSystem {
         transform.position = new Vector2(transform.position.x, transform.position.y);
         transform.rotation =  ((car.horizontal)? (car.direction)? 0 : 180: (car.direction)? 90 : 270); // right: 0 left: 180 up: 90 down: 270
 
-//        shapeRenderer.begin(ShapeRenderer.ShapeType.Line); // pink is right, green is left, blue is up, purple is down
-//        shapeRenderer.setColor((car.horizontal)? (car.direction)? Color.PINK:Color.GREEN: (car.direction)? Color.BLUE:Color.PURPLE);
-//        if (car.horizontal) {
-//            shapeRenderer.line(car.position.x, car.position.y, car.changeDirection, car.position.y);
-//        } else {
-//            shapeRenderer.line(car.position.x, car.position.y, car.position.x, car.changeDirection);
-//        }
-//        shapeRenderer.end();
-
-
         if(car.horizontal){
             if(car.direction) {
                 if(car.changeDirection > transform.position.x) { // going right
@@ -74,8 +62,10 @@ public class CarSystem extends IteratingSystem {
             }
         }
 
-        Rectangle horizontalObject = chunk.getObjectIsInside(transform.position, chunkPosition, chunk.horizontalRoadObject);
-        Rectangle verticalObject = chunk.getObjectIsInside(transform.position, chunkPosition, chunk.verticalRoadObject);
+        Rectangle horizontalObject = chunk.getObjectIsInsideRectMapChunk(new Rectangle(transform.position.x, transform.position.y, MAP_SIZE, MAP_SIZE), "HORIZONTAL"); //give me 0 out of bound errors
+        Rectangle verticalObject = chunk.getObjectIsInsideRectMapChunk(new Rectangle(transform.position.x, transform.position.y, MAP_SIZE, MAP_SIZE), "VERTICAL");
+        //Rectangle horizontalObject = chunk.getObjectIsInside(transform.position, chunk.horizontalFilter); // give me a ton of out of bounds
+        //Rectangle verticalObject = chunk.getObjectIsInside(transform.position, chunk.verticalFilter);
 
 
         if(horizontalObject == null && verticalObject == null) { //disposing of the car as it is out of bounds
@@ -104,14 +94,14 @@ public class CarSystem extends IteratingSystem {
         }else{
             if(horizontalObject != null) {
                 if(car.direction && transform.position.x % chunkSize < 3* MAP_SIZE){ // car is going right and near the right border
-                    Rectangle roadGoesPastChunk = chunk.getObjectIsInside(transform.position.add(3* MAP_SIZE,0), chunkPosition.add(1,0), chunk.verticalRoadObject);
+                    Rectangle roadGoesPastChunk = chunk.getObjectIsInside(transform.position.add(3* MAP_SIZE,0), chunk.horizontalFilter);
                     if(roadGoesPastChunk != null) {
                         car.changeDirection = roadGoesPastChunk.x + roadGoesPastChunk.width - MAP_SIZE;
                         transform.position.x += 3*MAP_SIZE; //make the car be in the correct chunk
                         return;
                     }
                 } else if (!car.direction && transform.position.x % chunkSize > chunkSize - 3* MAP_SIZE) { // car is going left and near the left border
-                    Rectangle roadGoesPastChunk = chunk.getObjectIsInside(transform.position.add(-3* MAP_SIZE,0), chunkPosition.add(-1,0), chunk.verticalRoadObject);
+                    Rectangle roadGoesPastChunk = chunk.getObjectIsInside(transform.position.add(-3* MAP_SIZE,0), chunk.verticalFilter);
                     if(roadGoesPastChunk != null) {
                         car.changeDirection = roadGoesPastChunk.x + MAP_SIZE;
                         transform.position.x -= 3*MAP_SIZE; //make the car be in the correct chunk
@@ -122,14 +112,14 @@ public class CarSystem extends IteratingSystem {
                 car.changeDirection = (car.direction) ? horizontalObject.x  + horizontalObject.width - MAP_SIZE : horizontalObject.x + MAP_SIZE;
             }else{
                 if(car.direction && transform.position.y % chunkSize < 3* MAP_SIZE){ // car is going up and near the top border
-                    Rectangle roadGoesPastChunk = chunk.getObjectIsInside(transform.position.add(0,3* MAP_SIZE), chunkPosition.add(0,1), chunk.horizontalRoadObject);
+                    Rectangle roadGoesPastChunk = chunk.getObjectIsInside(transform.position.add(0,3* MAP_SIZE), chunk.horizontalFilter);
                     if(roadGoesPastChunk != null) {
                         car.changeDirection = roadGoesPastChunk.y + roadGoesPastChunk.width - MAP_SIZE;
                         transform.position.y += 3*MAP_SIZE; //make the car be in the correct chunk
                         return;
                     }
                 } else if (!car.direction && transform.position.y % chunkSize > chunkSize - 3* MAP_SIZE) { // car is going down and near the bottom border
-                    Rectangle roadGoesPastChunk = chunk.getObjectIsInside(transform.position.add(0,-3* MAP_SIZE), chunkPosition.add(0,-1), chunk.horizontalRoadObject);
+                    Rectangle roadGoesPastChunk = chunk.getObjectIsInside(transform.position.add(0,-3* MAP_SIZE), chunk.verticalFilter);
                     if(roadGoesPastChunk != null) {
                         car.changeDirection = roadGoesPastChunk.y + MAP_SIZE;
                         transform.position.y -= 3*MAP_SIZE; //make the car be in the correct chunk

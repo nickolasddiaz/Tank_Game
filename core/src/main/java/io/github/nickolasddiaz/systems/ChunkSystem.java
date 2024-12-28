@@ -107,6 +107,10 @@ public class ChunkSystem extends EntitySystem {
 
     private void updateLoadedChunks(Vector2 centerChunk) {
         HashMap<Vector2, TiledMap> newChunks = new HashMap<>();
+
+        // First, clear all existing worlds
+        chunk.clearWorlds();
+
         // Load new chunks
         for (int x = (int)centerChunk.x - CHUNK_LOAD_RADIUS; x <= centerChunk.x + CHUNK_LOAD_RADIUS; x++) {
             for (int y = (int)centerChunk.y - CHUNK_LOAD_RADIUS; y <= centerChunk.y + CHUNK_LOAD_RADIUS; y++) {
@@ -115,16 +119,17 @@ public class ChunkSystem extends EntitySystem {
                     TiledMap temp = mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE);
                     spawnCars(temp.getLayers().get("OBJECTS").getObjects());
                     newChunks.put(chunkPos, temp);
+                    chunk.cacheObjects(chunkPos, temp);  // Cache objects for new chunk
                 } else {
                     newChunks.put(chunkPos, chunk.mapChunks.get(chunkPos));
+                    // re-cache existing chunk's objects
+                    chunk.cacheObjects(chunkPos, chunk.mapChunks.get(chunkPos));
                 }
             }
         }
-        chunk.clearCache();
 
-        for(Map.Entry<Vector2, TiledMap> entry : newChunks.entrySet()) {
-            chunk.cacheObjects(entry.getKey(), entry.getValue());
-        }
+        chunk.mapChunks.clear();
+        chunk.mapChunks.putAll(newChunks);
     }
 
     private void loadInitialChunks() {
@@ -134,6 +139,7 @@ public class ChunkSystem extends EntitySystem {
                 TiledMap temp = mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE);
                 spawnCars(temp.getLayers().get("OBJECTS").getObjects());
                 chunk.cacheObjects(chunkPos, temp);
+                chunk.mapChunks.put(chunkPos, temp);
             }
         }
     }

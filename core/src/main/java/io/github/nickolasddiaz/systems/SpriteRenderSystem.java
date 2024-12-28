@@ -3,20 +3,24 @@ package io.github.nickolasddiaz.systems;
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.SortedIteratingSystem;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.nickolasddiaz.components.CameraComponent;
+import io.github.nickolasddiaz.components.SettingsComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 
 public class SpriteRenderSystem extends SortedIteratingSystem {
-    private SpriteBatch batch;
+    private final SpriteBatch batch;
     private OrthographicCamera camera;
-    private ComponentMapper<TransformComponent> transformMapper;
-    private ComponentMapper<CameraComponent> cameraMapper;
+    private final ComponentMapper<TransformComponent> transformMapper;
+    private final ComponentMapper<CameraComponent> cameraMapper;
+    ShapeRenderer shapeRenderer;
 
     public SpriteRenderSystem(SpriteBatch batch) {
         super(Family.all(TransformComponent.class).get(),
-            (e1, e2) -> 0); // Simple comparator since we don't need sorting yet
+            (e1, e2) -> 0);
 
         this.batch = batch;
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
@@ -45,6 +49,5 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
                 transform.sprite.setColor(transform.color);
             transform.sprite.draw(batch);
         }
-
     }
 }
