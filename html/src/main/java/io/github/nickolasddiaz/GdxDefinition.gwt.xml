@@ -14,11 +14,15 @@
   <!-- <extend-configuration-property name="gdx.files.classpath" value="path/to/file.png" /> -->
 
   <!-- "Inherits" lines are how GWT knows where to look for code and configuration in other projects or libraries. -->
-  <inherits name="com.badlogic.gdx.backends.gdx_backends_gwt" />
+    <inherits name="regexodus.regexodus" />
+    <inherits name="com.github.tommyettinger.freetypist" />
+
+    <inherits name="com.badlogic.gdx.backends.gdx_backends_gwt" />
   <inherits name="com.badlogic.ashley_gwt" />
   <inherits name="com.badlogic.gdx.ai" />
   <inherits name="com.badlogic.gdx.physics.box2d.box2d-gwt" />
-    <inherits name="com.badlogic.gdx.graphics.g2d.freetype.freetype-gwt" />
+    <inherits name="com.dongbat.jbump" />
+
 
     <inherits name="io.github.nickolasddiaz.yourgame" />
 

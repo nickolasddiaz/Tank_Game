@@ -10,10 +10,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import io.github.nickolasddiaz.components.*;
-import io.github.nickolasddiaz.systems.CarFactory;
-import io.github.nickolasddiaz.systems.CarSystem;
-import io.github.nickolasddiaz.systems.ChunkSystem;
-import io.github.nickolasddiaz.systems.SpriteRenderSystem;
+import io.github.nickolasddiaz.systems.*;
 
 import static io.github.nickolasddiaz.systems.MapGenerator.TILE_SIZE;
 
@@ -29,6 +26,8 @@ public class yourgame extends Game {
     public CameraComponent camera;
     public TransformComponent transform;
     public Entity car;
+    public EnemyFactorySystem enemyFactorySystem;
+    public StatsComponent statsComponent;
 
 
     public void create() {
@@ -48,7 +47,8 @@ public class yourgame extends Game {
         player.add(chunk);
         camera = new CameraComponent();
         player.add(camera);
-        player.add(new StatsComponent());
+        statsComponent = new StatsComponent();
+        player.add(statsComponent);
         player.add(new CollisionComponent());
         player.add(new JoystickComponent());
         player.add(settings);
@@ -66,6 +66,7 @@ public class yourgame extends Game {
 
         engine.addSystem(new CarSystem(engine));
         engine.addSystem(new SpriteRenderSystem(batch));
+        enemyFactorySystem = new EnemyFactorySystem(engine, new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas")), camera, chunk, statsComponent, transform);
 
     }
 

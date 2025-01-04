@@ -5,8 +5,10 @@ dependencies {
   api "com.badlogicgames.ashley:ashley:$ashleyVersion"
   api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
-  api "com.github.tommyettinger:textratypist:1.1.0"
+  implementation "com.github.tommyettinger:freetypist:1.1.0:sources"
   implementation 'com.github.implicit-invocation:jbump:v1.0.2'
+
+
 
 
 

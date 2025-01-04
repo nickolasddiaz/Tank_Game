@@ -20,6 +20,8 @@ public class ChunkComponent implements Component {
     public Vector2 currentChunk = new Vector2(0, 0);
     public Random random = new Random(System.currentTimeMillis());
     public float carWidth = 64;
+    public WorldGraph pathfindingGraph = new WorldGraph();
+
 
     public final World<RectangleMapObject> tileWorld; // HORIZONTAL, VERTICAL, STRUCTURE, DECORATION
     public final World<PolygonMapObject> oceanWorld; //OCEAN
@@ -29,6 +31,12 @@ public class ChunkComponent implements Component {
     public ChunkComponent() {
         tileWorld = new World<>();
         oceanWorld = new World<>();
+    }
+
+    public boolean getObjectIsInsideBoolean(Vector2 playerPosition, CollisionFilter filter) {
+        ArrayList<Item> items = new ArrayList<>();
+        tileWorld.queryPoint(playerPosition.x, playerPosition.y, filter, items);
+        return items.isEmpty();
     }
 
     public Rectangle getObjectIsInside(Vector2 playerPosition, CollisionFilter filter) {
@@ -55,7 +63,7 @@ public class ChunkComponent implements Component {
         return items.isEmpty() ? null : items;
     }
 
-    public Rectangle getObjectIsInsideRectMapChunk(Rectangle playerRect, String objectName) {
+    public Rectangle getObjectIsInsideRectMapChunk(Rectangle playerRect, String objectName) { // old slow version
         for(Map.Entry<Vector2, TiledMap> entry : mapChunks.entrySet()) {
             TiledMap chunkMap = entry.getValue();
             MapObjects objects = chunkMap.getLayers().get("OBJECTS").getObjects();
@@ -95,24 +103,38 @@ public class ChunkComponent implements Component {
                     items.add(item);
                 }
             }
-        });
 
+        });
         chunkItems.put(chunkPosition, items);
     }
 
-    public void removeCache(Vector2 chunkPosition) {
-        ArrayList<Item> items = chunkItems.get(chunkPosition);
-        if (items != null) {
-            for (Item item : items) {
-                if (item.userData instanceof RectangleMapObject) {
-                    tileWorld.remove(item);
-                } else if (item.userData instanceof PolygonMapObject) {
-                    oceanWorld.remove(item);
+    public void cacheObjectsNodes(){
+        pathfindingGraph = new WorldGraph();
+        for(Map.Entry<Vector2, TiledMap> entry : mapChunks.entrySet()) {
+            Vector2 chunkPosition = entry.getKey();
+            TiledMap chunkMap = entry.getValue();
+            MapObjects objects = chunkMap.getLayers().get("OBJECTS").getObjects();
+            ArrayList<Item> structureItems = new ArrayList<>();
+            ArrayList<Item> oceanItems = new ArrayList<>();
+            objects.forEach(obj -> {
+                if (obj.getName() != null) {
+                    if (obj instanceof RectangleMapObject) {
+                        RectangleMapObject rectObj = (RectangleMapObject) obj;
+                        if ("STRUCTURE".equals(rectObj.getName())) {
+                            structureItems.add(new Item<>(rectObj));
+                        }
+                    } else if (obj instanceof PolygonMapObject) {
+                        PolygonMapObject polyObj = (PolygonMapObject) obj;
+                        oceanItems.add(new Item<>(polyObj));
+                    }
                 }
-            }
-            chunkItems.remove(chunkPosition);
+            });
+            pathfindingGraph.updateChunk(chunkPosition, structureItems, oceanItems, tileWorld, oceanWorld);
         }
+
     }
+
+
     public void clearWorlds() {
         for (ArrayList<Item> items : chunkItems.values()) {
             for (Item item : items) {
@@ -127,29 +149,32 @@ public class ChunkComponent implements Component {
     }
 
 
-    public CollisionFilter horizontalFilter = new CollisionFilter() {
-        @Override
-        public Response filter(Item item, Item item1) {
-            if (item.userData instanceof RectangleMapObject) {
-                RectangleMapObject rectObj = (RectangleMapObject) item.userData;
-                if ("HORIZONTAL".equals(rectObj.getName())) {
-                    return Response.cross;
-                }
+    public CollisionFilter horizontalFilter = (item, item1) -> {
+        if (item.userData instanceof RectangleMapObject) {
+            RectangleMapObject rectObj = (RectangleMapObject) item.userData;
+            if ("HORIZONTAL".equals(rectObj.getName())) {
+                return Response.cross;
             }
-            return null;
         }
+        return null;
     };
-    public CollisionFilter verticalFilter = new CollisionFilter() {
-        @Override
-        public Response filter(Item item, Item item1) {
-            if (item.userData instanceof RectangleMapObject) {
-                RectangleMapObject rectObj = (RectangleMapObject) item.userData;
-                if ("VERTICAL".equals(rectObj.getName())) {
-                    return Response.cross;
-                }
+    public CollisionFilter verticalFilter = (item, item1) -> {
+        if (item.userData instanceof RectangleMapObject) {
+            RectangleMapObject rectObj = (RectangleMapObject) item.userData;
+            if ("VERTICAL".equals(rectObj.getName())) {
+                return Response.cross;
             }
-            return null;
         }
+        return null;
+    };
+    public CollisionFilter obstaclesFilter = (item, item1) -> {
+        if (item.userData instanceof RectangleMapObject) {
+            RectangleMapObject rectObj = (RectangleMapObject) item.userData;
+            if ("STRUCTURE".equals(rectObj.getName()) || "DECORATION".equals(rectObj.getName())) {
+                return Response.cross;
+            }
+        }
+        return null;
     };
 
 

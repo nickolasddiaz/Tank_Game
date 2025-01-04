@@ -130,6 +130,7 @@ public class ChunkSystem extends EntitySystem {
 
         chunk.mapChunks.clear();
         chunk.mapChunks.putAll(newChunks);
+        chunk.cacheObjectsNodes();
     }
 
     private void loadInitialChunks() {
@@ -142,6 +143,7 @@ public class ChunkSystem extends EntitySystem {
                 chunk.mapChunks.put(chunkPos, temp);
             }
         }
+        chunk.cacheObjectsNodes();
     }
     private void spawnCars(MapObjects objects) {
         for (MapObject object : objects) {
