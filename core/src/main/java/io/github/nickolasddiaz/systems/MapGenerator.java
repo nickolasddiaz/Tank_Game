@@ -44,20 +44,28 @@ enum TileType {
 
 public class MapGenerator {
     public static final int ROAD_SIZE = 5 * 2; //how wide/long will the road be in tiles the road will only be two tiles wide. It needs to be even
-    public static final int MAP_SIZE = 8 * ROAD_SIZE; //how many tiles will there be in a chunk
+    public static final int MAP_SIZE = 8 * ROAD_SIZE; //how many tiles will there be in a chunk 80
     public static final int TILE_SIZE = 8;
     public static final float FREQUENCY = 0.01f; //how much noise will be generated
     public static final double ROAD_DENSITY = 0.1; //how many roads will there be
     public static final double DECORATION_DENSITY = 0.002; //how many decorations will there be
-    public static final int TERRAIN_SIZE = MAP_SIZE / ROAD_SIZE;
-    public static final int itemSize = TILE_SIZE*TILE_SIZE;
+    public static final int itemSize = TILE_SIZE*TILE_SIZE; // size of one tile
     public static final int chunkSize = MAP_SIZE * itemSize; // unit of one chunk length
+    public static final int ALL_CHUNK_SIZE = 3 * MAP_SIZE; // unit of three chunk length
+
+    // units are used in determining positioning in the game world
+    // MAP_SIZE how many rows of tiles in a chunk, 80 tiles
+    // itemSize how many rows of units in a tile, 64 units
+    // chunkSize how many rows of units in a chunk, 5120 units = 80 * 64 or MAP_SIZE * itemSize
+    // ALL_CHUNK_SIZE how many tiles in a row of three chunks or the entire load length, 240 tiles = 3 * MAP_SIZE
 
     private final HashMap<Integer, TileType> biomes;
     private final HashMap<TileType, TextureRegion> tileTextures;
     private final FastNoiseLite noise;
     private final TerrainGenerator roads;
     private final int seed;
+
+    private boolean[][] notWalkableGrid;
 
 
     public MapGenerator(int seed) {
@@ -93,7 +101,7 @@ public class MapGenerator {
         return convertToTiledMap(biomeMap, TerrainMap, xOffset * itemSize, yOffset * itemSize);
     }
     private boolean[] generateRoads(int xOffset, int yOffset) {
-        boolean[] road = new boolean[TERRAIN_SIZE];
+        boolean[] road = new boolean[TILE_SIZE];
         Random random = new Random(seed + xOffset * 31L + yOffset * 37L);
         for (int i = 0; i < road.length; i++) {
             road[i] = random.nextDouble() < ROAD_DENSITY;
@@ -128,8 +136,13 @@ public class MapGenerator {
     }
 
     //functions below to convert int[][] biomeMap and terrainMap to a TiledMap
+    public boolean[][] getNotWalkableGrid() {
+        return notWalkableGrid.clone();
+    }
+
     private TiledMap convertToTiledMap(int[][] biomeMap, Integer[][] terrainMap, int xOffset, int yOffset) {
         TiledMap map = new TiledMap();
+        notWalkableGrid = new boolean[MAP_SIZE][MAP_SIZE];
 
         TiledMapTileLayer biomeLayer = new TiledMapTileLayer(MAP_SIZE, MAP_SIZE, TILE_SIZE, TILE_SIZE);
         TiledMapTileLayer terrainLayer = new TiledMapTileLayer(MAP_SIZE, MAP_SIZE, TILE_SIZE, TILE_SIZE);
@@ -171,11 +184,17 @@ public class MapGenerator {
                         MapObject decorationObject = new RectangleMapObject(x * itemSize + xOffset, y * itemSize + yOffset, itemSize, itemSize);
                         decorationObject.setName("DECORATION");
                         objectLayer.add(decorationObject);
+                        notWalkableGrid[x][y] = true;
                     }
                     if (terrainNumber == TileType.PLAINS_BUILDING9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING1_9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING2_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING1_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING2_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING1_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING2_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING1_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING2_9.ordinal()){
                         MapObject structureObject = new RectangleMapObject(x * itemSize + xOffset, y * itemSize + yOffset, 4 * itemSize, 3 * itemSize);
                         structureObject.setName("STRUCTURE");
                         objectLayer.add(structureObject);
+                        for (int i = x; i < x + 4; i++) {
+                            for (int j = y; j < y + 3; j++) {
+                                notWalkableGrid[i][j] = true;
+                            }
+                        }
                     }
                 }
 
@@ -208,6 +227,9 @@ public class MapGenerator {
                         roadObject.setName("HORIZONTAL");
                         objectLayer.add(roadObject);
                     }
+                }
+                if(biomeMap[x][y] == TileType.OCEAN.ordinal()){
+                    notWalkableGrid[x][y] = true;
                 }
 
                 if (biomeMap[x][y] == TileType.OCEAN.ordinal() && !visited[x][y]) {

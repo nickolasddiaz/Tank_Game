@@ -151,9 +151,9 @@ public class TerrainGenerator {
     public static final int ROAD_CROSSWALK_HEIGHT = TileType.ROAD_CROSSWALK_HEIGHT.ordinal();
 
     private final Random random;
-    Cell[][] grid = new Cell[TERRAIN_SIZE][TERRAIN_SIZE];
-    private boolean[] isRoadTop = new boolean[TERRAIN_SIZE];
-    private boolean[] isRoadBottom = new boolean[TERRAIN_SIZE];
+    Cell[][] grid = new Cell[TILE_SIZE][TILE_SIZE];
+    private boolean[] isRoadTop = new boolean[TILE_SIZE];
+    private boolean[] isRoadBottom = new boolean[TILE_SIZE];
 
 
     public TerrainGenerator(int seed) {
@@ -163,21 +163,21 @@ public class TerrainGenerator {
     public Integer[][] generate(int[][] biomeMap, boolean[] top, boolean[] left, boolean[] right, boolean[] down) {
         isRoadTop = top;
         isRoadBottom = down;
-        grid = new Cell[TERRAIN_SIZE][TERRAIN_SIZE];// Initialize grid with cells that have all possibilities
+        grid = new Cell[TILE_SIZE][TILE_SIZE];// Initialize grid with cells that have all possibilities
         Integer[][] TerrainMap = new Integer[MAP_SIZE][MAP_SIZE];
-        for (int i = 0; i < TERRAIN_SIZE; i++) { // TERRAIN_SIZE = MAP_SIZE/ROAD_SIZE
-            for (int j = 0; j < TERRAIN_SIZE; j++) {
+        for (int i = 0; i < TILE_SIZE; i++) { // TILE_SIZE = MAP_SIZE/ROAD_SIZE
+            for (int j = 0; j < TILE_SIZE; j++) {
                 grid[i][j] = new Cell(null, null, null, null);
             }
         }
-        for(int i = 0; i < TERRAIN_SIZE; i++){
+        for(int i = 0; i < TILE_SIZE; i++){
             if(top[i]){
-                roadUp(i, TERRAIN_SIZE-1, TerrainMap, biomeMap);
-                grid[i][TERRAIN_SIZE-1].down = true;
-                grid[i][TERRAIN_SIZE-1].selectedOption = Options.VERTICAL;
-                grid[i][TERRAIN_SIZE-1].collapsed = true;
-                insertRoad(i, TERRAIN_SIZE-1, grid[i][TERRAIN_SIZE-1].isUp(), grid[i][TERRAIN_SIZE-1].isLeft(), grid[i][TERRAIN_SIZE-1].isRight(), grid[i][TERRAIN_SIZE-1].isDown(), TerrainMap, biomeMap);
-                getNewCells(i, TERRAIN_SIZE-1);
+                roadUp(i, TILE_SIZE-1, TerrainMap, biomeMap);
+                grid[i][TILE_SIZE-1].down = true;
+                grid[i][TILE_SIZE-1].selectedOption = Options.VERTICAL;
+                grid[i][TILE_SIZE-1].collapsed = true;
+                insertRoad(i, TILE_SIZE-1, grid[i][TILE_SIZE-1].isUp(), grid[i][TILE_SIZE-1].isLeft(), grid[i][TILE_SIZE-1].isRight(), grid[i][TILE_SIZE-1].isDown(), TerrainMap, biomeMap);
+                getNewCells(i, TILE_SIZE-1);
             }
             if(left[i]){
                 roadLeft(0, i, TerrainMap, biomeMap); //make sure the border between the edges are filled
@@ -188,12 +188,12 @@ public class TerrainGenerator {
                 getNewCells(0, i);
             }
             if(right[i]){
-                roadRight(TERRAIN_SIZE-1, i, TerrainMap, biomeMap); //make sure the border between the edges are filled
-                grid[TERRAIN_SIZE-1][i].left = true;
-                grid[TERRAIN_SIZE-1][i].selectedOption = Options.HORIZONTAL;
-                grid[TERRAIN_SIZE-1][i].collapsed = true;
-                insertRoad(TERRAIN_SIZE-1, i, grid[TERRAIN_SIZE-1][i].isUp(), grid[TERRAIN_SIZE-1][i].isLeft(), grid[TERRAIN_SIZE-1][i].isRight(), grid[TERRAIN_SIZE-1][i].isDown(), TerrainMap, biomeMap);
-                getNewCells(TERRAIN_SIZE-1, i);
+                roadRight(TILE_SIZE-1, i, TerrainMap, biomeMap); //make sure the border between the edges are filled
+                grid[TILE_SIZE-1][i].left = true;
+                grid[TILE_SIZE-1][i].selectedOption = Options.HORIZONTAL;
+                grid[TILE_SIZE-1][i].collapsed = true;
+                insertRoad(TILE_SIZE-1, i, grid[TILE_SIZE-1][i].isUp(), grid[TILE_SIZE-1][i].isLeft(), grid[TILE_SIZE-1][i].isRight(), grid[TILE_SIZE-1][i].isDown(), TerrainMap, biomeMap);
+                getNewCells(TILE_SIZE-1, i);
             }
             if(down[i]){
                 roadDown(i, 0, TerrainMap, biomeMap);
@@ -382,37 +382,37 @@ public class TerrainGenerator {
     private void checkAndAddCell(int x, int y, Boolean sourceConnection, Boolean up, Boolean left, Boolean right, Boolean down) {
         if (checkIfOutOfBounds(x, y) && !grid[x][y].collapsed && sourceConnection != null && sourceConnection) {
             // Handle corner cases specifically
-            if ((x == 0 && y == 0) || (x == 0 && y == TERRAIN_SIZE - 1) ||
-                (x == TERRAIN_SIZE - 1 && y == 0) || (x == TERRAIN_SIZE - 1 && y == TERRAIN_SIZE - 1)) {
+            if ((x == 0 && y == 0) || (x == 0 && y == TILE_SIZE - 1) ||
+                (x == TILE_SIZE - 1 && y == 0) || (x == TILE_SIZE - 1 && y == TILE_SIZE - 1)) {
                 // For corners, ensure at least two connections are possible
                 grid[x][y].removeOptions(
-                    (x == 0 && y == TERRAIN_SIZE - 1) || (x == TERRAIN_SIZE - 1 && y == TERRAIN_SIZE - 1), // up
+                    (x == 0 && y == TILE_SIZE - 1) || (x == TILE_SIZE - 1 && y == TILE_SIZE - 1), // up
                     x == 0, // left
-                    x == TERRAIN_SIZE - 1, // right
-                    (x == 0 && y == 0) || (x == TERRAIN_SIZE - 1 && y == 0) // down
+                    x == TILE_SIZE - 1, // right
+                    (x == 0 && y == 0) || (x == TILE_SIZE - 1 && y == 0) // down
                 );
                 Queue.add(Pair.of(grid[x][y].getOptionCount(), new Vector2(x, y)));
                 return;
             }
 
             // Handle edge cases (non-corner edges)
-            if (x <= 1 || x >= TERRAIN_SIZE - 2) {
+            if (x <= 1 || x >= TILE_SIZE - 2) {
                 grid[x][y].removeOptions(
-                    y >= TERRAIN_SIZE / 2,
-                    (x >= TERRAIN_SIZE / 2) ? null : false,
-                    (x >= TERRAIN_SIZE / 2) ? false : null,
-                    y <= TERRAIN_SIZE / 2
+                    y >= TILE_SIZE / 2,
+                    (x >= TILE_SIZE / 2) ? null : false,
+                    (x >= TILE_SIZE / 2) ? false : null,
+                    y <= TILE_SIZE / 2
                 );
                 Queue.add(Pair.of(grid[x][y].getOptionCount(), new Vector2(x, y)));
                 return;
             }
 
-            if (y <= 1 || y >= TERRAIN_SIZE - 2) {
+            if (y <= 1 || y >= TILE_SIZE - 2) {
                 grid[x][y].removeOptions(
-                    (y >= TERRAIN_SIZE / 2) ? false : null,
-                    x <= TERRAIN_SIZE / 2,
-                    x >= TERRAIN_SIZE / 2,
-                    (y >= TERRAIN_SIZE / 2) ? null : false
+                    (y >= TILE_SIZE / 2) ? false : null,
+                    x <= TILE_SIZE / 2,
+                    x >= TILE_SIZE / 2,
+                    (y >= TILE_SIZE / 2) ? null : false
                 );
                 Queue.add(Pair.of(grid[x][y].getOptionCount(), new Vector2(x, y)));
                 return;
@@ -458,7 +458,7 @@ public class TerrainGenerator {
         }
 
     private boolean checkIfOutOfBounds(int x, int y) {
-        return x >= 0 && x < TERRAIN_SIZE && y >= 0 && y < TERRAIN_SIZE;
+        return x >= 0 && x < TILE_SIZE && y >= 0 && y < TILE_SIZE;
     }
 
     public static class Pair<K, V> {

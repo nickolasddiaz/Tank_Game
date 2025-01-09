@@ -17,15 +17,17 @@ public class EnemyFactorySystem {
     ChunkComponent chunkComponent;
     StatsComponent statsComponent;
     TransformComponent playerComponent;
+    SettingsComponent settings;
 
 
-    public EnemyFactorySystem(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerComponent) {
+    public EnemyFactorySystem(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerComponent, SettingsComponent settings) {
         this.engine = engine;
         this.atlas = atlas;
         this.cameraComponent = cameraComponent;
         this.chunkComponent = chunkComponent;
         this.statsComponent = statsComponent;
         this.playerComponent = playerComponent;
+        this.settings = settings;
     }
 
     public void createTank(int enemyType, Vector2 spawnPosition){ {
@@ -54,11 +56,11 @@ public class EnemyFactorySystem {
             i++;
         }
 
-        EnemyComponent enemyComponent = new EnemyComponent(100f,10f,100f,100f, (float) statsComponent.getStars() /15);
+        EnemyComponent enemyComponent = new EnemyComponent(100f,10f,100f,300f, (float) statsComponent.getStars() /15);
         tank.add(enemyComponent);
 
 
-        engine.addSystem(new EnemySystem(engine, playerComponent));
+        engine.addSystem(new EnemySystem(engine, playerComponent, cameraComponent, settings));
 
         engine.addEntity(tank);
     }

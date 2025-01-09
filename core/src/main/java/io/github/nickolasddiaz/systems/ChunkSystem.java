@@ -87,8 +87,8 @@ public class ChunkSystem extends EntitySystem {
         Vector2 newChunk = new Vector2(chunkX, chunkY);
 
         if (!newChunk.equals(chunk.currentChunk)) {
-            updateLoadedChunks(newChunk);
             chunk.currentChunk.set(newChunk);
+            updateLoadedChunks(newChunk);
         }
 
         cameraComponent.camera.position.set(cameraX, cameraY, 0);
@@ -107,6 +107,8 @@ public class ChunkSystem extends EntitySystem {
 
     private void updateLoadedChunks(Vector2 centerChunk) {
         HashMap<Vector2, TiledMap> newChunks = new HashMap<>();
+        HashMap<Vector2, boolean[][]> tempWalkChunks = new HashMap<>();
+
 
         // First, clear all existing worlds
         chunk.clearWorlds();
@@ -117,16 +119,22 @@ public class ChunkSystem extends EntitySystem {
                 Vector2 chunkPos = new Vector2(x, y);
                 if (!chunk.mapChunks.containsKey(chunkPos)) {
                     TiledMap temp = mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE);
+                    tempWalkChunks.put(chunkPos.cpy(), mapGenerator.getNotWalkableGrid()); // new Vector2(chunkPos) to avoid reference issues
                     spawnCars(temp.getLayers().get("OBJECTS").getObjects());
                     newChunks.put(chunkPos, temp);
                     chunk.cacheObjects(chunkPos, temp);  // Cache objects for new chunk
                 } else {
                     newChunks.put(chunkPos, chunk.mapChunks.get(chunkPos));
+                    tempWalkChunks.put(chunkPos.cpy(), chunk.walkChunks.get(chunkPos).clone());
+                    boolean[][] temp = chunk.walkChunks.get(chunkPos);
                     // re-cache existing chunk's objects
                     chunk.cacheObjects(chunkPos, chunk.mapChunks.get(chunkPos));
                 }
             }
         }
+
+        chunk.walkChunks.clear();
+        chunk.walkChunks.putAll(tempWalkChunks);
 
         chunk.mapChunks.clear();
         chunk.mapChunks.putAll(newChunks);
@@ -140,6 +148,7 @@ public class ChunkSystem extends EntitySystem {
                 TiledMap temp = mapGenerator.generateMap(x * MAP_SIZE, y * MAP_SIZE);
                 spawnCars(temp.getLayers().get("OBJECTS").getObjects());
                 chunk.cacheObjects(chunkPos, temp);
+                chunk.walkChunks.put(chunkPos.cpy(), mapGenerator.getNotWalkableGrid());
                 chunk.mapChunks.put(chunkPos, temp);
             }
         }
