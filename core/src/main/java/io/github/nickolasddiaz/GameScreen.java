@@ -6,10 +6,8 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import io.github.nickolasddiaz.systems.EnemyFactorySystem;
-import io.github.nickolasddiaz.systems.JoystickInputSystem;
-import io.github.nickolasddiaz.systems.PlayerMovementSystem;
-import io.github.nickolasddiaz.systems.StatsRenderSystem;
+import io.github.nickolasddiaz.components.CollisionComponent;
+import io.github.nickolasddiaz.systems.*;
 
 public class GameScreen implements Screen {
     private final yourgame game;
@@ -21,6 +19,14 @@ public class GameScreen implements Screen {
     public GameScreen(final yourgame game) {
         this.game = game;
         game.engine.removeEntity(game.car);
+        CollisionComponent collisionComponent = new CollisionComponent(
+            game.transform.sprite.getWidth(),
+            game.transform.sprite.getHeight(),
+            game.chunk.movingObject
+        );
+
+        game.player.add(collisionComponent);
+        game.engine.addSystem(new CollisionSystem());
         game.engine.addSystem(new PlayerMovementSystem());
         game.engine.addSystem(new StatsRenderSystem(game.batch));
         if(game.settings.IS_MOBILE) {

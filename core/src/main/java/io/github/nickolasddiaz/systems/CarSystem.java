@@ -78,7 +78,6 @@ public class CarSystem extends IteratingSystem {
             boolean right = horizontalObject.contains(transform.position.x + MAP_SIZE *3, transform.position.y); //check if going right is possible
             boolean left =  horizontalObject.contains(transform.position.x - MAP_SIZE *3, transform.position.y); //check if going left is possible
             boolean direction = (right && left)? chunk.random.nextBoolean() : right; //true is right, false is left it is never neither
-            if(!right && !left) {Gdx.app.log("CarSystem", "Car error"); return;}
             car.horizontal = true;
             car.direction = direction;
             car.changeDirection = direction? horizontalObject.x + horizontalObject.width - MAP_SIZE: horizontalObject.x + MAP_SIZE;
@@ -87,7 +86,6 @@ public class CarSystem extends IteratingSystem {
             boolean up = verticalObject.contains(transform.position.x, transform.position.y + MAP_SIZE *3); //check if going up is possible
             boolean down = verticalObject.contains(transform.position.x, transform.position.y - MAP_SIZE *3); //check if going down is possible
             boolean direction = (up && down)? chunk.random.nextBoolean() : up; //true is up, false is down it is never neither
-            if(!up && !down) {Gdx.app.log("CarSystem", "Car error"); return;}
             car.horizontal = false;
             car.direction = direction;
             car.changeDirection = direction? verticalObject.y + verticalObject.height - MAP_SIZE: verticalObject.y +  MAP_SIZE;

@@ -13,6 +13,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
 
+import java.util.Map;
+
 import static io.github.nickolasddiaz.systems.MapGenerator.*;
 
 
@@ -105,39 +107,38 @@ public class EnemySystem extends IteratingSystem {
         shapeRenderer.end();
     }
 
-        private void getNextPath(ChunkComponent chunk, Vector2 enemyPosition, EnemyComponent car) {
-    //        do {
-    //            if (car.pathIndex < car.path.getCount() - 1) {
-    //                car.nextPath.set(car.path.get(++car.pathIndex).position);
-    //            }else{break;}
-    //        } while (chunk.isObjectInRay(chunk.GridToWorldCoordinates(car.nextPath), enemyPosition, chunk.obstaclesFilter));
-            if(car.pathIndex < car.path.getCount() - 1) {
-                car.nextPath.set(car.path.get(++car.pathIndex).position);
-            }
-        car.nextPathWorld = chunk.GridToWorldCoordinates(car.nextPath);
-        car.nextPathRect.set(car.nextPathWorld.x, car.nextPathWorld.y, itemSize, itemSize);
-    }
-
-//    private void getNextPath(ChunkComponent chunk, Vector2 enemyPosition, EnemyComponent enemyComponent) {
-//        do {
-//            if (enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
-//                enemyComponent.nextPath.set(enemyComponent.path.get(++enemyComponent.pathIndex).position);
-//            } else {
-//                break;
+//        private void getNextPath(ChunkComponent chunk, Vector2 enemyPosition, EnemyComponent car) {
+//    //        do {
+//    //            if (car.pathIndex < car.path.getCount() - 1) {
+//    //                car.nextPath.set(car.path.get(++car.pathIndex).position);
+//    //            }else{break;}
+//    //        } while (chunk.isObjectInRay(chunk.GridToWorldCoordinates(car.nextPath), enemyPosition, chunk.obstaclesFilter));
+//            if(car.pathIndex < car.path.getCount() - 1) {
+//                car.nextPath.set(car.path.get(++car.pathIndex).position);
 //            }
-//        } while (chunk.isObjectInRay(chunk.GridToWorldCoordinates(enemyComponent.nextPath), enemyPosition, chunk.obstaclesFilter));
-//        enemyComponent.nextPathWorld = chunk.GridToWorldCoordinates(enemyComponent.nextPath);
-//        enemyComponent.nextPathRect.set(
-//            enemyComponent.nextPathWorld.x,
-//            enemyComponent.nextPathWorld.y,
-//            itemSize,
-//            itemSize
-//        );
+//        car.nextPathWorld = chunk.GridToWorldCoordinates(car.nextPath);
+//        car.nextPathRect.set(car.nextPathWorld.x, car.nextPathWorld.y, itemSize, itemSize);
 //    }
 
-    private void moveEnemy(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
+    private void getNextPath(ChunkComponent chunk, Vector2 enemyPosition, EnemyComponent enemyComponent) {
+        do {
+            if (enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
+                enemyComponent.nextPath.set(enemyComponent.path.get(++enemyComponent.pathIndex).position);
+            } else {
+                break;
+            }
+        } while (chunk.isObjectInRay(chunk.GridToWorldCoordinates(enemyComponent.nextPath), enemyPosition, chunk.obstaclesFilter));
+        enemyComponent.nextPathWorld = chunk.GridToWorldCoordinates(enemyComponent.nextPath);
+        enemyComponent.nextPathRect.set(
+            enemyComponent.nextPathWorld.x,
+            enemyComponent.nextPathWorld.y,
+            itemSize,
+            itemSize
+        );
+    }
 
-            Vector2 direction = new Vector2(enemyComponent.nextPathWorld).sub(transform.position).nor();
+    private void moveEnemy(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
+        Vector2 direction = new Vector2(enemyComponent.nextPathWorld).sub(transform.position).nor();
 
         // Gradual rotation
         float targetAngle = direction.angleDeg();

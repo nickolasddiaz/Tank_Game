@@ -28,6 +28,8 @@ public class yourgame extends Game {
     public Entity car;
     public EnemyFactorySystem enemyFactorySystem;
     public StatsComponent statsComponent;
+    public ChunkComponent chunk;
+    public Entity player;
 
 
     public void create() {
@@ -35,7 +37,7 @@ public class yourgame extends Game {
         batch = new SpriteBatch();
 
         // Create player entity with properly initialized components
-        Entity player = new Entity();
+        player = new Entity();
         transform =new TransformComponent();
 
         player.add(transform);
@@ -43,13 +45,12 @@ public class yourgame extends Game {
         // Add other components
         settings = new SettingsComponent();
         player.add(new PlayerComponent());
-        ChunkComponent chunk = new ChunkComponent();
+        chunk = new ChunkComponent();
         player.add(chunk);
         camera = new CameraComponent();
         player.add(camera);
         statsComponent = new StatsComponent();
         player.add(statsComponent);
-        player.add(new CollisionComponent());
         player.add(new JoystickComponent());
         player.add(settings);
 

@@ -10,4 +10,17 @@ public class TransformComponent implements Component {
     public float rotation = 0f;
     public Sprite sprite;
     public Color color = null;
+    public Vector2 bouncePosition = new Vector2();
+    public Vector2 tempPosition = new Vector2();
+    public boolean collided = false;
+    public float tempRotation = 0f;
+
+    public void updateSprite(Sprite sprite, int width, int height, Vector2 position, Color color, float rotation) {
+        this.sprite = sprite;
+        this.sprite.setSize(width, height);
+        this.position = position;
+        this.color = color;
+        this.rotation = rotation;
+    }
+
 }

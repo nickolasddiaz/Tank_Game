@@ -4,19 +4,18 @@ import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.SortedIteratingSystem;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.CameraComponent;
-import io.github.nickolasddiaz.components.SettingsComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
+
+import static io.github.nickolasddiaz.systems.MapGenerator.TILE_SIZE;
 
 public class SpriteRenderSystem extends SortedIteratingSystem {
     private final SpriteBatch batch;
-    private OrthographicCamera camera;
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<CameraComponent> cameraMapper;
-    ShapeRenderer shapeRenderer;
 
     public SpriteRenderSystem(SpriteBatch batch) {
         super(Family.all(TransformComponent.class).get(),
@@ -41,13 +40,30 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         TransformComponent transform = transformMapper.get(entity);
-        if (transform.sprite != null) {
-            transform.sprite.setPosition(transform.position.x, transform.position.y);
-            transform.sprite.setRotation(transform.rotation -90);
-            transform.sprite.setOriginCenter();
-            if(transform.color != null)
-                transform.sprite.setColor(transform.color);
-            transform.sprite.draw(batch);
+        if (transform.collided) { //bounce back SPEED is itemSize
+            transform.tempPosition = new Vector2(transform.tempPosition.x - TILE_SIZE * (float) Math.cos(Math.toRadians(transform.tempRotation) * deltaTime) ,
+                    transform.tempPosition.y - TILE_SIZE * (float) Math.sin(Math.toRadians(transform.tempRotation)) * deltaTime);
+
+            if(transform.bouncePosition.dst(transform.tempPosition) >= TILE_SIZE){
+                transform.collided = false;
+                transform.position = transform.bouncePosition.cpy();
+                transform.rotation = transform.tempRotation;
+            }
+            modifySprite(transform.tempPosition, transform.tempRotation, transform.color, transform.sprite);
         }
+
+        else if (transform.sprite != null) {
+            modifySprite(transform.position, transform.rotation, transform.color, transform.sprite);
+        }
+    }
+
+
+    private void modifySprite(Vector2 position, float Rotation, Color color, Sprite sprite){
+        sprite.setPosition(position.x, position.y);
+        sprite.setRotation(Rotation -90);
+        sprite.setOriginCenter();
+        if(color != null)
+            sprite.setColor(color);
+        sprite.draw(batch);
     }
 }

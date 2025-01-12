@@ -28,10 +28,6 @@ public class CarFactory {
     }
     public Entity createTank(TransformComponent transform){
         Entity tank = engine.createEntity();
-
-        transform.sprite = new Sprite(atlas.findRegion("tank"));
-        transform.sprite.setSize(TILE_SIZE * TILE_SIZE *4 , TILE_SIZE * TILE_SIZE * 4);
-
         CarComponent carComponent = null;
 
         Rectangle rect = chunkComponent.getObjectIsInsideRect(new Rectangle(0,0,chunkSize,chunkSize), chunkComponent.horizontalFilter);
@@ -43,7 +39,7 @@ public class CarFactory {
         float spawnY = rect.y + ((isRight) ? 0 : rect.height - chunkComponent.carWidth);
         float spawnX = rect.x + chunkComponent.random.nextFloat() * rect.width; // random x between rect.x and rect.x + rect.width
 
-        transform.position.set(spawnX,spawnY);
+        transform.updateSprite(new Sprite(atlas.findRegion("tank")), TILE_SIZE * TILE_SIZE *4, TILE_SIZE * TILE_SIZE *4, new Vector2(spawnX,spawnY), null, 0f);
         carComponent = new CarComponent(isRight, (isRight ? rect.x + rect.width - (float)MAP_SIZE / 2 : rect.x + (float)MAP_SIZE / 2));
         carComponent.horizontal = true;
 
@@ -63,11 +59,7 @@ public class CarFactory {
 
         // Create transform component
         TransformComponent transformComponent = new TransformComponent();
-        transformComponent.sprite = new Sprite(atlas.findRegion("car"));
-        transformComponent.color = carColors[carTypeIndex];
-        transformComponent.position.set(position);
-        transformComponent.rotation = 0f;
-        transformComponent.sprite.setSize(TILE_SIZE * TILE_SIZE , TILE_SIZE * TILE_SIZE *2);
+        transformComponent.updateSprite(new Sprite(atlas.findRegion("car")), TILE_SIZE * TILE_SIZE, TILE_SIZE * TILE_SIZE * 2, position, carColors[carTypeIndex], 0f);
         car.add(transformComponent);
 
         // Create car component

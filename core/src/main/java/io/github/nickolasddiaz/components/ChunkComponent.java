@@ -32,12 +32,15 @@ public class ChunkComponent implements Component {
 
     public final World<RectangleMapObject> tileWorld; // HORIZONTAL, VERTICAL, STRUCTURE, DECORATION
     public final World<PolygonMapObject> oceanWorld; //OCEAN
+    public final World<PolygonMapObject> movingObject; //This is for player, enemy, cars and bullets
+
 
     private final HashMap<Vector2, ArrayList<Item>> chunkItems = new HashMap<>();
 
     public ChunkComponent() {
         tileWorld = new World<>();
         oceanWorld = new World<>();
+        movingObject = new World<>();
     }
 
     public boolean getObjectIsInsideBoolean(Vector2 playerPosition, CollisionFilter filter) {
@@ -52,7 +55,8 @@ public class ChunkComponent implements Component {
         return items.isEmpty() ? null : ((RectangleMapObject) items.get(0).userData).getRectangle();
     }
 
-    public ArrayList<Item> getObjectIsInside(CollisionFilter filter,Vector2 playerPosition) {
+
+    public ArrayList<Item> getObjectsIsInside(CollisionFilter filter,Vector2 playerPosition) {
         ArrayList<Item> items = new ArrayList<>();
         tileWorld.queryPoint(playerPosition.x, playerPosition.y, filter, items);
         return items.isEmpty() ? null : items;
@@ -64,9 +68,9 @@ public class ChunkComponent implements Component {
         return items.isEmpty() ? null : ((RectangleMapObject) items.get(0).userData).getRectangle();
     }
 
-    public ArrayList<Item> getObjectIsInsideRect(CollisionFilter filter,Rectangle playerRect) {
+    public ArrayList<Item> getObjectsIsInsideRect(CollisionFilter filter,Rectangle playerRect, World world) {
         ArrayList<Item> items = new ArrayList<>();
-        tileWorld.queryRect(playerRect.x, playerRect.y, playerRect.width, playerRect.height, filter, items);
+        world.queryRect(playerRect.x, playerRect.y, playerRect.width, playerRect.height, filter, items);
         return items.isEmpty() ? null : items;
     }
 
@@ -152,8 +156,8 @@ public class ChunkComponent implements Component {
 
     // assist with coordinate conversion
     public Vector2 worldToGridCoordinates(Vector2 world) {// moving units of the three chunks into an array of ALL_CHUNK_SIZE or 240 tiles
-        float gridX = (world.x - (currentChunk.x * chunkSize)) / itemSize;
-        float gridY = (world.y - (currentChunk.y * chunkSize)) / itemSize;
+        float gridX = (world.x - (currentChunk.x * chunkSize)) / itemSize + MAP_SIZE;
+        float gridY = (world.y - (currentChunk.y * chunkSize)) / itemSize + MAP_SIZE;
 
         return new Vector2((int) gridX, (int) gridY);
     }
@@ -161,8 +165,8 @@ public class ChunkComponent implements Component {
     // assist with coordinate conversion
     public Vector2 GridToWorldCoordinates(Vector2 grid) { // moving an array of ALL_CHUNK_SIZE or 240 tiles into units of the three chunks
         return new Vector2(
-            currentChunk.x * chunkSize  + (grid.x * itemSize),
-            currentChunk.y * chunkSize  + (grid.y * itemSize)
+            currentChunk.x * chunkSize  + (grid.x * itemSize) - chunkSize,
+            currentChunk.y * chunkSize  + (grid.y * itemSize) - chunkSize
         );
     }
 
@@ -201,6 +205,15 @@ public class ChunkComponent implements Component {
     public CollisionFilter obstaclesFilter = (item, item1) -> {
         if (item.userData instanceof RectangleMapObject) {
             RectangleMapObject rectObj = (RectangleMapObject) item.userData;
+            if ("STRUCTURE".equals(rectObj.getName()) || "DECORATION".equals(rectObj.getName())) {
+                return Response.cross;
+            }
+        }
+        return null;
+    };
+    public CollisionFilter oceanFilter = (item, item1) -> {
+        if (item.userData instanceof PolygonMapObject) {
+            PolygonMapObject rectObj = (PolygonMapObject) item.userData;
             if ("STRUCTURE".equals(rectObj.getName()) || "DECORATION".equals(rectObj.getName())) {
                 return Response.cross;
             }

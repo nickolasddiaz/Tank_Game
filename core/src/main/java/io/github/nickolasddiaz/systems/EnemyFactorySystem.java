@@ -37,12 +37,7 @@ public class EnemyFactorySystem {
         tank.add(cameraComponent);
         tank.add(chunkComponent);
         TransformComponent transformComponent = new TransformComponent();
-        transformComponent.sprite = new Sprite(atlas.findRegion("tank"));
-        //transformComponent.color = carColors[carTypeIndex];
-        transformComponent.position.set(spawnPosition);
-        transformComponent.sprite.setSize(TILE_SIZE * TILE_SIZE *4, TILE_SIZE * TILE_SIZE *4);
-        tank.add(transformComponent);
-
+        Vector2 tempPosition = spawnPosition.cpy();
         float length,radiusAngle;
         int i = 0;
         while (i < 10) {
@@ -50,11 +45,14 @@ public class EnemyFactorySystem {
             length = chunkComponent.random.nextFloat() * chunkSize;
             Vector2 position = new Vector2((float) Math.cos(radiusAngle) * length, (float) Math.sin(radiusAngle) * length);
             if (chunkComponent.getObjectIsInsideBoolean(new Vector2(position.x, position.y), chunkComponent.horizontalFilter)) {
-                transformComponent.position.set(position);
+                tempPosition = position;
                 break;
             }
             i++;
         }
+        //transformComponent.color = carColors[carTypeIndex];
+        transformComponent.updateSprite(new Sprite(atlas.findRegion("tank")), TILE_SIZE * TILE_SIZE *4, TILE_SIZE * TILE_SIZE *4, tempPosition, null, 0f);
+        tank.add(transformComponent);
 
         EnemyComponent enemyComponent = new EnemyComponent(100f,10f,100f,300f, (float) statsComponent.getStars() /15);
         tank.add(enemyComponent);
