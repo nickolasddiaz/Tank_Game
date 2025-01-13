@@ -6,10 +6,12 @@ import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import static io.github.nickolasddiaz.systems.MapGenerator.itemSize;
+
 public class EnemyComponent implements Component {
     public float health = 100;
     public float damage = 10;
-    public float speed = 100;
+    public float speed = itemSize;
     public float enemyType = 0;
     public float lowestDistance = 100;
     public float spinSpeed = speed/16;
@@ -24,7 +26,7 @@ public class EnemyComponent implements Component {
         this.enemyType = enemyType;
         this.health = health * multiplier;
         this.damage = damage * multiplier;
-        this.speed = speed * multiplier *5;
+        this.speed = speed * multiplier * itemSize;
         this.spinSpeed = this.speed/2;
         this.path = new DefaultGraphPath<>();
     }

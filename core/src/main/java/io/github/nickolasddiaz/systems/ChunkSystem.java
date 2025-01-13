@@ -26,7 +26,6 @@ public class ChunkSystem extends EntitySystem {
     private final ComponentMapper<CameraComponent> cameraMapper;
     private final ComponentMapper<SettingsComponent> settingsMapper;
 
-    private final ShapeRenderer shapeRenderer;
     private final OrthogonalTiledMapRenderer chunkRenderer;
     private final MapGenerator mapGenerator;
     private final Matrix4 tempMatrix;
@@ -50,7 +49,6 @@ public class ChunkSystem extends EntitySystem {
         settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
 
         // Initialize rendering tools
-        shapeRenderer = new ShapeRenderer();
         chunkRenderer = new OrthogonalTiledMapRenderer(null, TILE_SIZE);
         mapGenerator = new MapGenerator((int)System.currentTimeMillis());
         tempMatrix = new Matrix4();
@@ -126,7 +124,6 @@ public class ChunkSystem extends EntitySystem {
                 } else {
                     newChunks.put(chunkPos, chunk.mapChunks.get(chunkPos));
                     tempWalkChunks.put(chunkPos.cpy(), chunk.walkChunks.get(chunkPos).clone());
-                    boolean[][] temp = chunk.walkChunks.get(chunkPos);
                     // re-cache existing chunk's objects
                     chunk.cacheObjects(chunkPos, chunk.mapChunks.get(chunkPos));
                 }
@@ -211,23 +208,23 @@ public class ChunkSystem extends EntitySystem {
     }
 
     public void debugRenderChunkBoundaries() { // around 250 to 500 tiledMapObjects total
-        shapeRenderer.setProjectionMatrix(cameraComponent.camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.RED);
+        chunk.shapeRenderer.setProjectionMatrix(cameraComponent.camera.combined);
+        chunk.shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        chunk.shapeRenderer.setColor(Color.RED);
         for (Map.Entry<Vector2, TiledMap> entry : chunk.mapChunks.entrySet()) {
-            shapeRenderer.rect(entry.getKey().x * chunkSize, entry.getKey().y * chunkSize, chunkSize, chunkSize);
+            chunk.shapeRenderer.rect(entry.getKey().x * chunkSize, entry.getKey().y * chunkSize, chunkSize, chunkSize);
 
             entry.getValue().getLayers().get("OBJECTS").getObjects().forEach(obj -> {
                 if (obj instanceof RectangleMapObject) {
                     Rectangle rect = ((RectangleMapObject) obj).getRectangle();
-                    shapeRenderer.rect(rect.x, rect.y, rect.width, rect.height);
+                    chunk.shapeRenderer.rect(rect.x, rect.y, rect.width, rect.height);
                 } else if (obj instanceof PolygonMapObject) {
                     Polygon poly = ((PolygonMapObject) obj).getPolygon();
-                    shapeRenderer.polygon(poly.getTransformedVertices());
+                    chunk.shapeRenderer.polygon(poly.getTransformedVertices());
                 }
             });
         }
-        shapeRenderer.end();
+        chunk.shapeRenderer.end();
     }
 
     private boolean isChunkVisible(float offsetX, float offsetY) {

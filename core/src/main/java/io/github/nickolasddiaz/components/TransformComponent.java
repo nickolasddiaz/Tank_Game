@@ -14,6 +14,8 @@ public class TransformComponent implements Component {
     public Vector2 tempPosition = new Vector2();
     public boolean collided = false;
     public float tempRotation = 0f;
+    public boolean slowDown = false;
+    public Vector2 movement = new Vector2();
 
     public void updateSprite(Sprite sprite, int width, int height, Vector2 position, Color color, float rotation) {
         this.sprite = sprite;

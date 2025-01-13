@@ -13,8 +13,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
 
-import java.util.Map;
-
 import static io.github.nickolasddiaz.systems.MapGenerator.*;
 
 
@@ -154,8 +152,7 @@ public class EnemySystem extends IteratingSystem {
 
         // Movement
         float angleRad = (float) Math.toRadians(transform.rotation);
-        Vector2 movement = new Vector2((float) Math.cos(angleRad), (float) Math.sin(angleRad)).scl(enemyComponent.speed * deltaTime);
-        transform.position.add(movement);
+        transform.movement = new Vector2((float) Math.cos(angleRad), (float) Math.sin(angleRad)).scl(enemyComponent.speed * deltaTime);
     }
 
 

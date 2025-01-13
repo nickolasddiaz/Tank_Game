@@ -185,17 +185,13 @@ public class MapGenerator {
                         decorationObject.setName("DECORATION");
                         objectLayer.add(decorationObject);
                         notWalkableGrid[x][y] = true;
-                        if (x + 1 < MAP_SIZE && y + 1 < MAP_SIZE) notWalkableGrid[x + 1][y + 1] = true;
-                        if (x - 1 >= 0 && y - 1 >= 0) notWalkableGrid[x - 1][y - 1] = true;
-                        if (x + 1 < MAP_SIZE && y - 1 >= 0) notWalkableGrid[x + 1][y - 1] = true;
-                        if (x - 1 >= 0 && y + 1 < MAP_SIZE) notWalkableGrid[x - 1][y + 1] = true;
                     }
                     if (terrainNumber == TileType.PLAINS_BUILDING9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING1_9.ordinal() || terrainNumber == TileType.PLAINS_BUILDING2_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING1_9.ordinal() || terrainNumber == TileType.DESSERT_BUILDING2_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING1_9.ordinal() || terrainNumber == TileType.TUNDRA_BUILDING2_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING1_9.ordinal() || terrainNumber == TileType.WILD_WEST_BUILDING2_9.ordinal()){
                         MapObject structureObject = new RectangleMapObject(x * itemSize + xOffset, y * itemSize + yOffset, 4 * itemSize, 3 * itemSize);
                         structureObject.setName("STRUCTURE");
                         objectLayer.add(structureObject);
-                        for (int i = x; i < x + 4 && i < MAP_SIZE; i++) {
-                            for (int j = y; j < y + 3 && j < MAP_SIZE; j++) {
+                        for (int i = x; i < x + 4; i++) {
+                            for (int j = y; j < y + 3; j++) {
                                 notWalkableGrid[i][j] = true;
                             }
                         }

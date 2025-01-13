@@ -47,12 +47,14 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
             if(transform.bouncePosition.dst(transform.tempPosition) >= TILE_SIZE){
                 transform.collided = false;
                 transform.position = transform.bouncePosition.cpy();
-                transform.rotation = transform.tempRotation;
+                transform.rotation = transform.tempRotation -180f;
             }
             modifySprite(transform.tempPosition, transform.tempRotation, transform.color, transform.sprite);
         }
 
         else if (transform.sprite != null) {
+            transform.position.add((transform.slowDown)? transform.movement.scl(.3f) :transform.movement);
+            transform.movement = new Vector2(0, 0);
             modifySprite(transform.position, transform.rotation, transform.color, transform.sprite);
         }
     }
@@ -60,7 +62,7 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
 
     private void modifySprite(Vector2 position, float Rotation, Color color, Sprite sprite){
         sprite.setPosition(position.x, position.y);
-        sprite.setRotation(Rotation -90);
+        sprite.setRotation(Rotation);
         sprite.setOriginCenter();
         if(color != null)
             sprite.setColor(color);

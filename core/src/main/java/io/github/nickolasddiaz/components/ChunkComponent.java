@@ -1,11 +1,14 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.dongbat.jbump.CollisionFilter;
@@ -22,6 +25,7 @@ import static io.github.nickolasddiaz.systems.MapGenerator.*;
 // ALL_CHUNK_SIZE how many tiles in a row of three chunks or the entire load length, 240 tiles = 3 * MAP_SIZE
 
 public class ChunkComponent implements Component {
+    public ShapeRenderer shapeRenderer = new ShapeRenderer();
     public HashMap<Vector2, TiledMap> mapChunks = new HashMap<>();
     public HashMap<Vector2, boolean[][]> walkChunks = new HashMap<>();
     public Vector2 currentChunk = new Vector2(0, 0);
@@ -220,6 +224,26 @@ public class ChunkComponent implements Component {
         }
         return null;
     };
+
+    public float getAngleFromPoint(Polygon polygon, Rectangle rect){
+        Vector2 polygonCenter = new Vector2(polygon.getX() + polygon.getOriginX(), polygon.getY() + polygon.getOriginY());
+        Vector2 point = new Vector2(rect.x + rect.width / 2, rect.y + rect.height / 2);
+        return getAngleFromPoint(polygonCenter, point);
+    }
+
+    public float getAngleFromPoint(Vector2 polygonCenter, Vector2 point) {
+        Vector2 toPoint = new Vector2(point).sub(polygonCenter); // Create vector from center to point
+        return MathUtils.atan2(toPoint.y, toPoint.x) * MathUtils.radiansToDegrees;  // Calculate angle in degrees
+    }
+
+    public Polygon rectangletoPolygon(Rectangle rect){
+        return  new Polygon(new float[]{
+            rect.x, rect.y,
+            rect.x + rect.width, rect.y,
+            rect.x + rect.width, rect.y + rect.height,
+            rect.x, rect.y + rect.height
+        });
+    }
 
 
 }

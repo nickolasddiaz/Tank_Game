@@ -26,7 +26,7 @@ public class yourgame extends Game {
     public CameraComponent camera;
     public TransformComponent transform;
     public Entity car;
-    public EnemyFactorySystem enemyFactorySystem;
+    public EnemyFactory enemyFactory;
     public StatsComponent statsComponent;
     public ChunkComponent chunk;
     public Entity player;
@@ -67,7 +67,7 @@ public class yourgame extends Game {
 
         engine.addSystem(new CarSystem(engine));
         engine.addSystem(new SpriteRenderSystem(batch));
-        enemyFactorySystem = new EnemyFactorySystem(engine, new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas")), camera, chunk, statsComponent, transform, settings);
+        enemyFactory = new EnemyFactory(engine, new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas")), camera, chunk, statsComponent, transform, settings);
 
     }
 

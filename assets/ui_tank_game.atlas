@@ -6,147 +6,147 @@ filter: Linear, Linear
 repeat: none
 U811sIwHbPWRhkkOdY3XvMr5.ttf_0
   rotate: false
-  xy: 387, 733
+  xy: 387, 719
   size: 256, 128
   orig: 256, 128
   offset: 0, 0
   index: -1
 bottom_left_heart
   rotate: false
-  xy: 91, 343
+  xy: 325, 513
   size: 24, 27
   orig: 24, 27
   offset: 0, 0
   index: -1
 bottom_right_heart
   rotate: false
-  xy: 325, 527
+  xy: 157, 414
   size: 24, 27
   orig: 24, 27
   offset: 0, 0
   index: -1
 car
   rotate: false
-  xy: 837, 802
-  size: 26, 59
-  orig: 26, 59
+  xy: 645, 731
+  size: 60, 26
+  orig: 60, 26
   offset: 0, 0
   index: -1
 check_mark
   rotate: false
-  xy: 259, 490
+  xy: 259, 476
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 handle
   rotate: false
-  xy: 91, 372
+  xy: 1, 268
   size: 83, 83
   orig: 83, 83
   offset: 0, 0
   index: -1
 handle_background
   rotate: false
-  xy: 259, 556
+  xy: 259, 542
   size: 175, 175
   orig: 175, 175
   offset: 0, 0
   index: -1
 home
   rotate: false
-  xy: 1, 367
+  xy: 645, 759
   size: 88, 88
   orig: 88, 88
   offset: 0, 0
   index: -1
 left_star
   rotate: false
-  xy: 502, 601
+  xy: 436, 555
   size: 21, 40
   orig: 21, 40
   offset: 0, 0
   index: -1
 ouLiJS4iu4ylyojldWZspG21.ttf_0
   rotate: false
-  xy: 1, 475
+  xy: 1, 461
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 pause
   rotate: false
-  xy: 436, 643
+  xy: 1, 353
   size: 88, 88
   orig: 88, 88
   offset: 0, 0
   index: -1
 play
   rotate: false
-  xy: 747, 773
+  xy: 436, 629
   size: 88, 88
   orig: 88, 88
   offset: 0, 0
   index: -1
 redo
   rotate: false
-  xy: 1, 277
+  xy: 735, 759
   size: 88, 88
   orig: 88, 88
   offset: 0, 0
   index: -1
 right_star
   rotate: false
-  xy: 526, 657
+  xy: 526, 643
   size: 20, 40
   orig: 20, 40
   offset: 0, 0
   index: -1
 silver_rectangle
   rotate: false
-  xy: 1, 733
+  xy: 1, 719
   size: 384, 128
   orig: 384, 128
   offset: 0, 0
   index: -1
 slide_dot
   rotate: false
-  xy: 526, 699
+  xy: 526, 685
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 slider
   rotate: false
-  xy: 1, 457
+  xy: 1, 443
   size: 192, 16
   orig: 192, 16
   offset: 0, 0
   index: -1
 tank
   rotate: false
-  xy: 645, 761
-  size: 100, 100
-  orig: 100, 100
+  xy: 436, 597
+  size: 50, 30
+  orig: 50, 30
   offset: 0, 0
   index: -1
 top_left_heart
   rotate: false
-  xy: 645, 738
+  xy: 825, 826
   size: 24, 21
   orig: 24, 21
   offset: 0, 0
   index: -1
 top_right_heart
   rotate: false
-  xy: 1, 254
+  xy: 1, 245
   size: 24, 21
   orig: 24, 21
   offset: 0, 0
   index: -1
 unchecked_mark
   rotate: false
-  xy: 436, 577
+  xy: 91, 377
   size: 64, 64
   orig: 64, 64
   offset: 0, 0

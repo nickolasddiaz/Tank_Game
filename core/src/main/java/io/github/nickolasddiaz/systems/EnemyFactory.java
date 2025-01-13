@@ -7,10 +7,9 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.TILE_SIZE;
-import static io.github.nickolasddiaz.systems.MapGenerator.chunkSize;
+import static io.github.nickolasddiaz.systems.MapGenerator.*;
 
-public class EnemyFactorySystem {
+public class EnemyFactory {
     private final Engine engine;
     private final TextureAtlas atlas; // Assuming you're using a texture atlas
     CameraComponent cameraComponent;
@@ -20,7 +19,7 @@ public class EnemyFactorySystem {
     SettingsComponent settings;
 
 
-    public EnemyFactorySystem(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerComponent, SettingsComponent settings) {
+    public EnemyFactory(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerComponent, SettingsComponent settings) {
         this.engine = engine;
         this.atlas = atlas;
         this.cameraComponent = cameraComponent;
@@ -51,11 +50,16 @@ public class EnemyFactorySystem {
             i++;
         }
         //transformComponent.color = carColors[carTypeIndex];
-        transformComponent.updateSprite(new Sprite(atlas.findRegion("tank")), TILE_SIZE * TILE_SIZE *4, TILE_SIZE * TILE_SIZE *4, tempPosition, null, 0f);
+        //enemy sprite is 30x50 now is 76x128
+        transformComponent.updateSprite(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f) , tempPosition, null, 0f);
         tank.add(transformComponent);
 
-        EnemyComponent enemyComponent = new EnemyComponent(100f,10f,100f,300f, (float) statsComponent.getStars() /15);
+        EnemyComponent enemyComponent = new EnemyComponent(100f,10f,100f,10f, (float) statsComponent.getStars() /15);
         tank.add(enemyComponent);
+
+        tank.add(settings);
+        tank.add(new CollisionComponent(transformComponent.sprite.getX(), transformComponent.sprite.getY(), transformComponent.sprite.getWidth(), transformComponent.sprite.getHeight(), transformComponent.sprite.getBoundingRectangle(), chunkComponent.movingObject));
+        engine.addSystem(new CollisionSystem());
 
 
         engine.addSystem(new EnemySystem(engine, playerComponent, cameraComponent, settings));

@@ -65,14 +65,14 @@ public class PlayerMovementSystem extends IteratingSystem {
 
                     // Apply movement based on rotation
                     float angleRad = (float) Math.toRadians(transform.rotation);
-                    transform.position.x += MathUtils.cos(angleRad) * movement.len();
-                    transform.position.y += MathUtils.sin(angleRad) * movement.len();
+                    transform.movement.x = MathUtils.cos(angleRad) * movement.len();
+                    transform.movement.y = MathUtils.sin(angleRad) * movement.len();
                 }
             }
         } else {
             // Desktop controls
-            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) direction.x += 1f;
-            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) direction.x -= 1f;
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) direction.x -= 1f;
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) direction.x += 1f;
             if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W)) direction.y += 1f;
             if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) direction.y -= 1f;
 
@@ -84,8 +84,8 @@ public class PlayerMovementSystem extends IteratingSystem {
 
 
                 float angleRad = (float) Math.toRadians(transform.rotation);
-                transform.position.x += MathUtils.cos(angleRad) * movement.y;
-                transform.position.y += MathUtils.sin(angleRad) * movement.y;
+                transform.movement.x = MathUtils.cos(angleRad) * movement.y;
+                transform.movement.y = MathUtils.sin(angleRad) * movement.y;
             }
         }
     }

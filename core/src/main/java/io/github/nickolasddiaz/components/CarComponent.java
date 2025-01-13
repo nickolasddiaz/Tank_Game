@@ -3,10 +3,10 @@ package io.github.nickolasddiaz.components;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.utils.Pool;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.MAP_SIZE;
+import static io.github.nickolasddiaz.systems.MapGenerator.itemSize;
 
 public class CarComponent implements Component, Pool.Poolable {
-    public float speed = MAP_SIZE; // 80
+    public float speed = itemSize; // 64
     public boolean direction = false; // up/right or down/left
     public boolean horizontal = false; // horizontal/vertical
     public float changeDirection = 0;
