@@ -137,7 +137,7 @@ public class MapGenerator {
 
     //functions below to convert int[][] biomeMap and terrainMap to a TiledMap
     public boolean[][] getNotWalkableGrid() {
-        return notWalkableGrid.clone();
+        return notWalkableGrid;
     }
 
     private TiledMap convertToTiledMap(int[][] biomeMap, Integer[][] terrainMap, int xOffset, int yOffset) {

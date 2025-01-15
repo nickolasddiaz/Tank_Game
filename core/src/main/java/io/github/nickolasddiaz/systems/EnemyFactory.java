@@ -27,6 +27,8 @@ public class EnemyFactory {
         this.statsComponent = statsComponent;
         this.playerComponent = playerComponent;
         this.settings = settings;
+        engine.addSystem(new CollisionSystem());
+        engine.addSystem(new EnemySystem(engine, playerComponent, cameraComponent, settings));
     }
 
     public void createTank(int enemyType, Vector2 spawnPosition){ {
@@ -35,7 +37,7 @@ public class EnemyFactory {
         tank.add(statsComponent);
         tank.add(cameraComponent);
         tank.add(chunkComponent);
-        TransformComponent transformComponent = new TransformComponent();
+        //enemy sprite is 30x50 now is 76x128
         Vector2 tempPosition = spawnPosition.cpy();
         float length,radiusAngle;
         int i = 0;
@@ -50,19 +52,14 @@ public class EnemyFactory {
             i++;
         }
         //transformComponent.color = carColors[carTypeIndex];
-        //enemy sprite is 30x50 now is 76x128
-        transformComponent.updateSprite(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f) , tempPosition, null, 0f);
+        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "ENEMY", chunkComponent.world, tempPosition, 0f);
+
         tank.add(transformComponent);
 
         EnemyComponent enemyComponent = new EnemyComponent(100f,10f,100f,10f, (float) statsComponent.getStars() /15);
         tank.add(enemyComponent);
 
         tank.add(settings);
-        tank.add(new CollisionComponent(transformComponent.sprite.getX(), transformComponent.sprite.getY(), transformComponent.sprite.getWidth(), transformComponent.sprite.getHeight(), transformComponent.sprite.getBoundingRectangle(), chunkComponent.movingObject));
-        engine.addSystem(new CollisionSystem());
-
-
-        engine.addSystem(new EnemySystem(engine, playerComponent, cameraComponent, settings));
 
         engine.addEntity(tank);
     }

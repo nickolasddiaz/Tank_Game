@@ -3,14 +3,10 @@ package io.github.nickolasddiaz;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import io.github.nickolasddiaz.components.CollisionComponent;
 import io.github.nickolasddiaz.systems.*;
-
-import static io.github.nickolasddiaz.systems.MapGenerator.itemSize;
 
 public class GameScreen implements Screen {
     private final yourgame game;
@@ -22,17 +18,7 @@ public class GameScreen implements Screen {
     public GameScreen(final yourgame game) {
         this.game = game;
         game.engine.removeEntity(game.car);
-        CollisionComponent collisionComponent = new CollisionComponent(
-            game.transform.sprite.getX(),
-            game.transform.sprite.getY(),
-            game.transform.sprite.getWidth(),
-            game.transform.sprite.getHeight(),
-            game.transform.sprite.getBoundingRectangle(),
-            game.chunk.movingObject
-        );
 
-
-        game.player.add(collisionComponent);
         game.engine.addSystem(new CollisionSystem());
         game.engine.addSystem(new PlayerMovementSystem());
         game.engine.addSystem(new StatsRenderSystem(game.batch));

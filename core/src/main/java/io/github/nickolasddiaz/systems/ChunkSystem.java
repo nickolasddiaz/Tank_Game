@@ -123,7 +123,7 @@ public class ChunkSystem extends EntitySystem {
                     chunk.cacheObjects(chunkPos, temp);  // Cache objects for new chunk
                 } else {
                     newChunks.put(chunkPos, chunk.mapChunks.get(chunkPos));
-                    tempWalkChunks.put(chunkPos.cpy(), chunk.walkChunks.get(chunkPos).clone());
+                    tempWalkChunks.put(chunkPos.cpy(), chunk.walkChunks.get(chunkPos));
                     // re-cache existing chunk's objects
                     chunk.cacheObjects(chunkPos, chunk.mapChunks.get(chunkPos));
                 }

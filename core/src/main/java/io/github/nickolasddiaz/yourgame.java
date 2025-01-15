@@ -6,13 +6,16 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.systems.*;
 
 import static io.github.nickolasddiaz.systems.MapGenerator.TILE_SIZE;
+import static io.github.nickolasddiaz.systems.MapGenerator.itemSize;
 
 
 public class yourgame extends Game {
@@ -29,6 +32,7 @@ public class yourgame extends Game {
     public EnemyFactory enemyFactory;
     public StatsComponent statsComponent;
     public ChunkComponent chunk;
+    public TextureAtlas atlas;
     public Entity player;
 
 
@@ -38,15 +42,16 @@ public class yourgame extends Game {
 
         // Create player entity with properly initialized components
         player = new Entity();
-        transform =new TransformComponent();
-
-        player.add(transform);
+        this.atlas = new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas"));
+        //tank sprite is 30x50 now is 76x128
 
         // Add other components
         settings = new SettingsComponent();
         player.add(new PlayerComponent());
         chunk = new ChunkComponent();
         player.add(chunk);
+        transform =new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "PLAYER", chunk.world, new Vector2(0f,0f), 0f);
+        player.add(transform);
         camera = new CameraComponent();
         player.add(camera);
         statsComponent = new StatsComponent();
@@ -56,8 +61,7 @@ public class yourgame extends Game {
 
         // Add entity to engine
         engine.addEntity(player);
-
-        carFactory = new CarFactory(engine, new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas")), camera, chunk);
+        carFactory = new CarFactory(engine, atlas, camera, chunk);
         engine.addSystem(new ChunkSystem(carFactory, transform));
         car = carFactory.createTank(transform);
 
@@ -66,7 +70,7 @@ public class yourgame extends Game {
         this.setScreen(new MainMenuScreen(this));
 
         engine.addSystem(new CarSystem(engine));
-        engine.addSystem(new SpriteRenderSystem(batch));
+        engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer));
         enemyFactory = new EnemyFactory(engine, new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas")), camera, chunk, statsComponent, transform, settings);
 
     }
