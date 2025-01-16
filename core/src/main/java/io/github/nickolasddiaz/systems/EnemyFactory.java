@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.*;
+import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class EnemyFactory {
     private final Engine engine;
@@ -15,23 +15,24 @@ public class EnemyFactory {
     CameraComponent cameraComponent;
     ChunkComponent chunkComponent;
     StatsComponent statsComponent;
-    TransformComponent playerComponent;
     SettingsComponent settings;
+    PlayerComponent playerComponent;
 
 
-    public EnemyFactory(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerComponent, SettingsComponent settings) {
+    public EnemyFactory(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerTransformComponent, SettingsComponent settings, PlayerComponent playerComponent) {
         this.engine = engine;
         this.atlas = atlas;
         this.cameraComponent = cameraComponent;
         this.chunkComponent = chunkComponent;
         this.statsComponent = statsComponent;
-        this.playerComponent = playerComponent;
         this.settings = settings;
+        this.playerComponent = playerComponent;
         engine.addSystem(new CollisionSystem());
-        engine.addSystem(new EnemySystem(engine, playerComponent, cameraComponent, settings));
+        engine.addSystem(new EnemySystem(engine, playerTransformComponent, cameraComponent, settings));
     }
 
     public void createTank(int enemyType, Vector2 spawnPosition){ {
+        playerComponent.enemyCount++;
         Entity tank = engine.createEntity();
 
         tank.add(statsComponent);
@@ -58,6 +59,8 @@ public class EnemyFactory {
 
         EnemyComponent enemyComponent = new EnemyComponent(100f,10f,100f,10f, (float) statsComponent.getStars() /15);
         tank.add(enemyComponent);
+        transformComponent.turretComponent(new Sprite(atlas.findRegion("turret")), new Vector2(itemSize,0), itemSize,itemSize);
+
 
         tank.add(settings);
 

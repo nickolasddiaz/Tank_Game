@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.TILE_SIZE;
+import static io.github.nickolasddiaz.utils.MapGenerator.TILE_SIZE;
 
 public class CameraComponent implements Component {
     public OrthographicCamera camera;

@@ -14,12 +14,13 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
+import io.github.nickolasddiaz.utils.MapGenerator;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.*;
-import static io.github.nickolasddiaz.systems.MapGenerator.MAP_SIZE;
+import static io.github.nickolasddiaz.utils.MapGenerator.*;
+import static io.github.nickolasddiaz.utils.MapGenerator.MAP_SIZE;
 
 public class ChunkSystem extends EntitySystem {
     private final ComponentMapper<ChunkComponent> chunkMapper;

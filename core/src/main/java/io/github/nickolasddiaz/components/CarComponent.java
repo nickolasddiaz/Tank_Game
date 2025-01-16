@@ -3,7 +3,7 @@ package io.github.nickolasddiaz.components;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.utils.Pool;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.itemSize;
+import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class CarComponent implements Component, Pool.Poolable {
     public float speed = itemSize; // 64

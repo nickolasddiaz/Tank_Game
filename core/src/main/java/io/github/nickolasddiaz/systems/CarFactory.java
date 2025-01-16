@@ -9,7 +9,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.*;
+import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class CarFactory {
     private final Engine engine;

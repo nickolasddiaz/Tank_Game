@@ -12,7 +12,7 @@ import io.github.nickolasddiaz.components.CameraComponent;
 import io.github.nickolasddiaz.components.SettingsComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.TILE_SIZE;
+import static io.github.nickolasddiaz.utils.MapGenerator.TILE_SIZE;
 
 public class SpriteRenderSystem extends SortedIteratingSystem {
     private final SpriteBatch batch;
@@ -43,6 +43,10 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         TransformComponent transform = transformMapper.get(entity);
+        if(transform.isDead){
+            return;
+        }
+
         if(settings.DEBUG) {
             shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
             shapeRenderer.setColor(Color.BLUE);
@@ -67,6 +71,9 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
             transform.movement = new Vector2(0, 0);
             drawSprite(transform.position, transform.rotation, transform.color, transform.sprite);
         }
+        if(transform.hasTurret)
+            drawTurret(transform);
+
         transform.updateBounds();
     }
 
@@ -78,5 +85,29 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
         if(color != null)
             sprite.setColor(color);
         sprite.draw(batch);
+    }
+    private void drawTurret(TransformComponent transform){
+        // Calculate the turret's position based on the base entity's position and rotation
+        Vector2 turretPosition = new Vector2();
+        float baseRotationRad = (float) Math.toRadians(transform.rotation);
+
+        turretPosition.x = transform.position.x +
+            (transform.turretOffSetPosition.x * (float) Math.cos(baseRotationRad) -
+                transform.turretOffSetPosition.y * (float) Math.sin(baseRotationRad));
+        turretPosition.y = transform.position.y +
+            (transform.turretOffSetPosition.x * (float) Math.sin(baseRotationRad) +
+                transform.turretOffSetPosition.y * (float) Math.cos(baseRotationRad));
+
+        // Draw the turret sprite
+        transform.turretSprite.setPosition(turretPosition.x, turretPosition.y);
+        transform.turretSprite.setRotation(transform.turretRotation);
+        transform.turretSprite.setOriginCenter();
+
+        // If the base has a color, apply it to the turret as well
+        if (transform.color != null) {
+            transform.turretSprite.setColor(transform.color);
+        }
+
+        transform.turretSprite.draw(batch);
     }
 }

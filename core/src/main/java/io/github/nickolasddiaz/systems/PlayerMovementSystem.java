@@ -5,21 +5,31 @@ import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.dongbat.jbump.Item;
 import io.github.nickolasddiaz.components.*;
+import io.github.nickolasddiaz.utils.CollisionObject;
+
+import java.util.ArrayList;
+
+import static io.github.nickolasddiaz.utils.MapGenerator.chunkSize;
 
 public class PlayerMovementSystem extends IteratingSystem {
     private final ComponentMapper<PlayerComponent> playerMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<JoystickComponent> joystickMapper;
-    private final ComponentMapper<SettingsComponent> settingsMapper;
+    private final ChunkComponent chunk;
+    private final SettingsComponent settings;
+    private CollisionObject lockedTarget;
 
-    public PlayerMovementSystem() {
-        super(Family.all(PlayerComponent.class, TransformComponent.class, JoystickComponent.class, SettingsComponent.class).get());
+    public PlayerMovementSystem(SettingsComponent settings, ChunkComponent chunk) {
+        super(Family.all(PlayerComponent.class, TransformComponent.class, JoystickComponent.class).get());
         playerMapper = ComponentMapper.getFor(PlayerComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         joystickMapper = ComponentMapper.getFor(JoystickComponent.class);
-        settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
+        this.settings = settings;
+        this.chunk = chunk;
     }
 
     @Override
@@ -27,12 +37,35 @@ public class PlayerMovementSystem extends IteratingSystem {
         PlayerComponent player = playerMapper.get(entity);
         TransformComponent transform = transformMapper.get(entity);
         JoystickComponent joystick = joystickMapper.get(entity);
-        SettingsComponent settings = settingsMapper.get(entity);
 
         Vector2 direction = new Vector2(0, 0);
         float speedMultiplier = 1f;
 
+        if(!settings.AUTO_FIRE)
+            // Reverse Y to account for the coordinate system
+            transform.turretRotation = (float) Math.toDegrees(Math.atan2(Gdx.graphics.getHeight() / 2f - Gdx.input.getY(), Gdx.input.getX() - Gdx.graphics.getWidth() / 2f));
+        else{
+            if (lockedTarget == null && player.enemyCount > 0) {
+                ArrayList<Item> enemies = chunk.getObjectsIsInsideRect(chunk.enemyFilter, new Rectangle(transform.position.x - chunkSize / 2f, transform.position.y - chunkSize / 2f, chunkSize, chunkSize), chunk.world);
 
+                if (enemies != null && !enemies.isEmpty()) {
+                    float minDistance = Float.MAX_VALUE;
+                    for (Item enemy : enemies) {
+                        CollisionObject enemyObject = (CollisionObject) enemy.userData;
+                        float distance = transform.position.dst(enemyObject.getPosition());
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            lockedTarget = enemyObject;
+                        }
+                    }
+                }
+            }
+            else if(lockedTarget != null){
+                Vector2 targetPosition = lockedTarget.getPosition();
+                transform.turretRotation = (float) Math.toDegrees(Math.atan2(targetPosition.y - transform.position.y, targetPosition.x - transform.position.x));
+            }
+
+        }
         if (settings.IS_MOBILE && Gdx.input.isTouched()) {
             Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
 

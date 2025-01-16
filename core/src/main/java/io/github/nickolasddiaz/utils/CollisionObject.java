@@ -1,4 +1,4 @@
-package io.github.nickolasddiaz.components;
+package io.github.nickolasddiaz.utils;
 
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
@@ -52,9 +52,6 @@ public class CollisionObject {
             rect.x, rect.y + rect.height
         });
     }
-    public Polygon getNonEncasedPolygon(){
-        return polygonObject;
-    }
 
     public void updatePosition(Vector2 position) {
         if (isPolygon) {
@@ -68,5 +65,12 @@ public class CollisionObject {
         if (isPolygon) {
             polygonObject.setRotation(rotation);
         }
+    }
+
+    public Vector2 getPosition() {
+        if (isPolygon) {
+            return new Vector2(polygonObject.getX(), polygonObject.getY());
+        }
+        return new Vector2(rectangleObject.x, rectangleObject.y);
     }
 }

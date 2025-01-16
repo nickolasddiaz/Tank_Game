@@ -6,14 +6,14 @@ import com.badlogic.gdx.math.*;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
 import io.github.nickolasddiaz.components.ChunkComponent;
-import io.github.nickolasddiaz.components.CollisionObject;
+import io.github.nickolasddiaz.utils.CollisionObject;
 import io.github.nickolasddiaz.components.SettingsComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 
 import java.util.ArrayList;
 import java.util.Objects;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.itemSize;
+import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class CollisionSystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
@@ -45,8 +45,8 @@ public class CollisionSystem extends IteratingSystem {
                 return;
             }
             if(Objects.equals(object.getObjectType(), "OCEAN")){
-                if (Intersector.overlapConvexPolygons(object.getNonEncasedPolygon(), transform.item.userData.getPolygon())) {
-                    float collisionAngle = chunk.getAngleFromPoint(object.getNonEncasedPolygon(), transform.item.userData.getBounds());
+                if (Intersector.overlapConvexPolygons(object.getPolygon(), transform.item.userData.getPolygon())) {
+                    float collisionAngle = chunk.getAngleFromPoint(object.getPolygon(), transform.item.userData.getBounds());
                     setCollided(transform, collisionAngle);
                     return;
                 }
@@ -54,7 +54,7 @@ public class CollisionSystem extends IteratingSystem {
 
             if(Objects.equals(object.getObjectType(), "DECORATION")){
                 transform.slowDown = true;
-            }else if(Objects.equals(object.getObjectType(), "ENEMY") || Objects.equals(object.getObjectType(), "PLAYER")|| Objects.equals(object.getObjectType(), "STRUCTURE")){
+            }else if(Objects.equals(object.getObjectType(), "STRUCTURE")) {//|| Objects.equals(object.getObjectType(), "PLAYER")|| Objects.equals(object.getObjectType(), "ENEMY")){
                 float collisionAngle = chunk.getAngleFromPoint(transform.item.userData.getPolygon(), object.getBounds());
                 setCollided(transform, collisionAngle);
             }

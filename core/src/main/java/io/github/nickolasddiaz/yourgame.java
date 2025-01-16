@@ -14,14 +14,13 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.systems.*;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.TILE_SIZE;
-import static io.github.nickolasddiaz.systems.MapGenerator.itemSize;
+import static io.github.nickolasddiaz.utils.MapGenerator.TILE_SIZE;
+import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 
 public class yourgame extends Game {
 
     public SpriteBatch batch;
-    public BitmapFont font;
     public ScreenViewport viewport;
     public Engine engine;
     public SettingsComponent settings;
@@ -46,10 +45,12 @@ public class yourgame extends Game {
         //tank sprite is 30x50 now is 76x128
 
         // Add other components
+        PlayerComponent playerComponent = new PlayerComponent();
         settings = new SettingsComponent();
-        player.add(new PlayerComponent());
+        player.add(playerComponent);
         chunk = new ChunkComponent();
         player.add(chunk);
+        //tank size is 30 width and 50 height
         transform =new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "PLAYER", chunk.world, new Vector2(0f,0f), 0f);
         player.add(transform);
         camera = new CameraComponent();
@@ -71,7 +72,13 @@ public class yourgame extends Game {
 
         engine.addSystem(new CarSystem(engine));
         engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer));
-        enemyFactory = new EnemyFactory(engine, new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas")), camera, chunk, statsComponent, transform, settings);
+        enemyFactory = new EnemyFactory(engine, atlas, camera, chunk, statsComponent, transform, settings,playerComponent);
+        transform.turretComponent(
+            new Sprite(atlas.findRegion("turret")),
+            new Vector2(itemSize, itemSize * 0.6f),  // Position at center of tank
+            itemSize,                                // turret width
+            itemSize                                 // turret height
+        ); //62 width 20 height
 
     }
 

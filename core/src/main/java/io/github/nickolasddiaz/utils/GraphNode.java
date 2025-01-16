@@ -1,4 +1,4 @@
-package io.github.nickolasddiaz.components;
+package io.github.nickolasddiaz.utils;
 
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.math.Vector2;

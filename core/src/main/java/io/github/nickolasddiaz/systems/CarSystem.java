@@ -10,8 +10,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.chunkSize; // unit of one chunk length
-import static io.github.nickolasddiaz.systems.MapGenerator.MAP_SIZE; // unit of one tile length
+import static io.github.nickolasddiaz.utils.MapGenerator.chunkSize; // unit of one chunk length
+import static io.github.nickolasddiaz.utils.MapGenerator.MAP_SIZE; // unit of one tile length
 
 public class CarSystem extends IteratingSystem {
     private final ComponentMapper<CarComponent> CarMapper;

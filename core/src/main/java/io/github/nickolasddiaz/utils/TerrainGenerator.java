@@ -1,10 +1,10 @@
-package io.github.nickolasddiaz.systems;
+package io.github.nickolasddiaz.utils;
 
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.*;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.*;
+import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class TerrainGenerator {
     class Cell {

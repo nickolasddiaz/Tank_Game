@@ -15,9 +15,12 @@ import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
 import com.dongbat.jbump.Response;
 import com.dongbat.jbump.World;
+import io.github.nickolasddiaz.utils.CollisionObject;
+import io.github.nickolasddiaz.utils.WorldGraph;
+
 import java.util.*;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.*;
+import static io.github.nickolasddiaz.utils.MapGenerator.*;
 // units are used in determining positioning in the game world
 // MAP_SIZE how many rows of tiles in a chunk, 80 tiles
 // itemSize how many rows of units in a tile, 64 units
@@ -208,6 +211,9 @@ public class ChunkComponent implements Component {
     public CollisionFilter oceanFilter = createFilter("OCEAN");
     public CollisionFilter verticalFilter = createFilter("VERTICAL");
     public CollisionFilter horizontalFilter = createFilter("HORIZONTAL");
+    public CollisionFilter enemyFilter = createFilter("ENEMY");
+
+
 
 
 }

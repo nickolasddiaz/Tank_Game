@@ -39,10 +39,50 @@ public class OptionsScreen implements Screen {
         sxfVolumeSlider = new Slider(0, 100, 1, false, skin);
         setSFXVolume(game.settings.sfxVolume);
 
-        CheckBox mobileCheckBox = new CheckBox("Mobile Controls", skin);
+        Table mobileContainer = new Table();
+        Table debugContainer = new Table();
+        Table autoFireContainer = new Table();
+
+        CheckBox mobileCheckBox = new CheckBox("", skin); // Remove text from checkbox
+        CheckBox debugCheckBox = new CheckBox("", skin);
+        CheckBox autoFireCheckBox = new CheckBox("", skin);
+
+        Label mobileLabel = new Label("Mobile Controls", skin);
+        Label debugLabel = new Label("Debug Mode", skin);
+        Label autoFireLabel = new Label("Auto Fire", skin);
+
         mobileCheckBox.setChecked(game.settings.IS_MOBILE);
-        CheckBox debugCheckBox = new CheckBox("Debug Mode", skin);
         debugCheckBox.setChecked(game.settings.DEBUG);
+        autoFireCheckBox.setChecked(game.settings.AUTO_FIRE);
+
+        mobileContainer.add(mobileCheckBox).center().padBottom(5);
+        mobileContainer.row();
+        mobileContainer.add(mobileLabel).center();
+
+        debugContainer.add(debugCheckBox).center().padBottom(5);
+        debugContainer.row();
+        debugContainer.add(debugLabel).center();
+
+        autoFireContainer.add(autoFireCheckBox).center().padBottom(5);
+        autoFireContainer.row();
+        autoFireContainer.add(autoFireLabel).center();
+
+        float containerWidth = buttonWidth / 3;
+        float containerHeight = buttonHeight * 1.5f;
+
+        mobileContainer.setSize(containerWidth, containerHeight);
+        debugContainer.setSize(containerWidth, containerHeight);
+        autoFireContainer.setSize(containerWidth, containerHeight);
+
+        // Position the containers
+        mobileContainer.setPosition(buttonInitialX -25f, buttonInitialY - buttonHeight - buttonSpacing);
+        debugContainer.setPosition(buttonInitialX + containerWidth + buttonSpacing - 25f, buttonInitialY - buttonHeight - buttonSpacing);
+        autoFireContainer.setPosition(buttonInitialX + 2f * (containerWidth + buttonSpacing) -25f, buttonInitialY - buttonHeight - buttonSpacing);
+
+        // Add containers to stage instead of individual checkboxes
+        stage.addActor(mobileContainer);
+        stage.addActor(debugContainer);
+        stage.addActor(autoFireContainer);
 
         Button continueButton = new Button(skin);
         Button mainMenuButton = new Button(skin);
@@ -53,17 +93,17 @@ public class OptionsScreen implements Screen {
         musicVolumeSlider.setSize(buttonWidth, buttonHeight);
         sxfVolumeLabel.setSize(buttonWidth, buttonHeight);
         sxfVolumeSlider.setSize(buttonWidth, buttonHeight);
-        mobileCheckBox.setSize(buttonWidth / 2, buttonHeight);
-        debugCheckBox.setSize(buttonWidth / 2, buttonHeight);
+
         continueButton.setSize(buttonWidth / 4, buttonHeight * 1.5f);
         mainMenuButton.setSize(buttonWidth / 4, buttonHeight * 1.5f);
 
         musicVolumeLabel.setPosition(buttonInitialX, buttonInitialY + buttonHeight * 3);
         musicVolumeSlider.setPosition(buttonInitialX, buttonInitialY + buttonHeight * 2);
-        sxfVolumeLabel.setPosition(buttonInitialX, buttonInitialY + buttonHeight);
-        sxfVolumeSlider.setPosition(buttonInitialX, buttonInitialY);
-        mobileCheckBox.setPosition(buttonInitialX, buttonInitialY - buttonHeight - buttonSpacing);
-        debugCheckBox.setPosition(buttonInitialX + buttonWidth / 2 + buttonSpacing, buttonInitialY - buttonHeight - buttonSpacing);
+        sxfVolumeLabel.setPosition(buttonInitialX, buttonInitialY + buttonHeight + 10);
+        sxfVolumeSlider.setPosition(buttonInitialX, buttonInitialY + 20);
+
+
+
         continueButton.setPosition((float) Gdx.graphics.getWidth() / 2 - buttonSpacing * 4.5f, buttonInitialY - buttonHeight * 2 - buttonSpacing * 3);
         mainMenuButton.setPosition((float) Gdx.graphics.getWidth() / 2 + buttonSpacing, buttonInitialY - buttonHeight * 2 - buttonSpacing * 3);
 
@@ -72,8 +112,6 @@ public class OptionsScreen implements Screen {
         stage.addActor(musicVolumeSlider);
         stage.addActor(sxfVolumeLabel);
         stage.addActor(sxfVolumeSlider);
-        stage.addActor(debugCheckBox);
-        stage.addActor(mobileCheckBox);
         stage.addActor(continueButton);
         stage.addActor(mainMenuButton);
 
@@ -126,6 +164,12 @@ public class OptionsScreen implements Screen {
                 }
             }
         });
+        autoFireCheckBox.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.settings.AUTO_FIRE = autoFireCheckBox.isChecked();
+            }
+        });
     }
 
     private void setSFXVolume(int value) {
@@ -157,7 +201,7 @@ public class OptionsScreen implements Screen {
             } else {
                 setSFXVolume(game.settings.sfxVolume + 1);
             }
-        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
             if (lastClickedVolumeSFX) {
                 setMusicVolume(game.settings.musicVolume - 1);
             } else {

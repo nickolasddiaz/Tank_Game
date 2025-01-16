@@ -1,4 +1,4 @@
-package io.github.nickolasddiaz.components;
+package io.github.nickolasddiaz.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Connection;
@@ -7,8 +7,8 @@ import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.ALL_CHUNK_SIZE; // unit of three chunk length 240
-import static io.github.nickolasddiaz.systems.MapGenerator.MAP_SIZE; // unit of one tile length
+import static io.github.nickolasddiaz.utils.MapGenerator.ALL_CHUNK_SIZE; // unit of three chunk length 240
+
 
 public class WorldGraph implements IndexedGraph<GraphNode> {
     private final GraphNode[][] nodes;

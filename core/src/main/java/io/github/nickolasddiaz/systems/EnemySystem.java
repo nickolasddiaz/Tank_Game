@@ -12,8 +12,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
+import io.github.nickolasddiaz.utils.GraphNode;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.*;
+import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 
 public class EnemySystem extends IteratingSystem {
@@ -48,6 +49,9 @@ public class EnemySystem extends IteratingSystem {
             (int) Math.floor(transform.position.x / chunkSize),
             (int) Math.floor(transform.position.y / chunkSize)
         );
+
+        Vector2 targetPosition = player.position;
+        transform.turretRotation = (float) Math.toDegrees(Math.atan2(targetPosition.y - transform.position.y, targetPosition.x - transform.position.x));
 
         if (!chunk.mapChunks.containsKey(chunkPosition) || enemyComponent.health <= 0) {
             Gdx.app.log("EnemySystem", "Removing enemy entity");

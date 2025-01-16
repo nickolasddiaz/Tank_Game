@@ -5,8 +5,9 @@ import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import io.github.nickolasddiaz.utils.GraphNode;
 
-import static io.github.nickolasddiaz.systems.MapGenerator.itemSize;
+import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class EnemyComponent implements Component {
     public float health = 100;

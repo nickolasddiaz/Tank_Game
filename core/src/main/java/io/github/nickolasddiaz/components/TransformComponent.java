@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
 import com.dongbat.jbump.World;
+import io.github.nickolasddiaz.utils.CollisionObject;
 
 public class TransformComponent implements Component {
     public Vector2 position;
@@ -20,8 +21,17 @@ public class TransformComponent implements Component {
     public float tempRotation = 0f;
     public boolean slowDown = false;
     public Vector2 movement = new Vector2();
+
+
     public Item<CollisionObject> item;
     public World<CollisionObject> world;
+    public boolean isDead = false;
+
+    public boolean hasTurret = false;
+    public Sprite turretSprite; //52x20
+    public float turretRotation = 0f;
+    public Vector2 turretOffSetPosition;
+    public int turretLength;
 
 
     public TransformComponent(Sprite sprite, int width, int height, Color color, boolean isPolygon, String objectType, World<CollisionObject> world, Vector2 position, float rotation) {
@@ -50,6 +60,15 @@ public class TransformComponent implements Component {
         } else {
             item = world.add(new Item<>(new CollisionObject(sprite.getBoundingRectangle(), objectType)), sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
         }
+    }
+
+    public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, int width, int height) {
+        this.turretSprite = turretSprite;
+        this.turretSprite.setSize(width, height);
+        this.turretOffSetPosition = turretOffSetPosition;
+        turretOffSetPosition.add(-width/2f, -height/2f);
+        this.turretLength = height;
+        this.hasTurret = true;
     }
 
     public void updateBounds() {

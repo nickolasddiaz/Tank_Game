@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import io.github.nickolasddiaz.components.ChunkComponent;
 import io.github.nickolasddiaz.systems.*;
 
 public class GameScreen implements Screen {
@@ -19,8 +20,7 @@ public class GameScreen implements Screen {
         this.game = game;
         game.engine.removeEntity(game.car);
 
-        game.engine.addSystem(new CollisionSystem());
-        game.engine.addSystem(new PlayerMovementSystem());
+        game.engine.addSystem(new PlayerMovementSystem(game.settings, game.chunk));
         game.engine.addSystem(new StatsRenderSystem(game.batch));
         if(game.settings.IS_MOBILE) {
             game.engine.addSystem(new JoystickInputSystem());
