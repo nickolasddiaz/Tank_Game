@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -22,14 +23,17 @@ public class PlayerMovementSystem extends IteratingSystem {
     private final ChunkComponent chunk;
     private final SettingsComponent settings;
     private CollisionObject lockedTarget;
+    private final BulletFactory bulletFactory;
+    private float timeToReajust = 0f;
 
-    public PlayerMovementSystem(SettingsComponent settings, ChunkComponent chunk) {
+    public PlayerMovementSystem(SettingsComponent settings, ChunkComponent chunk, BulletFactory bulletFactory) {
         super(Family.all(PlayerComponent.class, TransformComponent.class, JoystickComponent.class).get());
         playerMapper = ComponentMapper.getFor(PlayerComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         joystickMapper = ComponentMapper.getFor(JoystickComponent.class);
         this.settings = settings;
         this.chunk = chunk;
+        this.bulletFactory = bulletFactory;
     }
 
     @Override
@@ -38,6 +42,14 @@ public class PlayerMovementSystem extends IteratingSystem {
         TransformComponent transform = transformMapper.get(entity);
         JoystickComponent joystick = joystickMapper.get(entity);
 
+        player.timeSinceLastShot += deltaTime;
+        timeToReajust += deltaTime;
+        if((settings.AUTO_FIRE || Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isTouched()) && player.timeSinceLastShot > player.fireRate){
+            bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation, player.bulletSpeed, player.bulletDamage, Color.YELLOW);
+            player.timeSinceLastShot = 0f;
+        }
+
+
         Vector2 direction = new Vector2(0, 0);
         float speedMultiplier = 1f;
 
@@ -45,7 +57,8 @@ public class PlayerMovementSystem extends IteratingSystem {
             // Reverse Y to account for the coordinate system
             transform.turretRotation = (float) Math.toDegrees(Math.atan2(Gdx.graphics.getHeight() / 2f - Gdx.input.getY(), Gdx.input.getX() - Gdx.graphics.getWidth() / 2f));
         else{
-            if (lockedTarget == null && player.enemyCount > 0) {
+            if ((lockedTarget == null || timeToReajust > 1f)&& player.enemyCount > 0) {
+                timeToReajust = 0f;
                 ArrayList<Item> enemies = chunk.getObjectsIsInsideRect(chunk.enemyFilter, new Rectangle(transform.position.x - chunkSize / 2f, transform.position.y - chunkSize / 2f, chunkSize, chunkSize), chunk.world);
 
                 if (enemies != null && !enemies.isEmpty()) {

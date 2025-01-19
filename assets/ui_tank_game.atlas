@@ -20,9 +20,16 @@ bottom_left_heart
   index: -1
 bottom_right_heart
   rotate: false
-  xy: 436, 586
+  xy: 526, 666
   size: 24, 27
   orig: 24, 27
+  offset: 0, 0
+  index: -1
+bullet
+  rotate: false
+  xy: 1, 254
+  size: 32, 20
+  orig: 32, 20
   offset: 0, 0
   index: -1
 car
@@ -34,7 +41,7 @@ car
   index: -1
 check_mark
   rotate: false
-  xy: 259, 484
+  xy: 91, 385
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
@@ -62,7 +69,7 @@ home
   index: -1
 left_star
   rotate: false
-  xy: 526, 653
+  xy: 502, 595
   size: 21, 40
   orig: 21, 40
   offset: 0, 0
@@ -132,28 +139,28 @@ tank
   index: -1
 top_left_heart
   rotate: false
-  xy: 1, 253
+  xy: 259, 505
   size: 24, 21
   orig: 24, 21
   offset: 0, 0
   index: -1
 top_right_heart
   rotate: false
-  xy: 325, 527
+  xy: 91, 362
   size: 24, 21
   orig: 24, 21
   offset: 0, 0
   index: -1
 turret
   rotate: false
-  xy: 436, 615
-  size: 52, 20
-  orig: 52, 20
+  xy: 259, 528
+  size: 77, 20
+  orig: 77, 20
   offset: 0, 0
   index: -1
 unchecked_mark
   rotate: false
-  xy: 91, 385
+  xy: 436, 571
   size: 64, 64
   orig: 64, 64
   offset: 0, 0

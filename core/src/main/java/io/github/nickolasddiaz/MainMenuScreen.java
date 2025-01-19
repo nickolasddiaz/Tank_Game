@@ -17,7 +17,6 @@ public class MainMenuScreen implements Screen {
 
     final yourgame game;
     private final Stage stage;
-    Skin skin;
 
 
     public MainMenuScreen(final yourgame game) {
@@ -112,6 +111,8 @@ public class MainMenuScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         game.viewport.update(width, height, true);
+        game.stageViewport.update(width, height, true);
+        stage.getViewport().update(width, height, true);
     }
     @Override
     public void pause() {

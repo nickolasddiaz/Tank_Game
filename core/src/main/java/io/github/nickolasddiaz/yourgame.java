@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.systems.*;
@@ -33,11 +34,15 @@ public class yourgame extends Game {
     public ChunkComponent chunk;
     public TextureAtlas atlas;
     public Entity player;
+    public BulletFactory bulletFactory;
+    public FitViewport stageViewport;
+
 
 
     public void create() {
         engine = new Engine();
         batch = new SpriteBatch();
+        stageViewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         // Create player entity with properly initialized components
         player = new Entity();
@@ -72,13 +77,15 @@ public class yourgame extends Game {
 
         engine.addSystem(new CarSystem(engine));
         engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer));
-        enemyFactory = new EnemyFactory(engine, atlas, camera, chunk, statsComponent, transform, settings,playerComponent);
+        bulletFactory = new BulletFactory(chunk.world, engine, atlas);
+        enemyFactory = new EnemyFactory(engine, atlas, camera, chunk, statsComponent, transform, settings,playerComponent, bulletFactory);
         transform.turretComponent(
             new Sprite(atlas.findRegion("turret")),
-            new Vector2(itemSize, itemSize * 0.6f),  // Position at center of tank
-            itemSize,                                // turret width
+            new Vector2(itemSize*1.1f, itemSize * 0.5f),  // Position at center of tank
+            itemSize*1.48f,                                // turret width
             itemSize                                 // turret height
-        ); //62 width 20 height
+        ); //52 width 20 height modified 77 width and 20 height for better axis rotation
+
 
     }
 

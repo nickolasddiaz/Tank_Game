@@ -62,11 +62,11 @@ public class TransformComponent implements Component {
         }
     }
 
-    public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, int width, int height) {
+    public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, float width, int height) {
         this.turretSprite = turretSprite;
         this.turretSprite.setSize(width, height);
         this.turretOffSetPosition = turretOffSetPosition;
-        turretOffSetPosition.add(-width/2f, -height/2f);
+        turretOffSetPosition.add(-width/1.5f, -height/1.5f);
         this.turretLength = height;
         this.hasTurret = true;
     }

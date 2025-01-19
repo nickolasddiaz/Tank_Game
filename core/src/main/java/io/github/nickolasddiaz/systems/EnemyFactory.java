@@ -19,7 +19,7 @@ public class EnemyFactory {
     PlayerComponent playerComponent;
 
 
-    public EnemyFactory(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerTransformComponent, SettingsComponent settings, PlayerComponent playerComponent) {
+    public EnemyFactory(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerTransformComponent, SettingsComponent settings, PlayerComponent playerComponent, BulletFactory bulletFactory) {
         this.engine = engine;
         this.atlas = atlas;
         this.cameraComponent = cameraComponent;
@@ -28,7 +28,7 @@ public class EnemyFactory {
         this.settings = settings;
         this.playerComponent = playerComponent;
         engine.addSystem(new CollisionSystem());
-        engine.addSystem(new EnemySystem(engine, playerTransformComponent, cameraComponent, settings));
+        engine.addSystem(new EnemySystem(engine, playerTransformComponent, cameraComponent, settings, bulletFactory));
     }
 
     public void createTank(int enemyType, Vector2 spawnPosition){ {
@@ -56,10 +56,15 @@ public class EnemyFactory {
         TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "ENEMY", chunkComponent.world, tempPosition, 0f);
 
         tank.add(transformComponent);
-
-        EnemyComponent enemyComponent = new EnemyComponent(100f,10f,100f,10f, (float) statsComponent.getStars() /15);
+        //(float) statsComponent.getStars() /15
+        EnemyComponent enemyComponent = new EnemyComponent(0f,10f,10f,1f, 20f * itemSize, 5);
         tank.add(enemyComponent);
-        transformComponent.turretComponent(new Sprite(atlas.findRegion("turret")), new Vector2(itemSize,0), itemSize,itemSize);
+        transformComponent.turretComponent(
+            new Sprite(atlas.findRegion("turret")),
+            new Vector2(itemSize*1.1f, itemSize * 0.5f),  // Position at center of tank
+            itemSize*1.48f,                                // turret width
+            itemSize                                 // turret height
+        ); //52 width 20 height modified 77 width and 20 height for better axis rotation
 
 
         tank.add(settings);

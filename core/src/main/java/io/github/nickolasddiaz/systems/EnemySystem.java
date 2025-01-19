@@ -6,6 +6,7 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.Color;
@@ -25,9 +26,11 @@ public class EnemySystem extends IteratingSystem {
     private final SettingsComponent settings;
     private final Engine engine;
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
+    private final BulletFactory bulletFactory;
 
 
-    public EnemySystem(Engine engine, TransformComponent player, CameraComponent camera, SettingsComponent settings) {
+
+    public EnemySystem(Engine engine, TransformComponent player, CameraComponent camera, SettingsComponent settings, BulletFactory bulletFactory) {
         super(Family.all(EnemyComponent.class, ChunkComponent.class, TransformComponent.class).get());
         EnemyMapper = ComponentMapper.getFor(EnemyComponent.class);
         chunkMapper = ComponentMapper.getFor(ChunkComponent.class);
@@ -37,6 +40,7 @@ public class EnemySystem extends IteratingSystem {
         shapeRenderer.setProjectionMatrix(camera.camera.combined);
         shapeRenderer.setColor(Color.GREEN);
         this.settings = settings;
+        this.bulletFactory = bulletFactory;
     }
 
     @Override
@@ -45,6 +49,7 @@ public class EnemySystem extends IteratingSystem {
         ChunkComponent chunk = chunkMapper.get(entity);
         TransformComponent transform = transformMapper.get(entity);
 
+        //make sure the enemy is in a valid chunk and still alive
         Vector2 chunkPosition = new Vector2(
             (int) Math.floor(transform.position.x / chunkSize),
             (int) Math.floor(transform.position.y / chunkSize)
@@ -59,6 +64,20 @@ public class EnemySystem extends IteratingSystem {
             return;
         }
 
+        enemyComponent.timeSinceLastShot += deltaTime;
+        if(enemyComponent.timeSinceLastShot > enemyComponent.fireRate){
+            enemyComponent.timeSinceLastShot = 0f;
+            if(player.position.dst(transform.position) < chunkSize)
+                bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation + (chunk.random.nextFloat()-.5f)*10f, enemyComponent.bulletSpeed, enemyComponent.bulletDamage, Color.RED);
+        }
+
+        // Check if enemy is within minimum distance of player
+        float distanceToPlayer = transform.position.dst(player.position);
+        if (distanceToPlayer <= enemyComponent.minDistance) {
+            transform.movement = Vector2.Zero;
+            return;
+        }
+
         // Only recalculate path if player has moved outside the lazy path rectangle or if we don't have a valid path yet
         if (!enemyComponent.lazyPath.contains(player.position) || enemyComponent.path.getCount() == 0) {
             Vector2 startPos = chunk.worldToGridCoordinates(transform.position);
@@ -67,24 +86,47 @@ public class EnemySystem extends IteratingSystem {
             GraphNode startNode = chunk.pathfindingGraph.getNodeAt(startPos);
             GraphNode endNode = chunk.pathfindingGraph.getNodeAt(endPos);
 
+            // Handle null nodes by using previous path or creating direct path to player
             if (startNode == null || endNode == null) {
-                return;
-            }
-
-            IndexedAStarPathFinder<GraphNode> pathFinder = new IndexedAStarPathFinder<>(chunk.pathfindingGraph);
-            boolean pathFound = pathFinder.searchNodePath(startNode, endNode, new ManhattanDistance(), enemyComponent.path);
-
-            if (pathFound) {
-                enemyComponent.lazyPath.set(
-                    player.position.x - TILE_SIZE,
-                    player.position.y - TILE_SIZE,
-                    TILE_SIZE * 2,
-                    TILE_SIZE * 2
-                );
-
-                Gdx.app.log("EnemySystem", "Path found with " + enemyComponent.path.getCount() + " nodes");
+                if (enemyComponent.previousPath != null && enemyComponent.previousPath.getCount() > 0) {
+                    Gdx.app.log("EnemySystem", "Using previous path as fallback");
+                    enemyComponent.path = enemyComponent.previousPath;
+                } else {
+                    // Create a simple direct path to the player if no previous path exists
+                    DefaultGraphPath<GraphNode> directPath = new DefaultGraphPath<>();
+                    GraphNode simpleStartNode = new GraphNode(startPos);
+                    GraphNode simpleEndNode = new GraphNode(endPos);
+                    directPath.add(simpleStartNode);
+                    directPath.add(simpleEndNode);
+                    enemyComponent.path = directPath;
+                    Gdx.app.log("EnemySystem", "Created direct path to player as fallback");
+                }
             } else {
-                Gdx.app.log("EnemySystem", "No path found for enemy");
+                // Store the current path as previous path before calculating new one
+                if (enemyComponent.path.getCount() > 0) {
+                    enemyComponent.previousPath = new DefaultGraphPath<>();
+                    for (GraphNode node : enemyComponent.path) {
+                        enemyComponent.previousPath.add(node);
+                    }
+                }
+
+                IndexedAStarPathFinder<GraphNode> pathFinder = new IndexedAStarPathFinder<>(chunk.pathfindingGraph);
+                boolean pathFound = pathFinder.searchNodePath(startNode, endNode, new ManhattanDistance(), enemyComponent.path);
+
+                if (pathFound) {
+                    enemyComponent.lazyPath.set(
+                        player.position.x - TILE_SIZE,
+                        player.position.y - TILE_SIZE,
+                        TILE_SIZE * 2,
+                        TILE_SIZE * 2
+                    );
+                    Gdx.app.log("EnemySystem", "Path found with " + enemyComponent.path.getCount() + " nodes");
+                } else {
+                    Gdx.app.log("EnemySystem", "No path found, using previous path");
+                    if (enemyComponent.previousPath != null) {
+                        enemyComponent.path = enemyComponent.previousPath;
+                    }
+                }
             }
         }
 
@@ -99,7 +141,6 @@ public class EnemySystem extends IteratingSystem {
                 renderNextPathRect(transform.position, enemyComponent.nextPathWorld, enemyComponent);
             }
         }
-
     }
 
     private void renderNextPathRect(Vector2 enemy, Vector2 path, EnemyComponent car) {
@@ -108,19 +149,6 @@ public class EnemySystem extends IteratingSystem {
         shapeRenderer.line(enemy, path);
         shapeRenderer.end();
     }
-
-//        private void getNextPath(ChunkComponent chunk, Vector2 enemyPosition, EnemyComponent car) {
-//    //        do {
-//    //            if (car.pathIndex < car.path.getCount() - 1) {
-//    //                car.nextPath.set(car.path.get(++car.pathIndex).position);
-//    //            }else{break;}
-//    //        } while (chunk.isObjectInRay(chunk.GridToWorldCoordinates(car.nextPath), enemyPosition, chunk.obstaclesFilter));
-//            if(car.pathIndex < car.path.getCount() - 1) {
-//                car.nextPath.set(car.path.get(++car.pathIndex).position);
-//            }
-//        car.nextPathWorld = chunk.GridToWorldCoordinates(car.nextPath);
-//        car.nextPathRect.set(car.nextPathWorld.x, car.nextPathWorld.y, itemSize, itemSize);
-//    }
 
     private void getNextPath(ChunkComponent chunk, Vector2 enemyPosition, EnemyComponent enemyComponent) {
         do {

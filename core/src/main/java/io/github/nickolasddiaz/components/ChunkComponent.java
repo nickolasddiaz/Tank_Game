@@ -212,6 +212,7 @@ public class ChunkComponent implements Component {
     public CollisionFilter verticalFilter = createFilter("VERTICAL");
     public CollisionFilter horizontalFilter = createFilter("HORIZONTAL");
     public CollisionFilter enemyFilter = createFilter("ENEMY");
+    public CollisionFilter bulletHitFilter = createFilter("PLAYER", "ENEMY", "STRUCTURE", "CAR");
 
 
 
