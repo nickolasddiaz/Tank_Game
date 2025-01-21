@@ -11,29 +11,37 @@ import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
+import com.dongbat.jbump.CollisionFilter;
+import com.dongbat.jbump.Item;
+import com.dongbat.jbump.Response;
 import io.github.nickolasddiaz.components.*;
+import io.github.nickolasddiaz.utils.CollisionObject;
 import io.github.nickolasddiaz.utils.GraphNode;
+
+import java.util.ArrayList;
 
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 
 public class EnemySystem extends IteratingSystem {
     private final ComponentMapper<EnemyComponent> EnemyMapper;
-    private final ComponentMapper<ChunkComponent> chunkMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
+    private final ChunkComponent chunk;
     private final TransformComponent player;
     private final SettingsComponent settings;
     private final Engine engine;
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
     private final BulletFactory bulletFactory;
+    private float speedBoost = 1f;
+    private float collisionAngle = 0f;
 
 
 
-    public EnemySystem(Engine engine, TransformComponent player, CameraComponent camera, SettingsComponent settings, BulletFactory bulletFactory) {
-        super(Family.all(EnemyComponent.class, ChunkComponent.class, TransformComponent.class).get());
+    public EnemySystem(Engine engine, TransformComponent player, CameraComponent camera, SettingsComponent settings, BulletFactory bulletFactory, ChunkComponent chunk) {
+        super(Family.all(EnemyComponent.class, TransformComponent.class).get());
         EnemyMapper = ComponentMapper.getFor(EnemyComponent.class);
-        chunkMapper = ComponentMapper.getFor(ChunkComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         this.player = player;
         this.engine = engine;
@@ -41,12 +49,12 @@ public class EnemySystem extends IteratingSystem {
         shapeRenderer.setColor(Color.GREEN);
         this.settings = settings;
         this.bulletFactory = bulletFactory;
+        this.chunk = chunk;
     }
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         EnemyComponent enemyComponent = EnemyMapper.get(entity);
-        ChunkComponent chunk = chunkMapper.get(entity);
         TransformComponent transform = transformMapper.get(entity);
 
         //make sure the enemy is in a valid chunk and still alive
@@ -55,11 +63,44 @@ public class EnemySystem extends IteratingSystem {
             (int) Math.floor(transform.position.y / chunkSize)
         );
 
+        if(transform.collided){ return; }
+        ArrayList<Item> obstacles = chunk.getObjectsIsInsideRect(CollisionFilter.defaultFilter, transform.item.userData.getBounds(), chunk.world);
+        if (obstacles != null) {
+            for (Item obstacle : obstacles) {
+                CollisionObject object = (CollisionObject) obstacle.userData;
+                switch (object.getObjectType()) {
+                    case "OCEAN":
+                        if (Intersector.overlapConvexPolygons(object.getPolygon(), transform.item.userData.getPolygon())) {
+                            float collisionAngle = chunk.getAngleFromPoint(object.getPolygon(), transform.item.userData.getBounds());
+                            transform.setCollided(collisionAngle);
+                        }
+                        break;
+                    case "VERTICAL":
+                    case "HORIZONTAL":
+                        transform.speedBoost += .6f;
+                        break;
+                    case "DECORATION":
+                        transform.speedBoost *= .4f;
+                        break;
+                    case "CAR":
+                    case "BULLET":
+                        object.health = 0;
+                        break;
+                    case "PLAYER":
+                    case "STRUCTURE":
+                        float collisionAngle = chunk.getAngleFromPoint(transform.item.userData.getPolygon(), object.getBounds());
+                        transform.setCollided(collisionAngle);
+                        break;
+                }
+            }
+        }
+
         Vector2 targetPosition = player.position;
         transform.turretRotation = (float) Math.toDegrees(Math.atan2(targetPosition.y - transform.position.y, targetPosition.x - transform.position.x));
 
+
         if (!chunk.mapChunks.containsKey(chunkPosition) || enemyComponent.health <= 0) {
-            Gdx.app.log("EnemySystem", "Removing enemy entity");
+            transform.dispose();
             engine.removeEntity(entity);
             return;
         }
@@ -68,15 +109,26 @@ public class EnemySystem extends IteratingSystem {
         if(enemyComponent.timeSinceLastShot > enemyComponent.fireRate){
             enemyComponent.timeSinceLastShot = 0f;
             if(player.position.dst(transform.position) < chunkSize)
-                bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation + (chunk.random.nextFloat()-.5f)*10f, enemyComponent.bulletSpeed, enemyComponent.bulletDamage, Color.RED);
+                bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation + (chunk.random.nextFloat()-.5f)*10f, enemyComponent.bulletSpeed, enemyComponent.bulletDamage, Color.RED,"E_BULLET");
         }
 
         // Check if enemy is within minimum distance of player
         float distanceToPlayer = transform.position.dst(player.position);
         if (distanceToPlayer <= enemyComponent.minDistance) {
-            transform.movement = Vector2.Zero;
             return;
         }
+        if (enemyComponent.path.getCount() > 1 || enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
+            moveEnemy(transform, enemyComponent, deltaTime);
+            if(settings.DEBUG) {
+                renderNextPathRect(transform.position, enemyComponent.nextPathWorld, enemyComponent);
+            }
+        }
+
+        enemyComponent.timeSinceLastPathfinding += deltaTime;
+        if (enemyComponent.timeSinceLastPathfinding < enemyComponent.pathfindingCooldown) {
+            return;
+        }
+        enemyComponent.timeSinceLastPathfinding = 0f;
 
         // Only recalculate path if player has moved outside the lazy path rectangle or if we don't have a valid path yet
         if (!enemyComponent.lazyPath.contains(player.position) || enemyComponent.path.getCount() == 0) {
@@ -111,6 +163,7 @@ public class EnemySystem extends IteratingSystem {
                 }
 
                 IndexedAStarPathFinder<GraphNode> pathFinder = new IndexedAStarPathFinder<>(chunk.pathfindingGraph);
+                enemyComponent.path.clear();
                 boolean pathFound = pathFinder.searchNodePath(startNode, endNode, new ManhattanDistance(), enemyComponent.path);
 
                 if (pathFound) {
@@ -135,12 +188,14 @@ public class EnemySystem extends IteratingSystem {
             getNextPath(chunk, transform.position, enemyComponent);
         }
 
-        if (enemyComponent.path.getCount() > 1 || enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
-            moveEnemy(transform, enemyComponent, deltaTime);
-            if(settings.DEBUG) {
-                renderNextPathRect(transform.position, enemyComponent.nextPathWorld, enemyComponent);
-            }
+        chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter);
+        transform.speedBoost = speedBoost;
+        speedBoost = 1f;
+        if(collisionAngle != 0) {
+            transform.setCollided(collisionAngle);
+            collisionAngle = 0;
         }
+
     }
 
     private void renderNextPathRect(Vector2 enemy, Vector2 path, EnemyComponent car) {
@@ -194,4 +249,38 @@ public class EnemySystem extends IteratingSystem {
             return Math.abs(node.position.x - endNode.position.x) + Math.abs(node.position.y - endNode.position.y);
         }
     }
+
+    private final CollisionFilter CollisionFilter = new CollisionFilter() {
+        @Override
+        public Response filter(Item item, Item other) {
+            if(other == null) {
+                return null;
+            }
+            CollisionObject otherObject = (CollisionObject) other.userData;
+            switch (otherObject.getObjectType()) {
+                case "OCEAN":
+                case "STRUCTURE":
+                    if (Intersector.overlapConvexPolygons(otherObject.getPolygon(), ((CollisionObject) item.userData).getPolygon())) {
+                        collisionAngle = chunk.getAngleFromPoint(otherObject.getPolygon(), ((CollisionObject) item.userData).getBounds());
+                        return Response.bounce;
+                    }
+                    return Response.cross;
+                case "CAR":
+                    otherObject.health = 0;
+                    speedBoost *= .4f;
+                    return Response.cross;
+                case "PLAYER":
+                case "ENEMY":
+                    return Response.bounce;
+                case "HORIZONTAL":
+                case "VERTICAL":
+                    speedBoost += .4f;
+                    return Response.cross;
+                case "DECORATION":
+                    speedBoost *= .4f;
+                    return Response.cross;
+            }
+            return null;
+        }
+    };
 }

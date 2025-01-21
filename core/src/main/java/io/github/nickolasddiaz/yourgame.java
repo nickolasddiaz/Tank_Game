@@ -5,7 +5,6 @@ import com.badlogic.ashley.core.Entity;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -56,7 +55,7 @@ public class yourgame extends Game {
         chunk = new ChunkComponent();
         player.add(chunk);
         //tank size is 30 width and 50 height
-        transform =new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "PLAYER", chunk.world, new Vector2(0f,0f), 0f);
+        transform =new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "PLAYER", chunk.world, new Vector2(0f,0f), 0f,1000);
         player.add(transform);
         camera = new CameraComponent();
         player.add(camera);
@@ -75,10 +74,10 @@ public class yourgame extends Game {
         viewport.setWorldSize(Gdx.graphics.getWidth() * TILE_SIZE, Gdx.graphics.getHeight() * TILE_SIZE);
         this.setScreen(new MainMenuScreen(this));
 
-        engine.addSystem(new CarSystem(engine));
-        engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer));
+        engine.addSystem(new CarSystem(engine, chunk));
+        engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer, engine));
         bulletFactory = new BulletFactory(chunk.world, engine, atlas);
-        enemyFactory = new EnemyFactory(engine, atlas, camera, chunk, statsComponent, transform, settings,playerComponent, bulletFactory);
+        enemyFactory = new EnemyFactory(engine, atlas, camera, chunk, statsComponent, transform, settings,playerComponent, bulletFactory,chunk);
         transform.turretComponent(
             new Sprite(atlas.findRegion("turret")),
             new Vector2(itemSize*1.1f, itemSize * 0.5f),  // Position at center of tank

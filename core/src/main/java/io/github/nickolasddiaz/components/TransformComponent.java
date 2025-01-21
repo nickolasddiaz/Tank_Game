@@ -10,6 +10,8 @@ import com.dongbat.jbump.Item;
 import com.dongbat.jbump.World;
 import io.github.nickolasddiaz.utils.CollisionObject;
 
+import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
+
 public class TransformComponent implements Component {
     public Vector2 position;
     public float rotation = 0f;
@@ -19,13 +21,12 @@ public class TransformComponent implements Component {
     public Vector2 tempPosition = new Vector2();
     public boolean collided = false;
     public float tempRotation = 0f;
-    public boolean slowDown = false;
+    public float speedBoost = 1f;
     public Vector2 movement = new Vector2();
 
 
     public Item<CollisionObject> item;
     public World<CollisionObject> world;
-    public boolean isDead = false;
 
     public boolean hasTurret = false;
     public Sprite turretSprite; //52x20
@@ -34,7 +35,7 @@ public class TransformComponent implements Component {
     public int turretLength;
 
 
-    public TransformComponent(Sprite sprite, int width, int height, Color color, boolean isPolygon, String objectType, World<CollisionObject> world, Vector2 position, float rotation) {
+    public TransformComponent(Sprite sprite, int width, int height, Color color, boolean isPolygon, String objectType, World<CollisionObject> world, Vector2 position, float rotation, int health) {
         this.position = position;
         this.rotation = rotation;
 
@@ -54,11 +55,11 @@ public class TransformComponent implements Component {
             // Create AABB that encompasses the sprite at any rotation
             float maxDimension = (float) Math.sqrt(width * width + height * height);
             polygonBounds.setOrigin(width/2f, height/2f); // Set origin to center for proper rotation
-            item = world.add(new Item<>(new CollisionObject(polygonBounds, objectType)), 0, 0,
+            item = world.add(new Item<>(new CollisionObject(polygonBounds, objectType, health)), 0, 0,
                 maxDimension/2 + (height-width),
                 maxDimension/2f);
         } else {
-            item = world.add(new Item<>(new CollisionObject(sprite.getBoundingRectangle(), objectType)), sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
+            item = world.add(new Item<>(new CollisionObject(sprite.getBoundingRectangle(), objectType, health)), sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
         }
     }
 
@@ -72,13 +73,18 @@ public class TransformComponent implements Component {
     }
 
     public void updateBounds() {
-        item.userData.updatePosition(position);
         item.userData.updateRotation(rotation);
-        world.move(item, position.x, position.y, CollisionFilter.defaultFilter);
+        item.userData.updatePosition(position);
     }
 
     public void dispose(){
         world.remove(item);
+    }
+    public void setCollided(float rotation){
+        tempPosition = position.cpy();
+        tempRotation = rotation;
+        bouncePosition = position.add(new Vector2(itemSize, 0).setAngleDeg(rotation -180f));
+        collided = true;
     }
 
 }

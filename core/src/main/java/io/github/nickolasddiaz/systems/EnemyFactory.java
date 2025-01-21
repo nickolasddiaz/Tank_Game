@@ -19,7 +19,7 @@ public class EnemyFactory {
     PlayerComponent playerComponent;
 
 
-    public EnemyFactory(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerTransformComponent, SettingsComponent settings, PlayerComponent playerComponent, BulletFactory bulletFactory) {
+    public EnemyFactory(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerTransformComponent, SettingsComponent settings, PlayerComponent playerComponent, BulletFactory bulletFactory,ChunkComponent chunk) {
         this.engine = engine;
         this.atlas = atlas;
         this.cameraComponent = cameraComponent;
@@ -27,8 +27,7 @@ public class EnemyFactory {
         this.statsComponent = statsComponent;
         this.settings = settings;
         this.playerComponent = playerComponent;
-        engine.addSystem(new CollisionSystem());
-        engine.addSystem(new EnemySystem(engine, playerTransformComponent, cameraComponent, settings, bulletFactory));
+        engine.addSystem(new EnemySystem(engine, playerTransformComponent, cameraComponent, settings, bulletFactory,chunk));
     }
 
     public void createTank(int enemyType, Vector2 spawnPosition){ {
@@ -53,7 +52,7 @@ public class EnemyFactory {
             i++;
         }
         //transformComponent.color = carColors[carTypeIndex];
-        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "ENEMY", chunkComponent.world, tempPosition, 0f);
+        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "ENEMY", chunkComponent.world, tempPosition, 0f,2);
 
         tank.add(transformComponent);
         //(float) statsComponent.getStars() /15

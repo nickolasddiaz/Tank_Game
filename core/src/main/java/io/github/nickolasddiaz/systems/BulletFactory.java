@@ -28,7 +28,7 @@ public class BulletFactory {
 
     }
 
-    public void createBullet(Vector2 position, float rotation, float speed, int damage, Color color) {
+    public void createBullet(Vector2 position, float rotation, float speed, int damage, Color color, String team) {
         Entity bullet = new Entity();
 
         // Create transform component with bullet properties
@@ -38,10 +38,10 @@ public class BulletFactory {
             itemSize,
             color,
             true, // isPolygon for rotation
-            "BULLET",
+            team,
             world,
             position,
-            rotation
+            rotation, 10
         );
         bullet.add(transform);
         BulletComponent bulletComponent = new BulletComponent(speed, damage);

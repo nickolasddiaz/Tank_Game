@@ -8,20 +8,23 @@ public class CollisionObject {
     private Rectangle rectangleObject;
     private Polygon polygonObject;
     private final boolean isPolygon;
-    private final String objectType; // HORIZONTAL, VERTICAL, STRUCTURE, DECORATION, OCEAN, CAR, ENEMY, PLAYER, BULLET
+    private final String objectType; // HORIZONTAL, VERTICAL, STRUCTURE, DECORATION, OCEAN, CAR, ENEMY, PLAYER, P_BULLET, E_BULLET
+    public int health = 10;
 
     // Constructor for non-rotatable rectangle objects
-    public CollisionObject(Rectangle rectangleObject, String objectType) {
+    public CollisionObject(Rectangle rectangleObject, String objectType, int health) {
         this.rectangleObject = rectangleObject;
         this.isPolygon = false;
         this.objectType = objectType;
+        this.health = health;
     }
 
     // Constructor for rotatable polygon objects
-    public CollisionObject(Polygon polygonObject, String objectType) {
+    public CollisionObject(Polygon polygonObject, String objectType, int health) {
         this.polygonObject = polygonObject;
         this.isPolygon = true;
         this.objectType = objectType;
+        this.health = health;
     }
 
     public boolean isisPolygon() {

@@ -3,14 +3,18 @@ package io.github.nickolasddiaz.systems;
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
+import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
+import com.dongbat.jbump.Response;
 import io.github.nickolasddiaz.components.BulletComponent;
 import io.github.nickolasddiaz.components.ChunkComponent;
 import io.github.nickolasddiaz.utils.CollisionObject;
 import io.github.nickolasddiaz.components.TransformComponent;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import static io.github.nickolasddiaz.utils.MapGenerator.chunkSize;
 
@@ -35,53 +39,51 @@ public class BulletSystem extends IteratingSystem {
         BulletComponent bullet = bulletMapper.get(entity);
 
         Vector2 chunkPosition = new Vector2((int) Math.floor(transform.position.x / chunkSize), (int) Math.floor(transform.position.y / chunkSize));
-
-        if(transform.isDead ||!chunk.mapChunks.containsKey(chunkPosition)) {
-            transform.isDead = true;
-            removeBullet(entity, transform);
+        if (!chunk.mapChunks.containsKey(chunkPosition)) {
+            transform.dispose();
             engine.removeEntity(entity);
             return;
         }
-        bullet.time_alive += deltaTime;
 
         // Move bullet
         transform.position.add( (float) (bullet.bullet_speed * deltaTime * Math.cos(Math.toRadians(transform.rotation))),
                                 (float) (bullet.bullet_speed * deltaTime * Math.sin(Math.toRadians(transform.rotation))));
-        // Check for collisions
-        ArrayList<Item> collisions = chunk.getObjectsIsInsideRect(
-            chunk.bulletHitFilter,
-            transform.item.userData.getBounds(),
-            chunk.world
-        );
 
-        if (collisions != null && bullet.time_alive > 0.3f) {
-            for (Item item : collisions) {
-                CollisionObject colObj = (CollisionObject) item.userData;
-                String objType = colObj.getObjectType();
+        chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter);
+    }
 
-                // Check collision with valid targets
-                if (objType.equals("ENEMY") || objType.equals("PLAYER") ||
-                    objType.equals("STRUCTURE") || objType.equals("CAR")) {
-
-                    handleBulletCollision(entity, transform, colObj);
-                    return;
-                }
+    private final CollisionFilter CollisionFilter = new CollisionFilter() {
+        @Override
+        public Response filter(Item item, Item other) {
+            if(other == null) {
+                return null;
             }
+            CollisionObject otherObject = (CollisionObject) other.userData;
+            switch (otherObject.getObjectType()) {
+                case "OCEAN":
+                case "STRUCTURE":
+                    if (Intersector.overlapConvexPolygons(otherObject.getPolygon(), ((CollisionObject) item.userData).getPolygon())) {
+                        ((CollisionObject) item.userData).health = 0;
+                    }
+                    return Response.touch;
+                case "CAR":
+                    otherObject.health = 0;
+                    ((CollisionObject) item.userData).health = 0;
+                    return Response.cross;
+                case "PLAYER":
+                    if(!Objects.equals(((CollisionObject) item.userData).getObjectType(), "P_BULLET")){
+                        otherObject.health -= ((CollisionObject) item.userData).health;
+                        ((CollisionObject) item.userData).health = 0;
+                    }
+                    return Response.cross;
+                case "ENEMY":
+                    if(!Objects.equals(((CollisionObject) item.userData).getObjectType(), "E_BULLET")){
+                        otherObject.health -= ((CollisionObject) item.userData).health;
+                        ((CollisionObject) item.userData).health = 0;
+                        }
+                    return Response.cross;
+            }
+            return null;
         }
-    }
-
-
-    private void handleBulletCollision(Entity bullet, TransformComponent transform, CollisionObject hitObject) {
-        // Handle bullet hit effects here (damage, particles, etc)
-
-        // Mark bullet for removal
-        transform.isDead = true;
-        removeBullet(bullet, transform);
-    }
-
-    private void removeBullet(Entity bullet, TransformComponent transform) {
-        // Clean up resources
-        transform.dispose(); // This removes the item from the collision world
-        engine.removeEntity(bullet);
-    }
+    };
 }

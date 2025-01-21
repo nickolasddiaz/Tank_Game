@@ -59,7 +59,7 @@ public class CarFactory {
 
         // Create transform component
         //car sprite is 26x60 now is 76x176
-        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("car")), (int) (itemSize * 1.34f), (int) (itemSize *.67f), carColors[carTypeIndex], true, "CAR", chunkComponent.world,position, 0f);
+        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("car")), (int) (itemSize * 1.34f), (int) (itemSize *.67f), carColors[carTypeIndex], true, "CAR", chunkComponent.world,position, 0f, 1);
         transformComponent.updateBounds();
         car.add(transformComponent);
 

@@ -88,6 +88,7 @@ public class LeaderboardScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         game.viewport.update(width, height, true);
+        stage.getViewport().update(width, height, true);
     }
 
     @Override

@@ -11,19 +11,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.*;
 
 public class StatsRenderSystem extends EntitySystem {
-    private final SpriteBatch batch;
-    private float iconSize;
-
     private Stage stage;
 
-    private ComponentMapper<StatsComponent> statsMapper;
-    private ComponentMapper<SettingsComponent> settingsMapper;
-    private StatsComponent statsComponent;
-    private SettingsComponent settingsComponent;
-
-    public StatsRenderSystem(SpriteBatch batch) {
-        this.batch = batch;
-    }
 
     @Override
     public void addedToEngine(Engine engine) {
@@ -31,18 +20,18 @@ public class StatsRenderSystem extends EntitySystem {
             StatsComponent.class,
             SettingsComponent.class
         ).get()).first();
-        statsMapper = ComponentMapper.getFor(StatsComponent.class);
-        settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
+        ComponentMapper<StatsComponent> statsMapper = ComponentMapper.getFor(StatsComponent.class);
+        ComponentMapper<SettingsComponent> settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
 
-        statsComponent = statsMapper.get(player);
-        settingsComponent = settingsMapper.get(player);
+        StatsComponent statsComponent = statsMapper.get(player);
+        SettingsComponent settingsComponent = settingsMapper.get(player);
 
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
         Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
 
 
-        iconSize = Gdx.graphics.getWidth() / 30f;
+        float iconSize = Gdx.graphics.getWidth() / 30f;
 
         TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas"));
 
@@ -84,10 +73,10 @@ public class StatsRenderSystem extends EntitySystem {
             float x = currentX + i * iconSize * 1.5f;
             float pad = iconSize / 2;
             float heartPad = i * pad ;
-            statsComponent.heartImages[i*4].setPosition(x - pad + heartPad, yOffset + pad + iconSize/2);
-            statsComponent.heartImages[i*4+1].setPosition(x - pad + heartPad, yOffset - pad + iconSize/2);
-            statsComponent.heartImages[i*4+2].setPosition(x + pad + heartPad, yOffset - pad + iconSize/2);
-            statsComponent.heartImages[i*4+3].setPosition(x + pad + heartPad, yOffset + pad + iconSize/2);
+            statsComponent.heartImages[i*4].setPosition(x - pad + heartPad, yOffset + pad + iconSize /2);
+            statsComponent.heartImages[i*4+1].setPosition(x - pad + heartPad, yOffset - pad + iconSize /2);
+            statsComponent.heartImages[i*4+2].setPosition(x + pad + heartPad, yOffset - pad + iconSize /2);
+            statsComponent.heartImages[i*4+3].setPosition(x + pad + heartPad, yOffset + pad + iconSize /2);
         }
 
         // Add health label after hearts
@@ -100,7 +89,7 @@ public class StatsRenderSystem extends EntitySystem {
         // Position star images after health label
         currentX += statsComponent.healthLabel.getWidth() - padding;
         for (int i = 0; i < 10; i++) {
-            statsComponent.starImages[i].setPosition(currentX + ((float) i / 2) * (iconSize * 2f), yOffset + iconSize/1.2f);
+            statsComponent.starImages[i].setPosition(currentX + ((float) i / 2) * (iconSize * 2f), yOffset + iconSize /1.2f);
         }
 
         // Add stars label after stars
@@ -110,7 +99,7 @@ public class StatsRenderSystem extends EntitySystem {
         statsComponent.starsLabel.setPosition(currentX, yOffset);
         stage.addActor(statsComponent.starsLabel);
 
-        statsComponent.addHealthLevel(15);
+        statsComponent.addHealthLevel(3);
         statsComponent.addStarLevel(21);
     }
 

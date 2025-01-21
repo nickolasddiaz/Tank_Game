@@ -108,11 +108,11 @@ public class ChunkComponent implements Component {
 
                 if (obj instanceof RectangleMapObject) {
                     RectangleMapObject rectObj = (RectangleMapObject) obj;
-                    collisionObject = new CollisionObject(rectObj.getRectangle(), rectObj.getName());
+                    collisionObject = new CollisionObject(rectObj.getRectangle(), rectObj.getName(),10);
                     bounds = rectObj.getRectangle();
                 } else if (obj instanceof PolygonMapObject) {
                     PolygonMapObject polyObj = (PolygonMapObject) obj;
-                    collisionObject = new CollisionObject(polyObj.getPolygon(), polyObj.getName());
+                    collisionObject = new CollisionObject(polyObj.getPolygon(), polyObj.getName(),10);
                     bounds = polyObj.getPolygon().getBoundingRectangle();
                 } else {
                     return;
@@ -208,13 +208,7 @@ public class ChunkComponent implements Component {
     }
 
     public CollisionFilter obstaclesFilter = createFilter("STRUCTURE", "DECORATION");
-    public CollisionFilter oceanFilter = createFilter("OCEAN");
     public CollisionFilter verticalFilter = createFilter("VERTICAL");
     public CollisionFilter horizontalFilter = createFilter("HORIZONTAL");
     public CollisionFilter enemyFilter = createFilter("ENEMY");
-    public CollisionFilter bulletHitFilter = createFilter("PLAYER", "ENEMY", "STRUCTURE", "CAR");
-
-
-
-
 }

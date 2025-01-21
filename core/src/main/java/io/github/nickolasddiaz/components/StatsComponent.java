@@ -50,9 +50,13 @@ public class StatsComponent implements Component {
         }
         starsLabel.setText(stars + "S");
     }
-
-    public void addHealthLevel(int healthLevel) {
+    public void addHealthLevel(int healthLevel){
         health += healthLevel;
+        setHealthLevel(health);
+    }
+
+    public void setHealthLevel(int healthLevel) {
+        health = healthLevel;
         int level = health % 12;
         int flatLevel = (health - level) / 12;
         Color color = setColor(flatLevel);

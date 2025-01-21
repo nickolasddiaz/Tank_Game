@@ -19,8 +19,8 @@ public class GameScreen implements Screen {
         this.game = game;
         game.engine.removeEntity(game.car);
 
-        game.engine.addSystem(new PlayerMovementSystem(game.settings, game.chunk,game.bulletFactory));
-        game.engine.addSystem(new StatsRenderSystem(game.batch));
+        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk,game.bulletFactory,game.statsComponent));
+        game.engine.addSystem(new StatsRenderSystem());
         if(game.settings.IS_MOBILE) {
             game.engine.addSystem(new JoystickInputSystem());
         }
@@ -70,13 +70,15 @@ public class GameScreen implements Screen {
                 Gdx.input.setInputProcessor(stage);
             }
         }
+        if(game.statsComponent.getHealth() <= 0){
+            game.setScreen(new DeathScreen(game, game.statsComponent.getScore()));
+        }
 
 
         float spawn = 2f / (game.statsComponent.getScore() / 3f+ 1f);
         while(seconds > spawn){
            seconds -= spawn;
            game.enemyFactory.createTank(0, game.transform.position);
-           Gdx.app.log("Enemy", "Spawned");
         }
 
     }

@@ -20,8 +20,9 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
     private final CameraComponent camera;
     private final SettingsComponent settings;
     private final ShapeRenderer shapeRenderer;
+    private final Engine engine;
 
-    public SpriteRenderSystem(SpriteBatch batch, CameraComponent camera, SettingsComponent settings, ShapeRenderer shapeRenderer) {
+    public SpriteRenderSystem(SpriteBatch batch, CameraComponent camera, SettingsComponent settings, ShapeRenderer shapeRenderer, Engine engine) {
         super(Family.all(TransformComponent.class).get(),
             (e1, e2) -> 0);
 
@@ -30,6 +31,7 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
         this.settings = settings;
         this.shapeRenderer = shapeRenderer;
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
+        this.engine = engine;
     }
 
     @Override
@@ -43,7 +45,9 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         TransformComponent transform = transformMapper.get(entity);
-        if(transform.isDead){
+        if(transform.item.userData.health <= 0){
+            transform.dispose();
+            engine.removeEntity(entity);
             return;
         }
 
@@ -67,7 +71,12 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
         }
 
         else {
-            transform.position.add((transform.slowDown)? transform.movement.scl(.3f) :transform.movement);
+            if(transform.speedBoost == 1f)
+                transform.position.add(transform.movement);
+            else{
+                transform.position.add(transform.movement.scl(transform.speedBoost));
+                transform.speedBoost = 1f;
+            }
             transform.movement = new Vector2(0, 0);
             drawSprite(transform.position, transform.rotation, transform.color, transform.sprite);
         }

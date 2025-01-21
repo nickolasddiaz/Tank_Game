@@ -28,6 +28,9 @@ public class EnemyComponent implements Component {
     public float bulletSpeed = 20f * itemSize;
     public int bulletDamage = 5;
 
+    public float pathfindingCooldown = 0.5f; // Seconds between pathfinding attempts
+    public float timeSinceLastPathfinding = 0f;
+
     public EnemyComponent(float enemyType, float health, float speed, float fireRate, float bulletSpeed, int bulletDamage) {
         this.enemyType = enemyType;
         this.health = health;

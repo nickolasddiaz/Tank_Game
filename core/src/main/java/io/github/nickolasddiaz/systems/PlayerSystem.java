@@ -5,10 +5,13 @@ import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
+import com.dongbat.jbump.Response;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.utils.CollisionObject;
 
@@ -16,17 +19,20 @@ import java.util.ArrayList;
 
 import static io.github.nickolasddiaz.utils.MapGenerator.chunkSize;
 
-public class PlayerMovementSystem extends IteratingSystem {
+public class PlayerSystem extends IteratingSystem {
     private final ComponentMapper<PlayerComponent> playerMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<JoystickComponent> joystickMapper;
     private final ChunkComponent chunk;
     private final SettingsComponent settings;
     private CollisionObject lockedTarget;
+    private final StatsComponent statsComponent;
     private final BulletFactory bulletFactory;
-    private float timeToReajust = 0f;
+    private float timeToReadjust = 0f;
+    private float speedBoost = 1f;
+    private float collisionAngle = 0f;
 
-    public PlayerMovementSystem(SettingsComponent settings, ChunkComponent chunk, BulletFactory bulletFactory) {
+    public PlayerSystem(SettingsComponent settings, ChunkComponent chunk, BulletFactory bulletFactory,StatsComponent statsComponent) {
         super(Family.all(PlayerComponent.class, TransformComponent.class, JoystickComponent.class).get());
         playerMapper = ComponentMapper.getFor(PlayerComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
@@ -34,6 +40,7 @@ public class PlayerMovementSystem extends IteratingSystem {
         this.settings = settings;
         this.chunk = chunk;
         this.bulletFactory = bulletFactory;
+        this.statsComponent = statsComponent;
     }
 
     @Override
@@ -41,11 +48,14 @@ public class PlayerMovementSystem extends IteratingSystem {
         PlayerComponent player = playerMapper.get(entity);
         TransformComponent transform = transformMapper.get(entity);
         JoystickComponent joystick = joystickMapper.get(entity);
+        if(statsComponent.getHealth() != transform.item.userData.health){
+            statsComponent.setHealthLevel(transform.item.userData.health);
+        }
 
         player.timeSinceLastShot += deltaTime;
-        timeToReajust += deltaTime;
+        timeToReadjust += deltaTime;
         if((settings.AUTO_FIRE || Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isTouched()) && player.timeSinceLastShot > player.fireRate){
-            bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation, player.bulletSpeed, player.bulletDamage, Color.YELLOW);
+            bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation, player.bulletSpeed, player.bulletDamage, Color.YELLOW, "P_BULLET");
             player.timeSinceLastShot = 0f;
         }
 
@@ -57,8 +67,8 @@ public class PlayerMovementSystem extends IteratingSystem {
             // Reverse Y to account for the coordinate system
             transform.turretRotation = (float) Math.toDegrees(Math.atan2(Gdx.graphics.getHeight() / 2f - Gdx.input.getY(), Gdx.input.getX() - Gdx.graphics.getWidth() / 2f));
         else{
-            if ((lockedTarget == null || timeToReajust > 1f)&& player.enemyCount > 0) {
-                timeToReajust = 0f;
+            if ((lockedTarget == null || timeToReadjust > 1f)&& player.enemyCount > 0) {
+                timeToReadjust = 0f;
                 ArrayList<Item> enemies = chunk.getObjectsIsInsideRect(chunk.enemyFilter, new Rectangle(transform.position.x - chunkSize / 2f, transform.position.y - chunkSize / 2f, chunkSize, chunkSize), chunk.world);
 
                 if (enemies != null && !enemies.isEmpty()) {
@@ -79,6 +89,9 @@ public class PlayerMovementSystem extends IteratingSystem {
             }
 
         }
+
+        if(transform.collided){ return; }
+
         if (settings.IS_MOBILE && Gdx.input.isTouched()) {
             Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
 
@@ -134,5 +147,45 @@ public class PlayerMovementSystem extends IteratingSystem {
                 transform.movement.y = MathUtils.sin(angleRad) * movement.y;
             }
         }
+        chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter);
+        transform.speedBoost = speedBoost;
+        speedBoost = 1f;
+        if(collisionAngle != 0) {
+            transform.setCollided(collisionAngle);
+            collisionAngle = 0;
+        }
     }
+    private final CollisionFilter CollisionFilter = new CollisionFilter() {
+        @Override
+        public Response filter(Item item, Item other) {
+            if(other == null) {
+                return null;
+            }
+            CollisionObject otherObject = (CollisionObject) other.userData;
+            switch (otherObject.getObjectType()) {
+                case "OCEAN":
+                case "STRUCTURE":
+                    if (Intersector.overlapConvexPolygons(otherObject.getPolygon(), ((CollisionObject) item.userData).getPolygon())) {
+                        collisionAngle = chunk.getAngleFromPoint(otherObject.getPolygon(), ((CollisionObject) item.userData).getBounds());
+                        return Response.bounce;
+                    }
+                    return Response.cross;
+                case "CAR":
+                    otherObject.health = 0;
+                    speedBoost *= .4f;
+                    return Response.cross;
+                case "PLAYER":
+                case "ENEMY":
+                    return Response.bounce;
+                case "HORIZONTAL":
+                case "VERTICAL":
+                    speedBoost += .4f;
+                    return Response.cross;
+                case "DECORATION":
+                    speedBoost *= .4f;
+                    return Response.cross;
+            }
+            return null;
+        }
+    };
 }
