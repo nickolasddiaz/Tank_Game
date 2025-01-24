@@ -17,15 +17,15 @@ import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 public class BulletFactory {
 
     private final World<CollisionObject> world;
+    private final ChunkComponent chunk;
     private final Engine engine;
     private final TextureAtlas atlas;
 
-    public BulletFactory(World<CollisionObject> world, Engine engine, TextureAtlas atlas) {
+    public BulletFactory(World<CollisionObject> world, Engine engine, TextureAtlas atlas, ChunkComponent chunk) {
         this.world = world;
         this.engine = engine;
         this.atlas = atlas;
-
-
+        this.chunk = chunk;
     }
 
     public void createBullet(Vector2 position, float rotation, float speed, int damage, Color color, String team) {
@@ -34,14 +34,16 @@ public class BulletFactory {
         // Create transform component with bullet properties
         TransformComponent transform = new TransformComponent(
             atlas.createSprite("bullet"),
-            itemSize,
-            itemSize,
+            (int) (itemSize* 1.5f),
+            (int) (itemSize*1.5f),
             color,
             true, // isPolygon for rotation
             team,
             world,
             position,
-            rotation, 10
+            rotation,
+            10,
+            chunk
         );
         bullet.add(transform);
         BulletComponent bulletComponent = new BulletComponent(speed, damage);

@@ -147,7 +147,14 @@ public class PlayerSystem extends IteratingSystem {
                 transform.movement.y = MathUtils.sin(angleRad) * movement.y;
             }
         }
-        chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter);
+        if (chunk.world.getRect(transform.item) == null) {
+            Gdx.app.log("Invalid item or missing rect: ", "error");
+            Rectangle rect = transform.item.userData.getBounds();
+            chunk.world.add(transform.item, transform.position.x, transform.position.y, rect.width, rect.height);
+        }
+        Response.Result result = chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter);
+        transform.position.set(result.goalX, result.goalY);
+
         transform.speedBoost = speedBoost;
         speedBoost = 1f;
         if(collisionAngle != 0) {
@@ -166,8 +173,7 @@ public class PlayerSystem extends IteratingSystem {
                 case "OCEAN":
                 case "STRUCTURE":
                     if (Intersector.overlapConvexPolygons(otherObject.getPolygon(), ((CollisionObject) item.userData).getPolygon())) {
-                        collisionAngle = chunk.getAngleFromPoint(otherObject.getPolygon(), ((CollisionObject) item.userData).getBounds());
-                        return Response.bounce;
+                        return Response.slide;
                     }
                     return Response.cross;
                 case "CAR":

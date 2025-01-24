@@ -52,7 +52,7 @@ public class EnemyFactory {
             i++;
         }
         //transformComponent.color = carColors[carTypeIndex];
-        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "ENEMY", chunkComponent.world, tempPosition, 0f,2);
+        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "ENEMY", chunkComponent.world, tempPosition, 0f,2,chunkComponent);
 
         tank.add(transformComponent);
         //(float) statsComponent.getStars() /15

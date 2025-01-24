@@ -33,7 +33,7 @@ public class MainMenuScreen implements Screen {
         //Skin skin = game.assetManager.get("ui_tank_game.json");
         Skin skin = new FWSkin(Gdx.files.internal("ui_tank_game.json"));
 
-        Label titleLabel = new Label("GTA Tank", skin);
+        Label titleLabel = new Label("Tank Game", skin);
         ImageTextButton startButton = new ImageTextButton("Start", skin);
         ImageTextButton optionsButton = new ImageTextButton("Options", skin);
         ImageTextButton leaderboardButton = new ImageTextButton("Leaderboard", skin);

@@ -55,7 +55,7 @@ public class yourgame extends Game {
         chunk = new ChunkComponent();
         player.add(chunk);
         //tank size is 30 width and 50 height
-        transform =new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "PLAYER", chunk.world, new Vector2(0f,0f), 0f,1000);
+        transform =new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "PLAYER", chunk.world, new Vector2(0f,0f), 0f,1000,chunk);
         player.add(transform);
         camera = new CameraComponent();
         player.add(camera);
@@ -76,7 +76,7 @@ public class yourgame extends Game {
 
         engine.addSystem(new CarSystem(engine, chunk));
         engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer, engine));
-        bulletFactory = new BulletFactory(chunk.world, engine, atlas);
+        bulletFactory = new BulletFactory(chunk.world, engine, atlas, chunk);
         enemyFactory = new EnemyFactory(engine, atlas, camera, chunk, statsComponent, transform, settings,playerComponent, bulletFactory,chunk);
         transform.turretComponent(
             new Sprite(atlas.findRegion("turret")),

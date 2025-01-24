@@ -12,6 +12,7 @@ import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
@@ -141,7 +142,7 @@ public class EnemySystem extends IteratingSystem {
             // Handle null nodes by using previous path or creating direct path to player
             if (startNode == null || endNode == null) {
                 if (enemyComponent.previousPath != null && enemyComponent.previousPath.getCount() > 0) {
-                    Gdx.app.log("EnemySystem", "Using previous path as fallback");
+                    //Gdx.app.log("EnemySystem", "Using previous path as fallback");
                     enemyComponent.path = enemyComponent.previousPath;
                 } else {
                     // Create a simple direct path to the player if no previous path exists
@@ -151,7 +152,7 @@ public class EnemySystem extends IteratingSystem {
                     directPath.add(simpleStartNode);
                     directPath.add(simpleEndNode);
                     enemyComponent.path = directPath;
-                    Gdx.app.log("EnemySystem", "Created direct path to player as fallback");
+                    //Gdx.app.log("EnemySystem", "Created direct path to player as fallback");
                 }
             } else {
                 // Store the current path as previous path before calculating new one
@@ -173,9 +174,9 @@ public class EnemySystem extends IteratingSystem {
                         TILE_SIZE * 2,
                         TILE_SIZE * 2
                     );
-                    Gdx.app.log("EnemySystem", "Path found with " + enemyComponent.path.getCount() + " nodes");
+                    //Gdx.app.log("EnemySystem", "Path found with " + enemyComponent.path.getCount() + " nodes");
                 } else {
-                    Gdx.app.log("EnemySystem", "No path found, using previous path");
+                    //Gdx.app.log("EnemySystem", "No path found, using previous path");
                     if (enemyComponent.previousPath != null) {
                         enemyComponent.path = enemyComponent.previousPath;
                     }
@@ -188,7 +189,14 @@ public class EnemySystem extends IteratingSystem {
             getNextPath(chunk, transform.position, enemyComponent);
         }
 
-        chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter);
+        if (chunk.world.getRect(transform.item) == null) {
+            Gdx.app.log("Invalid item or missing rect: ", "error");
+            Rectangle rect = transform.item.userData.getBounds();
+            chunk.world.add(transform.item, transform.position.x, transform.position.y, rect.width, rect.height);
+        }
+        Response.Result result = chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter);
+        transform.position.set(result.goalX, result.goalY);
+
         transform.speedBoost = speedBoost;
         speedBoost = 1f;
         if(collisionAngle != 0) {
@@ -261,8 +269,7 @@ public class EnemySystem extends IteratingSystem {
                 case "OCEAN":
                 case "STRUCTURE":
                     if (Intersector.overlapConvexPolygons(otherObject.getPolygon(), ((CollisionObject) item.userData).getPolygon())) {
-                        collisionAngle = chunk.getAngleFromPoint(otherObject.getPolygon(), ((CollisionObject) item.userData).getBounds());
-                        return Response.bounce;
+                        return Response.slide;
                     }
                     return Response.cross;
                 case "CAR":

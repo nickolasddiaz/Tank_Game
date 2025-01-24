@@ -37,7 +37,7 @@ public class AboutScreen implements Screen {
         titleLabel.setFontScale(2);
 
         // Game description
-        Label descriptionLabel = new Label("GTA Tank\nCreated by: Nickolas Diaz", skin);
+        Label descriptionLabel = new Label("Tank Game\nCreated by: Nickolas Diaz", skin);
         descriptionLabel.setAlignment(Align.center);
         descriptionLabel.setStyle(skin.get("title", Label.LabelStyle.class));
         descriptionLabel.setFontScale(0.7f);

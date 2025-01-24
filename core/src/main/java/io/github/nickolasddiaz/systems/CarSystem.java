@@ -5,6 +5,7 @@ import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.dongbat.jbump.CollisionFilter;
@@ -142,6 +143,11 @@ public class CarSystem extends IteratingSystem {
     }
 
     private void moveCar(TransformComponent transform){
+        if (chunk.world.getRect(transform.item) == null) {
+            Gdx.app.log("Invalid item or missing rect: ", "error");
+            Rectangle rect = transform.item.userData.getBounds();
+            chunk.world.add(transform.item, transform.position.x, transform.position.y, rect.width, rect.height);
+        }
         chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter.defaultFilter);
     }
 }

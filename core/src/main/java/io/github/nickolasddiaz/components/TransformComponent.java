@@ -5,10 +5,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
-import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
 import com.dongbat.jbump.World;
 import io.github.nickolasddiaz.utils.CollisionObject;
+
 
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
@@ -33,9 +33,10 @@ public class TransformComponent implements Component {
     public float turretRotation = 0f;
     public Vector2 turretOffSetPosition;
     public int turretLength;
+    private final ChunkComponent chunk;
 
 
-    public TransformComponent(Sprite sprite, int width, int height, Color color, boolean isPolygon, String objectType, World<CollisionObject> world, Vector2 position, float rotation, int health) {
+    public TransformComponent(Sprite sprite, int width, int height, Color color, boolean isPolygon, String objectType, World<CollisionObject> world, Vector2 position, float rotation, int health, ChunkComponent chunk) {
         this.position = position;
         this.rotation = rotation;
 
@@ -61,6 +62,9 @@ public class TransformComponent implements Component {
         } else {
             item = world.add(new Item<>(new CollisionObject(sprite.getBoundingRectangle(), objectType, health)), sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
         }
+        this.chunk = chunk;
+
+        this.chunk.addMovingObject(this.item);
     }
 
     public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, float width, int height) {
@@ -73,11 +77,14 @@ public class TransformComponent implements Component {
     }
 
     public void updateBounds() {
-        item.userData.updateRotation(rotation);
-        item.userData.updatePosition(position);
+        if (item != null && item.userData != null) {
+            item.userData.updateRotation(rotation);
+            item.userData.updatePosition(position);
+        }
     }
 
     public void dispose(){
+        chunk.removeMovingObject(item);
         world.remove(item);
     }
     public void setCollided(float rotation){

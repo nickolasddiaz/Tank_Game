@@ -1,6 +1,7 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
@@ -11,6 +12,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.ObjectSet;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
 import com.dongbat.jbump.Response;
@@ -41,9 +43,18 @@ public class ChunkComponent implements Component {
 
 
     private final HashMap<Vector2, ArrayList<CollisionObject>> chunkItems = new HashMap<>();
+    private final ObjectSet<Item<CollisionObject>> movingObjects = new ObjectSet<>();
+
+    public void addMovingObject(Item<CollisionObject> item) {
+        movingObjects.add(item);
+    }
+    public void removeMovingObject(Item<CollisionObject> item) {
+        movingObjects.remove(item);
+    }
 
     public ChunkComponent() {
         world = new World<>();
+        world.setTileMode(false);
     }
 
     public boolean getObjectIsInsideBoolean(Vector2 playerPosition, CollisionFilter filter) {
@@ -119,8 +130,8 @@ public class ChunkComponent implements Component {
                 }
 
                 Item<CollisionObject> item = new Item<>(collisionObject);
-                world.add(item, bounds.x, bounds.y, bounds.width, bounds.height);
                 items.add(item.userData);
+                world.add(item, bounds.x, bounds.y, bounds.width, bounds.height);
             }
         });
         chunkItems.put(chunkPosition, items);
@@ -175,6 +186,23 @@ public class ChunkComponent implements Component {
         world = new World<>();
         chunkItems.clear();
     }
+    public void addWorlds(){
+        ObjectSet<Item<CollisionObject>> tempMovingObjects = new ObjectSet<>();
+
+        for (Item<CollisionObject> item : movingObjects) {
+            if (item == null || item.userData == null) continue;
+
+            CollisionObject object = item.userData;
+            Rectangle bounds = object.getBounds();
+            if (bounds != null) {
+                world.add(item, bounds.x, bounds.y, bounds.width, bounds.height);
+                tempMovingObjects.add(item);
+            }
+        }
+        movingObjects.clear();
+        movingObjects.addAll(tempMovingObjects);
+    }
+
 
     public float getAngleFromPoint(Polygon polygon, Rectangle rect){
         Vector2 polygonCenter = new Vector2(polygon.getX() + polygon.getOriginX(), polygon.getY() + polygon.getOriginY());

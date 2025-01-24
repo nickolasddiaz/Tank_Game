@@ -1,6 +1,7 @@
 package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
@@ -137,6 +138,7 @@ public class ChunkSystem extends EntitySystem {
         chunk.mapChunks.clear();
         chunk.mapChunks.putAll(newChunks);
         chunk.cacheObjectsNodes();
+        chunk.addWorlds();
     }
 
     private void loadInitialChunks() {
