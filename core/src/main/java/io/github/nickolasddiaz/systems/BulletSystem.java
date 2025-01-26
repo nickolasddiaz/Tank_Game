@@ -41,8 +41,7 @@ public class BulletSystem extends IteratingSystem {
 
         transform.tempPosition.set(transform.position);
 
-        Vector2 chunkPosition = new Vector2((int) Math.floor(transform.position.x / chunkSize), (int) Math.floor(transform.position.y / chunkSize));
-        if (!chunk.mapChunks.containsKey(chunkPosition)) {
+        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.position))) {
             transform.dispose();
             engine.removeEntity(entity);
             return;

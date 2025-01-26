@@ -33,8 +33,12 @@ public class PlayerSystem extends IteratingSystem {
     private float collisionAngle = 0f;
     private float spawnTime = 0f;
     private final EnemyFactory enemyFactory;
+    private final MissileFactory missileFactory;
+    private final LandMineFactory landMineFactory;
+    private float landMineSpawnTime = 0f;
+    private float MissileSpawnTime = 0f;
 
-    public PlayerSystem(SettingsComponent settings, ChunkComponent chunk, BulletFactory bulletFactory,StatsComponent statsComponent, EnemyFactory enemyFactory) {
+    public PlayerSystem(SettingsComponent settings, ChunkComponent chunk, BulletFactory bulletFactory,StatsComponent statsComponent, EnemyFactory enemyFactory, MissileFactory missileFactory, LandMineFactory landMineFactory) {
         super(Family.all(PlayerComponent.class, TransformComponent.class, JoystickComponent.class).get());
         playerMapper = ComponentMapper.getFor(PlayerComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
@@ -44,6 +48,8 @@ public class PlayerSystem extends IteratingSystem {
         this.bulletFactory = bulletFactory;
         this.statsComponent = statsComponent;
         this.enemyFactory = enemyFactory;
+        this.missileFactory = missileFactory;
+        this.landMineFactory = landMineFactory;
     }
 
     @Override
@@ -53,6 +59,24 @@ public class PlayerSystem extends IteratingSystem {
         JoystickComponent joystick = joystickMapper.get(entity);
         if(statsComponent.getHealth() != transform.item.userData.health){
             statsComponent.setHealthLevel(transform.item.userData.health);
+        }
+
+        //fire missiles
+        if(player.CanShootMissile){
+            MissileSpawnTime += deltaTime;
+            if(MissileSpawnTime > player.missileRate){
+                MissileSpawnTime = 0f;
+                missileFactory.spawnMissile(transform.position.cpy(), transform.turretRotation, player.bulletSpeed, player.calculateDamage() * 4, player.bulletSize, null);
+            }
+        }
+
+        //fire landmines
+        if(player.CanShootMine){
+            landMineSpawnTime += deltaTime;
+            if(landMineSpawnTime > player.mineRate){
+                landMineSpawnTime = 0f;
+                landMineFactory.createLandMine(transform.position.cpy(), player.calculateDamage() * 2);
+            }
         }
 
 
@@ -227,8 +251,10 @@ public class PlayerSystem extends IteratingSystem {
             }
             CollisionObject otherObject = (CollisionObject) other.userData;
             switch (otherObject.getObjectType()) {
-                case "OCEAN":
                 case "STRUCTURE":
+                    chunk.destroyStructure(otherObject.getPosition());
+                    //chunk.world.remove(other);
+                case "OCEAN":
                     if (Intersector.overlapConvexPolygons(otherObject.getPolygon(), ((CollisionObject) item.userData).getPolygon())) {
                         return Response.slide;
                     }

@@ -9,11 +9,11 @@ import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.ObjectSet;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
 import com.dongbat.jbump.Response;
@@ -132,10 +132,6 @@ public class ChunkComponent implements Component {
         chunkItems.put(chunkPosition, items);
     }
 
-    private Vector2 gamePlaneToNormalPlane(Vector2 num, Vector2 currentChunk){
-        return new Vector2((int)((Math.abs(num.x) - currentChunk.x) / MAP_SIZE + MAP_SIZE), (int)((Math.abs(num.y)- currentChunk.y) / MAP_SIZE + MAP_SIZE));
-    }
-
     public void cacheObjectsNodes() {
         boolean[][] walkableGrid = new boolean[ALL_CHUNK_SIZE][ALL_CHUNK_SIZE];
         // Initialize all cells as walkable
@@ -159,6 +155,28 @@ public class ChunkComponent implements Component {
 
         // Create the pathfinding graph
         pathfindingGraph = new WorldGraph(walkableGrid, currentChunk);
+    }
+
+    public void destroyStructure(Vector2 position) {
+        Vector2 grid = worldToGridCoordinates(position);
+        Vector2 mapPosition = new Vector2(grid.x % MAP_SIZE, grid.y % MAP_SIZE);
+        // Get the chunk map based on the chunk position
+        TiledMap chunkMap = mapChunks.get(getChunkPosition(position));
+        // Retrieve the desired layer 2 where the structure resides
+        TiledMapTileLayer layer = (TiledMapTileLayer) chunkMap.getLayers().get(1);
+        // Remove the tile at the calculated map position
+        if (layer != null) {
+            for (int i = (int) mapPosition.x; i < mapPosition.x + 4; i++) {
+                for (int j = (int) mapPosition.y; j < mapPosition.y + 3; j++) {
+                    layer.setCell(i, j, null);
+                }
+            }
+        }
+    }
+
+
+    public Vector2 getChunkPosition(Vector2 position) {
+        return new Vector2((int) Math.floor(position.x / chunkSize), (int) Math.floor(position.y / chunkSize));
     }
 
     // assist with coordinate conversion

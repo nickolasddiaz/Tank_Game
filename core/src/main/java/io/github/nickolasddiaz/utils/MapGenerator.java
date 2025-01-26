@@ -95,7 +95,7 @@ public class MapGenerator {
     }
 
     private int assignTileType(double noiseValue) {
-        if (noiseValue < -0.70) {
+        if (noiseValue < -0.70) {//switch statement not possible because of the java version
             return TileType.OCEAN.ordinal();    // 15% for Ocean
         } else if (noiseValue < -0.30) {
             return TileType.WILD_WEST.ordinal();// 20% for Wild West
@@ -106,7 +106,6 @@ public class MapGenerator {
         } else {
             return TileType.DESSERT.ordinal();  // 20% for Desert
         }
-
     }
 
     //functions below to convert int[][] biomeMap and terrainMap to a TiledMap

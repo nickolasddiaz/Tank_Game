@@ -32,13 +32,16 @@ public class StatsComponent implements Component {
     public float pointMultiplier = 1f;
     public int luck = 10;
     public int reRollNumber = 100;
+    private int addStar = 0;
 
     public int getScore() { return score; }
     public void addScore(int score) {
-        int passes = this.score/(10 + stars);
+        addStar++;
+        if(addStar < (10 + stars)){
+            addStar = 0;
+            addStarLevel(1);
+        }
         this.score += (int) (score* pointMultiplier);
-//        if(this.score/(10 + stars) > passes)
-//            addStarLevel(1);
 
         scoreLabel.setText("Score:\n" + this.score + "P");
     }
@@ -50,7 +53,7 @@ public class StatsComponent implements Component {
         int passes = stars/10;
         stars += wantedLevel;
         if(stars/10 > passes){
-            upgrade = true;
+            upgrade = false;//true
         }
 
         if (stars < 0) {

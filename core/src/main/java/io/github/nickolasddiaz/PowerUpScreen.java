@@ -290,7 +290,7 @@ public class PowerUpScreen extends InputAdapter implements Screen {
             case BULLET_SPEED: game.playerComponent.bulletSpeed += 2f * itemSize * multiplier;break;
             case BULLET_DAMAGE: game.playerComponent.bulletDamage += 2 * multiplier;break;
             case BULLET_SIZE: game.playerComponent.bulletSize += 0.4f * multiplier;break;
-            case FIRE_RATE: game.playerComponent.fireRate -= 0.2f * multiplier;break;
+            case FIRE_RATE: game.playerComponent.fireRate *= 0.8f * multiplier;break;
             case CRITICAL_DAMAGE: game.playerComponent.criticalDamageMultiplier += .5f * multiplier;break;
             case CRITICAL_CHANCE: game.playerComponent.criticalChance += 0.25f * multiplier;break;
             case FREEZE_SHOT: game.playerComponent.freezeAmount += 0.5f * multiplier;break;
@@ -300,8 +300,8 @@ public class PowerUpScreen extends InputAdapter implements Screen {
             case DECREASE_WANTED_LEVEL: game.statsComponent.addStarLevel(-multiplier*3);break;
             case RE_ROLL_NUMBER: game.statsComponent.reRollNumber += multiplier;break;
             case DESTROY_HOUSES: game.playerComponent.CanDestroy = true;break;
-            case MISSILE: game.playerComponent.CanShootMissile = true;break;
-            case MINE: game.playerComponent.CanShootMine = true;break;
+            case MISSILE: game.playerComponent.CanShootMissile = true; game.playerComponent.missileRate *= .8f * multiplier;  break;
+            case MINE: game.playerComponent.CanShootMine = true; game.playerComponent.mineRate *= .7f * multiplier; break;
             case ALL_AROUND:
                 game.statsComponent.regeneration += multiplier;
                 game.playerComponent.SPEED += itemSize * 10f * multiplier;

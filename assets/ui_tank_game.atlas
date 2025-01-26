@@ -249,6 +249,27 @@ left_star
   orig: 21, 40
   offset: 0, 0
   index: -1
+mine1
+  rotate: false
+  xy: 395, 634
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+mine2
+  rotate: false
+  xy: 195, 619
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+mine3
+  rotate: false
+  xy: 284, 33
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
 missile
   rotate: false
   xy: 205, 51

@@ -3,49 +3,51 @@ package io.github.nickolasddiaz.systems;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.dongbat.jbump.World;
-import io.github.nickolasddiaz.components.BulletComponent;
 import io.github.nickolasddiaz.components.ChunkComponent;
+import io.github.nickolasddiaz.components.MissileComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 import io.github.nickolasddiaz.utils.CollisionObject;
 
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
-public class BulletFactory {
+public class MissileFactory {
 
     private final World<CollisionObject> world;
     private final Engine engine;
     private final TextureAtlas atlas;
+    private final ChunkComponent chunk;
 
-    public BulletFactory(World<CollisionObject> world, Engine engine, TextureAtlas atlas) {
+    public MissileFactory(World<CollisionObject> world, Engine engine, TextureAtlas atlas, ChunkComponent chunk) {
         this.world = world;
         this.engine = engine;
         this.atlas = atlas;
+        this.chunk = chunk;
     }
 
-    public void createBullet(Vector2 position, float rotation, float speed, int damage, float size, Color color, String team) {
-        Entity bullet = new Entity();
+    public void spawnMissile(Vector2 position, float rotation, float speed, int damage, float size, Color color) {
+        Entity missile = new Entity();
 
-        // Create transform component with bullet properties
+        // Create transform component with missile properties
         TransformComponent transform = new TransformComponent(
-            atlas.createSprite("bullet"),
+            atlas.createSprite("missile"),
             (int) (itemSize*size),
             (int) (itemSize*size),
             color,
             true, // isPolygon for rotation
-            team,// could be "ALLY" or "ENEMY"
+            "MISSILE",
             world,
             position,
             rotation,
-            damage// its health is the damage
+            damage // its health is the damage
         );
-        bullet.add(transform);
-        BulletComponent bulletComponent = new BulletComponent(speed);
-        bullet.add(bulletComponent);
+        missile.add(transform);
 
-        engine.addEntity(bullet);
+        MissileComponent missileComponent = new MissileComponent(speed, chunk);
+        missile.add(missileComponent);
+
+        engine.addEntity(missile);
     }
 }

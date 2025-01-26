@@ -20,17 +20,18 @@ public class GameScreen implements Screen {
         this.game = game;
         game.engine.removeEntity(game.car);
 
-        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk,game.bulletFactory,game.statsComponent,game.enemyFactory));
+        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk,game.bulletFactory,game.statsComponent,game.enemyFactory,new MissileFactory(game.chunk.world,game.engine,game.atlas,game.chunk),new LandMineFactory(game.chunk.world,game.engine,game.atlas,game.chunk.random)));
         game.engine.addSystem(new StatsRenderSystem());
         if(game.settings.IS_MOBILE) {
             game.engine.addSystem(new JoystickInputSystem());
         }
 
         game.engine.addSystem(new BulletSystem(game.engine, game.chunk, game.statsComponent));
-        Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
+        game.engine.addSystem(new MissileSystem(game.engine, game.chunk, game.statsComponent));
+        game.engine.addSystem(new LandMineSystem(game.engine, game.chunk, game.statsComponent));
 
-        Button pauseButton = new Button(skin);
-        pauseButton.setStyle(skin.get("pause", Button.ButtonStyle.class));
+        Button pauseButton = new Button(game.skin);
+        pauseButton.setStyle(game.skin.get("pause", Button.ButtonStyle.class));
         pauseButton.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 7f);
         pauseButton.setPosition(Gdx.graphics.getWidth() - pauseButton.getWidth()*1.2f, Gdx.graphics.getHeight() - pauseButton.getHeight()*1.2f);
         stage.addActor(pauseButton);

@@ -8,7 +8,7 @@ public class CollisionObject {
     private Rectangle rectangleObject;
     private Polygon polygonObject;
     private final boolean isPolygon;
-    private final String objectType; // HORIZONTAL, VERTICAL, STRUCTURE, DECORATION, OCEAN, CAR, ENEMY, PLAYER, ALLY, P_BULLET, E_BULLET
+    private final String objectType; // HORIZONTAL, VERTICAL, STRUCTURE, DECORATION, OCEAN, CAR, ENEMY, PLAYER, ALLY, P_BULLET, E_BULLET, MISSILE, MINE
     public int health = 10;
 
     // Constructor for non-rotatable rectangle objects

@@ -29,7 +29,9 @@ public class PlayerComponent implements Component {
     public int backShotsAmount = 0;
     public boolean CanDestroy = false;
     public boolean CanShootMissile = false;
-    public boolean CanShootMine = false;
+    public float missileRate = 2f;
+    public boolean CanShootMine = true;
+    public float mineRate = 2f;
 
     public float SPEED = itemSize * 50f;
     public float spinSpeed = SPEED/16;
@@ -43,7 +45,7 @@ public class PlayerComponent implements Component {
         this.random = random;
     }
 
-    private int calculateDamage(){
+    public int calculateDamage(){
             float chance = criticalChance % 100;
             float multiplier = (random.nextFloat() < chance) ? criticalDamageMultiplier : 1f;
             return (int) (bulletDamage * multiplier * (criticalChance - chance)/ 100);
