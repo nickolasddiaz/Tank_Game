@@ -33,10 +33,9 @@ public class TransformComponent implements Component {
     public float turretRotation = 0f;
     public Vector2 turretOffSetPosition;
     public int turretLength;
-    private final ChunkComponent chunk;
 
 
-    public TransformComponent(Sprite sprite, int width, int height, Color color, boolean isPolygon, String objectType, World<CollisionObject> world, Vector2 position, float rotation, int health, ChunkComponent chunk) {
+    public TransformComponent(Sprite sprite, int width, int height, Color color, boolean isPolygon, String objectType, World<CollisionObject> world, Vector2 position, float rotation, int health) {
         this.position = position;
         this.rotation = rotation;
 
@@ -62,9 +61,6 @@ public class TransformComponent implements Component {
         } else {
             item = world.add(new Item<>(new CollisionObject(sprite.getBoundingRectangle(), objectType, health)), sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
         }
-        this.chunk = chunk;
-
-        this.chunk.addMovingObject(this.item);
     }
 
     public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, float width, int height) {
@@ -84,7 +80,6 @@ public class TransformComponent implements Component {
     }
 
     public void dispose(){
-        chunk.removeMovingObject(item);
         world.remove(item);
     }
     public void setCollided(float rotation){
@@ -92,6 +87,9 @@ public class TransformComponent implements Component {
         tempRotation = rotation;
         bouncePosition = position.add(new Vector2(itemSize, 0).setAngleDeg(rotation -180f));
         collided = true;
+    }
+    public int getHealth(){
+        return item.userData.health;
     }
 
 }

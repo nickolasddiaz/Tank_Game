@@ -4,163 +4,359 @@ size: 1024, 1024
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
+All Around
+  rotate: false
+  xy: 645, 923
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Ally Spawner
+  rotate: false
+  xy: 1, 517
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Back Shots
+  rotate: false
+  xy: 436, 793
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Bullet Damage
+  rotate: false
+  xy: 1, 415
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Bullet Size
+  rotate: false
+  xy: 538, 793
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Bullet Speed
+  rotate: false
+  xy: 849, 923
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Burn Damage
+  rotate: false
+  xy: 1, 313
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Critical Chance
+  rotate: false
+  xy: 1, 211
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Critical Damage
+  rotate: false
+  xy: 1, 109
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Destroy Houses
+  rotate: false
+  xy: 1, 7
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Explosive Power
+  rotate: false
+  xy: 103, 517
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Extra Shot
+  rotate: false
+  xy: 103, 415
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Fire Rate
+  rotate: false
+  xy: 103, 313
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Freeze Shot
+  rotate: false
+  xy: 103, 211
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Health Boost
+  rotate: false
+  xy: 103, 109
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Improved Armor
+  rotate: false
+  xy: 103, 7
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Lucky Charm
+  rotate: false
+  xy: 259, 616
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Mine Rate
+  rotate: false
+  xy: 436, 691
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Missile Rate
+  rotate: false
+  xy: 538, 691
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Point Boost
+  rotate: false
+  xy: 205, 514
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Re-roll
+  rotate: false
+  xy: 205, 208
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Reduce Star Level
+  rotate: false
+  xy: 205, 412
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Regeneration
+  rotate: false
+  xy: 205, 310
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Speed Boost
+  rotate: false
+  xy: 205, 106
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
 U811sIwHbPWRhkkOdY3XvMr5.ttf_0
   rotate: false
-  xy: 387, 727
+  xy: 387, 895
   size: 256, 128
   orig: 256, 128
   offset: 0, 0
   index: -1
+basePlate
+  rotate: false
+  xy: 747, 923
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
 bottom_left_heart
   rotate: false
-  xy: 157, 422
+  xy: 985, 930
   size: 24, 27
   orig: 24, 27
   offset: 0, 0
   index: -1
 bottom_right_heart
   rotate: false
-  xy: 526, 666
+  xy: 727, 839
   size: 24, 27
   orig: 24, 27
   offset: 0, 0
   index: -1
 bullet
   rotate: false
-  xy: 1, 254
+  xy: 361, 630
   size: 32, 20
   orig: 32, 20
   offset: 0, 0
   index: -1
 car
   rotate: false
-  xy: 645, 739
+  xy: 205, 1
   size: 60, 26
   orig: 60, 26
   offset: 0, 0
   index: -1
 check_mark
   rotate: false
-  xy: 91, 385
+  xy: 951, 959
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 handle
   rotate: false
-  xy: 1, 276
+  xy: 307, 60
   size: 83, 83
   orig: 83, 83
   offset: 0, 0
   index: -1
 handle_background
   rotate: false
-  xy: 259, 550
+  xy: 259, 718
   size: 175, 175
   orig: 175, 175
   offset: 0, 0
   index: -1
 home
   rotate: false
-  xy: 645, 767
+  xy: 307, 526
   size: 88, 88
   orig: 88, 88
   offset: 0, 0
   index: -1
 left_star
   rotate: false
-  xy: 502, 595
+  xy: 753, 849
   size: 21, 40
   orig: 21, 40
   offset: 0, 0
   index: -1
+missile
+  rotate: false
+  xy: 205, 51
+  size: 98, 53
+  orig: 98, 53
+  offset: 0, 0
+  index: -1
 ouLiJS4iu4ylyojldWZspG21.ttf_0
   rotate: false
-  xy: 1, 469
+  xy: 1, 637
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 pause
   rotate: false
-  xy: 1, 361
+  xy: 307, 436
   size: 88, 88
   orig: 88, 88
   offset: 0, 0
   index: -1
 play
   rotate: false
-  xy: 436, 637
+  xy: 307, 346
   size: 88, 88
   orig: 88, 88
   offset: 0, 0
   index: -1
+powerupbutton
+  rotate: false
+  xy: 645, 841
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
+poweruppage
+  rotate: false
+  xy: 307, 145
+  size: 87, 109
+  orig: 87, 109
+  offset: 0, 0
+  index: -1
 redo
   rotate: false
-  xy: 735, 767
+  xy: 307, 256
   size: 88, 88
   orig: 88, 88
   offset: 0, 0
   index: -1
 right_star
   rotate: false
-  xy: 825, 781
+  xy: 640, 799
   size: 20, 40
   orig: 20, 40
   offset: 0, 0
   index: -1
 silver_rectangle
   rotate: false
-  xy: 1, 727
+  xy: 1, 895
   size: 384, 128
   orig: 384, 128
   offset: 0, 0
   index: -1
 slide_dot
   rotate: false
-  xy: 825, 823
+  xy: 951, 925
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 slider
   rotate: false
-  xy: 1, 451
+  xy: 1, 619
   size: 192, 16
   orig: 192, 16
   offset: 0, 0
   index: -1
 tank
   rotate: false
-  xy: 526, 695
+  xy: 727, 891
   size: 50, 30
   orig: 50, 30
   offset: 0, 0
   index: -1
 top_left_heart
   rotate: false
-  xy: 259, 505
+  xy: 727, 868
   size: 24, 21
   orig: 24, 21
   offset: 0, 0
   index: -1
 top_right_heart
   rotate: false
-  xy: 91, 362
+  xy: 779, 900
   size: 24, 21
   orig: 24, 21
   offset: 0, 0
   index: -1
 turret
   rotate: false
-  xy: 259, 528
+  xy: 205, 29
   size: 77, 20
   orig: 77, 20
   offset: 0, 0
   index: -1
 unchecked_mark
   rotate: false
-  xy: 436, 571
+  xy: 361, 652
   size: 64, 64
   orig: 64, 64
   offset: 0, 0

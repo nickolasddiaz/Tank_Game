@@ -2,7 +2,6 @@ package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -12,6 +11,9 @@ import io.github.nickolasddiaz.components.*;
 
 public class StatsRenderSystem extends EntitySystem {
     private Stage stage;
+    StatsComponent statsComponent;
+    SettingsComponent settingsComponent;
+    float regenerationTime = 0f;
 
 
     @Override
@@ -23,8 +25,8 @@ public class StatsRenderSystem extends EntitySystem {
         ComponentMapper<StatsComponent> statsMapper = ComponentMapper.getFor(StatsComponent.class);
         ComponentMapper<SettingsComponent> settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
 
-        StatsComponent statsComponent = statsMapper.get(player);
-        SettingsComponent settingsComponent = settingsMapper.get(player);
+        statsComponent = statsMapper.get(player);
+        settingsComponent = settingsMapper.get(player);
 
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
@@ -60,7 +62,7 @@ public class StatsRenderSystem extends EntitySystem {
         float yOffset = Gdx.graphics.getHeight() - iconSize - 2 * padding;
 
         // Create and position score label
-        statsComponent.scoreLabel = new Label("Score: 0", skin);
+        statsComponent.scoreLabel = new Label("Score:\n0P", skin);
         statsComponent.scoreLabel.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 8f);
         statsComponent.scoreLabel.setPosition(padding, yOffset);
         stage.addActor(statsComponent.scoreLabel);
@@ -100,11 +102,18 @@ public class StatsRenderSystem extends EntitySystem {
         stage.addActor(statsComponent.starsLabel);
 
         statsComponent.addHealthLevel(3);
-        statsComponent.addStarLevel(21);
+        //statsComponent.addStarLevel(21);
     }
 
     @Override
     public void update(float deltaTime) {
+        regenerationTime += deltaTime;
+        if (regenerationTime > statsComponent.regenerationRate) {
+            regenerationTime = 0f;
+            statsComponent.addHealthLevel(statsComponent.regeneration);
+        }
+
+
         stage.act(deltaTime);
         stage.draw();
     }

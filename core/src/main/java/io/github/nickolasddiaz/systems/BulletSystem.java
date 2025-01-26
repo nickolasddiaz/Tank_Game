@@ -9,6 +9,7 @@ import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Response;
 import io.github.nickolasddiaz.components.BulletComponent;
 import io.github.nickolasddiaz.components.ChunkComponent;
+import io.github.nickolasddiaz.components.StatsComponent;
 import io.github.nickolasddiaz.utils.CollisionObject;
 import io.github.nickolasddiaz.components.TransformComponent;
 
@@ -20,14 +21,16 @@ public class BulletSystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<BulletComponent> bulletMapper;
     private final ChunkComponent chunk;
+    private StatsComponent statsComponent;
     private final Engine engine;
 
-    public BulletSystem(Engine engine, ChunkComponent chunk) {
+    public BulletSystem(Engine engine, ChunkComponent chunk, StatsComponent statsComponent) {
         super(Family.all(TransformComponent.class, BulletComponent.class).get());
         this.engine = engine;
         this.transformMapper = ComponentMapper.getFor(TransformComponent.class);
         this.bulletMapper = ComponentMapper.getFor(BulletComponent.class);
         this.chunk = chunk;
+        this.statsComponent = statsComponent;
     }
 
 
@@ -76,10 +79,14 @@ public class BulletSystem extends IteratingSystem {
             case "CAR":
                 otherObject.health = 0;
                 ((CollisionObject) item.userData).health = 0;
+                if(Objects.equals(((CollisionObject) item.userData).getObjectType(), "P_BULLET"))
+                    addScore();
                 return Response.touch;
+            case "ALLY":
             case "PLAYER":
                 if (!Objects.equals(((CollisionObject) item.userData).getObjectType(), "P_BULLET")) {
-                    otherObject.health -= ((CollisionObject) item.userData).health;
+                    if(otherObject.health > statsComponent.reduceDamage)
+                        otherObject.health -= ((CollisionObject) item.userData).health - statsComponent.reduceDamage;
                     ((CollisionObject) item.userData).health = 0;
                     return Response.touch;
                 }
@@ -88,6 +95,9 @@ public class BulletSystem extends IteratingSystem {
                 if (!Objects.equals(((CollisionObject) item.userData).getObjectType(), "E_BULLET")) {
                     otherObject.health -= ((CollisionObject) item.userData).health;
                     ((CollisionObject) item.userData).health = 0;
+                    if(otherObject.health <= 0){
+                        addScore();
+                    }
                     return Response.touch;
                 }
                 break;
@@ -95,5 +105,8 @@ public class BulletSystem extends IteratingSystem {
         }
         return Response.cross;
     };
+    private void addScore(){
+        statsComponent.addScore(1);
+    }
 
 }

@@ -11,6 +11,7 @@ import io.github.nickolasddiaz.systems.*;
 public class GameScreen implements Screen {
     private final yourgame game;
     private OptionsScreen optionsScreen;
+    private PowerUpScreen powerUpScreen;
     float seconds = 0;
     Stage stage = new Stage();
 
@@ -19,13 +20,13 @@ public class GameScreen implements Screen {
         this.game = game;
         game.engine.removeEntity(game.car);
 
-        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk,game.bulletFactory,game.statsComponent));
+        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk,game.bulletFactory,game.statsComponent,game.enemyFactory));
         game.engine.addSystem(new StatsRenderSystem());
         if(game.settings.IS_MOBILE) {
             game.engine.addSystem(new JoystickInputSystem());
         }
 
-        game.engine.addSystem(new BulletSystem(game.engine, game.chunk));
+        game.engine.addSystem(new BulletSystem(game.engine, game.chunk, game.statsComponent));
         Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
 
         Button pauseButton = new Button(skin);
@@ -52,43 +53,59 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Input.Keys.P)) {
             togglePause();
         }
+
+        // Render paused state UI
+        if (game.statsComponent.upgrade) {
+            if (powerUpScreen == null) {
+                powerUpScreen = new PowerUpScreen(game,game.chunk.random);
+            }
+            powerUpScreen.render(delta);
+            return;
+        }
+
+        // Render paused state UI
+        if (game.settings.paused) {
+            if (optionsScreen == null) {
+                optionsScreen = new OptionsScreen(game, false); // false means don't dispose GameScreen
+            }
+            optionsScreen.render(delta);
+            return;
+        }
+
+        // Regular gameplay rendering
+        if (optionsScreen != null) {
+            optionsScreen = null;
+            Gdx.input.setInputProcessor(stage);
+        }
+        if (powerUpScreen != null) {
+            powerUpScreen = null;
+        }
+
         seconds += delta;
-        game.engine.update(delta);
+        if(!game.settings.paused)
+            game.engine.update(delta);
         stage.act(delta);
         stage.draw();
 
-        if (game.settings.paused) {
-            if (optionsScreen == null) {
-                optionsScreen = new OptionsScreen(game, false);  // false means don't dispose GameScreen
-            }
-            optionsScreen.render(delta);
-
-            return;
-        }else{
-            if (optionsScreen != null) {
-                optionsScreen = null;
-                Gdx.input.setInputProcessor(stage);
-            }
-        }
-        if(game.statsComponent.getHealth() <= 0){
+        if (game.engine.getSystem(PlayerSystem.class).getEntities().size() == 0) {
+            game.statsComponent.setHealthLevel(0);
             game.setScreen(new DeathScreen(game, game.statsComponent.getScore()));
         }
 
-
-        float spawn = 2f / (game.statsComponent.getScore() / 3f+ 1f);
-        while(seconds > spawn){
-           seconds -= spawn;
-           game.enemyFactory.createTank(0, game.transform.position);
+        //float spawn = 40f / (game.statsComponent.getStars()/5f) ;
+        float spawn = 4;
+        while (seconds > spawn) {
+            seconds -= spawn;
+            game.enemyFactory.createTank(game.transform.position,false);
         }
-
     }
 
     private void togglePause() {
         game.settings.paused = !game.settings.paused;
-        if (!game.settings.paused && optionsScreen != null) {
-
-            optionsScreen.dispose();
-            optionsScreen = null;
+        if(game.settings.paused){
+            pause();
+        }else{
+            resume();
         }
     }
 

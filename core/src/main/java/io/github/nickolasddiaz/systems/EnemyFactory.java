@@ -2,6 +2,7 @@ package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
@@ -30,7 +31,7 @@ public class EnemyFactory {
         engine.addSystem(new EnemySystem(engine, playerTransformComponent, cameraComponent, settings, bulletFactory,chunk));
     }
 
-    public void createTank(int enemyType, Vector2 spawnPosition){ {
+    public void createTank(Vector2 spawnPosition, boolean isAlly){ {
         playerComponent.enemyCount++;
         Entity tank = engine.createEntity();
 
@@ -52,11 +53,11 @@ public class EnemyFactory {
             i++;
         }
         //transformComponent.color = carColors[carTypeIndex];
-        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "ENEMY", chunkComponent.world, tempPosition, 0f,2,chunkComponent);
+        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),(isAlly)? Color.GREEN : null, true, (isAlly)? "Ally" : "ENEMY", chunkComponent.world, tempPosition, 0f,2);
 
         tank.add(transformComponent);
         //(float) statsComponent.getStars() /15
-        EnemyComponent enemyComponent = new EnemyComponent(0f,10f,10f,1f, 20f * itemSize, 5);
+        EnemyComponent enemyComponent = new EnemyComponent(0f,10f,10f,1f, 20f * itemSize, 5, isAlly);
         tank.add(enemyComponent);
         transformComponent.turretComponent(
             new Sprite(atlas.findRegion("turret")),

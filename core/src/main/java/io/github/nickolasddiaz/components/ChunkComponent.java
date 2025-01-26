@@ -1,7 +1,8 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
-import com.badlogic.gdx.Gdx;
+import com.badlogic.ashley.core.Engine;
+import com.badlogic.ashley.core.Family;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
@@ -37,24 +38,18 @@ public class ChunkComponent implements Component {
     public Random random = new Random(System.currentTimeMillis());
     public float carWidth = 64;
     public WorldGraph pathfindingGraph;
+    private final Engine engine;
 
 
     public World<CollisionObject> world;
 
 
     private final HashMap<Vector2, ArrayList<CollisionObject>> chunkItems = new HashMap<>();
-    private final ObjectSet<Item<CollisionObject>> movingObjects = new ObjectSet<>();
 
-    public void addMovingObject(Item<CollisionObject> item) {
-        movingObjects.add(item);
-    }
-    public void removeMovingObject(Item<CollisionObject> item) {
-        movingObjects.remove(item);
-    }
-
-    public ChunkComponent() {
+    public ChunkComponent(Engine engine) {
         world = new World<>();
         world.setTileMode(false);
+        this.engine = engine;
     }
 
     public boolean getObjectIsInsideBoolean(Vector2 playerPosition, CollisionFilter filter) {
@@ -76,7 +71,7 @@ public class ChunkComponent implements Component {
         return items.isEmpty() ? null : ((CollisionObject) items.get(0).userData).getBounds();
     }
 
-    public ArrayList<Item> getObjectsIsInsideRect(CollisionFilter filter,Rectangle playerRect, World world) {
+    public ArrayList<Item> getObjectsIsInsideRect(CollisionFilter filter,Rectangle playerRect) {
         ArrayList<Item> items = new ArrayList<>();
         world.queryRect(playerRect.x, playerRect.y, playerRect.width, playerRect.height, filter, items);
         return items.isEmpty() ? null : items;
@@ -187,20 +182,14 @@ public class ChunkComponent implements Component {
         chunkItems.clear();
     }
     public void addWorlds(){
-        ObjectSet<Item<CollisionObject>> tempMovingObjects = new ObjectSet<>();
+        engine.getEntitiesFor(Family.all(TransformComponent.class).get()).forEach(entity -> {
+            Item<CollisionObject> transform = entity.getComponent(TransformComponent.class).item;
 
-        for (Item<CollisionObject> item : movingObjects) {
-            if (item == null || item.userData == null) continue;
-
-            CollisionObject object = item.userData;
-            Rectangle bounds = object.getBounds();
-            if (bounds != null) {
-                world.add(item, bounds.x, bounds.y, bounds.width, bounds.height);
-                tempMovingObjects.add(item);
+            if (transform.userData != null && transform.userData.health > 0) {
+                Rectangle bounds = transform.userData.getBounds();
+                world.add(transform, bounds.x, bounds.y, bounds.width, bounds.height);
             }
-        }
-        movingObjects.clear();
-        movingObjects.addAll(tempMovingObjects);
+        });
     }
 
 
@@ -239,4 +228,5 @@ public class ChunkComponent implements Component {
     public CollisionFilter verticalFilter = createFilter("VERTICAL");
     public CollisionFilter horizontalFilter = createFilter("HORIZONTAL");
     public CollisionFilter enemyFilter = createFilter("ENEMY");
+    public CollisionFilter allySpawnFilter = createFilter("PLAYER","STRUCTURE","OCEAN", "ENEMY", "ALLY");
 }

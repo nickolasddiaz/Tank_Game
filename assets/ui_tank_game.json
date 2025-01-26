@@ -20,6 +20,12 @@ com.badlogic.gdx.graphics.Color: {
 		b: 0
 		a: 1
 	}
+	GREY: {
+		r: 0.7921569
+		g: 0.7921569
+		b: 0.7921569
+		a: 1
+	}
 	RED: {
 		r: 1
 		g: 0
@@ -47,6 +53,14 @@ com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
 	silver_rectangle_hover: {
 		name: silver_rectangle
 		color: RED
+	}
+	powerupbuttonRed: {
+		name: powerupbutton
+		color: RED
+	}
+	poweruppagegrey: {
+		name: poweruppage
+		color: GREY
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.Button$ButtonStyle: {
@@ -77,12 +91,27 @@ com.badlogic.gdx.scenes.scene2d.ui.CheckBox$CheckBoxStyle: {
 		font: inktank
 	}
 }
+com.badlogic.gdx.scenes.scene2d.ui.ImageButton$ImageButtonStyle: {
+	default: {
+		up: powerupbutton
+	}
+}
 com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle: {
 	default: {
 		font: inktank
 		up: silver_rectangle
 		over: silver_rectangle_hover
 		checked: silver_rectangle_hover
+	}
+	power-up: {
+		font: inktank
+		up: poweruppage
+		over: poweruppagegrey
+	}
+	re-roll: {
+		font: chunq
+		up: powerupbutton
+		over: powerupbuttonRed
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {

@@ -5,13 +5,18 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 
+
 import java.util.Random;
 
 public class StatsComponent implements Component {
     private int score = 0;
     private int stars = 0;
-    private int health = 0;
-    private boolean isDead = false;
+    private final TransformComponent playerTransform;
+    public boolean upgrade = false;
+
+    public StatsComponent(TransformComponent playerTransform) {
+        this.playerTransform = playerTransform;
+    }
 
     public final Color[] starColors = new Color[10];
     public final Color[] heartColors = new Color[12];
@@ -21,14 +26,36 @@ public class StatsComponent implements Component {
 
     public Label scoreLabel, healthLabel, starsLabel;
 
+    public int reduceDamage = 0;
+    public int regeneration = 1;
+    public float regenerationRate = 10f;
+    public float pointMultiplier = 1f;
+    public int luck = 10;
+    public int reRollNumber = 100;
 
     public int getScore() { return score; }
+    public void addScore(int score) {
+        int passes = this.score/(10 + stars);
+        this.score += (int) (score* pointMultiplier);
+//        if(this.score/(10 + stars) > passes)
+//            addStarLevel(1);
+
+        scoreLabel.setText("Score:\n" + this.score + "P");
+    }
+
     public int getStars() { return stars; }
-    public int getHealth() { return health; }
-    public boolean isDead() { return isDead; }
+    public int getHealth() { return playerTransform.getHealth(); }
 
     public void addStarLevel(int wantedLevel) {
+        int passes = stars/10;
         stars += wantedLevel;
+        if(stars/10 > passes){
+            upgrade = true;
+        }
+
+        if (stars < 0) {
+            stars = 0;
+        }
         int level = stars % 10;
         int flatLevel = (stars - level) / 10;
         Color color = setColor(flatLevel);
@@ -51,14 +78,17 @@ public class StatsComponent implements Component {
         starsLabel.setText(stars + "S");
     }
     public void addHealthLevel(int healthLevel){
-        health += healthLevel;
-        setHealthLevel(health);
+        playerTransform.item.userData.health += healthLevel;
+        setHealthLevel(getHealth());
     }
 
     public void setHealthLevel(int healthLevel) {
-        health = healthLevel;
-        int level = health % 12;
-        int flatLevel = (health - level) / 12;
+        if (healthLevel < 0) {
+            healthLevel = 0;
+        }
+        playerTransform.item.userData.health = healthLevel;
+        int level = getHealth() % 12;
+        int flatLevel = (getHealth() - level) / 12;
         Color color = setColor(flatLevel);
         Color secondColor = setColor(flatLevel - 1);
 
@@ -77,10 +107,7 @@ public class StatsComponent implements Component {
             }
         }
 
-        if (health <= 0) {
-            isDead = true;
-        }
-        healthLabel.setText(health + "H");
+        healthLabel.setText(getHealth() + "H");
     }
 
     private Color setColor(int level) {
@@ -110,9 +137,5 @@ public class StatsComponent implements Component {
                 return new Color(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f);
             }
         }
-    }
-
-    public void setScore(int score) {
-        this.score = score;
     }
 }

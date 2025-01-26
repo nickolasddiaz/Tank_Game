@@ -17,11 +17,13 @@ public class OptionsScreen implements Screen {
     private final Label sxfVolumeLabel;
     private final Slider musicVolumeSlider;
     private final Slider sxfVolumeSlider;
+    private final boolean dispose;
 
     public OptionsScreen(final yourgame game, boolean dispose) {
         this.game = game;
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
+        this.dispose = dispose;
 
         float buttonHeight = Gdx.graphics.getHeight() / 10f;
         float buttonWidth = Gdx.graphics.getWidth() / 2f;
@@ -29,27 +31,25 @@ public class OptionsScreen implements Screen {
         float buttonInitialY = Gdx.graphics.getHeight() / 2f;
         float buttonSpacing = buttonHeight / 2;
 
-        Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
-
         // Volume Controls
-        musicVolumeLabel = new ImageTextButton("Music Volume " + game.settings.musicVolume, skin).getLabel();
-        musicVolumeSlider = new Slider(0, 100, 1, false, skin);
+        musicVolumeLabel = new ImageTextButton("Music Volume " + game.settings.musicVolume, game.skin).getLabel();
+        musicVolumeSlider = new Slider(0, 100, 1, false, game.skin);
         setMusicVolume(game.settings.musicVolume);
-        sxfVolumeLabel = new ImageTextButton("SFX Volume " + game.settings.sfxVolume, skin).getLabel();
-        sxfVolumeSlider = new Slider(0, 100, 1, false, skin);
+        sxfVolumeLabel = new ImageTextButton("SFX Volume " + game.settings.sfxVolume, game.skin).getLabel();
+        sxfVolumeSlider = new Slider(0, 100, 1, false, game.skin);
         setSFXVolume(game.settings.sfxVolume);
 
         Table mobileContainer = new Table();
         Table debugContainer = new Table();
         Table autoFireContainer = new Table();
 
-        CheckBox mobileCheckBox = new CheckBox("", skin); // Remove text from checkbox
-        CheckBox debugCheckBox = new CheckBox("", skin);
-        CheckBox autoFireCheckBox = new CheckBox("", skin);
+        CheckBox mobileCheckBox = new CheckBox("", game.skin); // Remove text from checkbox
+        CheckBox debugCheckBox = new CheckBox("", game.skin);
+        CheckBox autoFireCheckBox = new CheckBox("", game.skin);
 
-        Label mobileLabel = new Label("Mobile Controls", skin);
-        Label debugLabel = new Label("Debug Mode", skin);
-        Label autoFireLabel = new Label("Auto Fire", skin);
+        Label mobileLabel = new Label("Mobile Controls", game.skin);
+        Label debugLabel = new Label("Debug Mode", game.skin);
+        Label autoFireLabel = new Label("Auto Fire", game.skin);
 
         mobileCheckBox.setChecked(game.settings.IS_MOBILE);
         debugCheckBox.setChecked(game.settings.DEBUG);
@@ -84,9 +84,9 @@ public class OptionsScreen implements Screen {
         stage.addActor(debugContainer);
         stage.addActor(autoFireContainer);
 
-        Button continueButton = new Button(skin);
-        Button mainMenuButton = new Button(skin);
-        continueButton.setStyle(skin.get("play", Button.ButtonStyle.class));
+        Button continueButton = new Button(game.skin);
+        Button mainMenuButton = new Button(game.skin);
+        continueButton.setStyle(game.skin.get("play", Button.ButtonStyle.class));
 
         // Set button sizes and positions
         musicVolumeLabel.setSize(buttonWidth, buttonHeight);
@@ -208,7 +208,8 @@ public class OptionsScreen implements Screen {
                 setSFXVolume(game.settings.sfxVolume - 1);
             }
         }
-        game.engine.update(delta);
+        if(dispose)
+            game.engine.update(delta);
 
         stage.act(delta);
         stage.draw();

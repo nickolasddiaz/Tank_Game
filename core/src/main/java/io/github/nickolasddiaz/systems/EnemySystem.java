@@ -64,41 +64,12 @@ public class EnemySystem extends IteratingSystem {
             (int) Math.floor(transform.position.y / chunkSize)
         );
 
-        if(transform.collided){ return; }
-        ArrayList<Item> obstacles = chunk.getObjectsIsInsideRect(CollisionFilter.defaultFilter, transform.item.userData.getBounds(), chunk.world);
-        if (obstacles != null) {
-            for (Item obstacle : obstacles) {
-                CollisionObject object = (CollisionObject) obstacle.userData;
-                switch (object.getObjectType()) {
-                    case "OCEAN":
-                        if (Intersector.overlapConvexPolygons(object.getPolygon(), transform.item.userData.getPolygon())) {
-                            float collisionAngle = chunk.getAngleFromPoint(object.getPolygon(), transform.item.userData.getBounds());
-                            transform.setCollided(collisionAngle);
-                        }
-                        break;
-                    case "VERTICAL":
-                    case "HORIZONTAL":
-                        transform.speedBoost += .6f;
-                        break;
-                    case "DECORATION":
-                        transform.speedBoost *= .4f;
-                        break;
-                    case "CAR":
-                    case "BULLET":
-                        object.health = 0;
-                        break;
-                    case "PLAYER":
-                    case "STRUCTURE":
-                        float collisionAngle = chunk.getAngleFromPoint(transform.item.userData.getPolygon(), object.getBounds());
-                        transform.setCollided(collisionAngle);
-                        break;
-                }
-            }
+        if(enemyComponent.isAlly) {
+            transform.turretRotation = player.turretRotation;
+        }else{
+            Vector2 targetPosition = player.position;
+            transform.turretRotation = (float) Math.toDegrees(Math.atan2(targetPosition.y - transform.position.y, targetPosition.x - transform.position.x));
         }
-
-        Vector2 targetPosition = player.position;
-        transform.turretRotation = (float) Math.toDegrees(Math.atan2(targetPosition.y - transform.position.y, targetPosition.x - transform.position.x));
-
 
         if (!chunk.mapChunks.containsKey(chunkPosition) || enemyComponent.health <= 0) {
             transform.dispose();
@@ -110,7 +81,8 @@ public class EnemySystem extends IteratingSystem {
         if(enemyComponent.timeSinceLastShot > enemyComponent.fireRate){
             enemyComponent.timeSinceLastShot = 0f;
             if(player.position.dst(transform.position) < chunkSize)
-                bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation + (chunk.random.nextFloat()-.5f)*10f, enemyComponent.bulletSpeed, enemyComponent.bulletDamage, Color.RED,"E_BULLET");
+                bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation + (chunk.random.nextFloat()-.5f)*10f, enemyComponent.bulletSpeed, enemyComponent.bulletDamage,1.5f,
+                    (enemyComponent.isAlly)? Color.YELLOW :Color.RED, (enemyComponent.isAlly)? "P_BULLET" : "E_BULLET");
         }
 
         // Check if enemy is within minimum distance of player
@@ -267,11 +239,14 @@ public class EnemySystem extends IteratingSystem {
             CollisionObject otherObject = (CollisionObject) other.userData;
             switch (otherObject.getObjectType()) {
                 case "OCEAN":
-                case "STRUCTURE":
                     if (Intersector.overlapConvexPolygons(otherObject.getPolygon(), ((CollisionObject) item.userData).getPolygon())) {
                         return Response.slide;
                     }
-                    return Response.cross;
+                    return Response.bounce;
+                case "STRUCTURE":
+//                    float collisionAngle = chunk.getAngleFromPoint(transform.item.userData.getPolygon(), object.getBounds());
+//                    transform.setCollided(collisionAngle);
+                    return Response.slide;
                 case "CAR":
                     otherObject.health = 0;
                     speedBoost *= .4f;

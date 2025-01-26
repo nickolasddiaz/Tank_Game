@@ -14,10 +14,10 @@ import com.dongbat.jbump.Item;
 import com.dongbat.jbump.Response;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.utils.CollisionObject;
-
 import java.util.ArrayList;
 
 import static io.github.nickolasddiaz.utils.MapGenerator.chunkSize;
+import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class PlayerSystem extends IteratingSystem {
     private final ComponentMapper<PlayerComponent> playerMapper;
@@ -31,8 +31,10 @@ public class PlayerSystem extends IteratingSystem {
     private float timeToReadjust = 0f;
     private float speedBoost = 1f;
     private float collisionAngle = 0f;
+    private float spawnTime = 0f;
+    private final EnemyFactory enemyFactory;
 
-    public PlayerSystem(SettingsComponent settings, ChunkComponent chunk, BulletFactory bulletFactory,StatsComponent statsComponent) {
+    public PlayerSystem(SettingsComponent settings, ChunkComponent chunk, BulletFactory bulletFactory,StatsComponent statsComponent, EnemyFactory enemyFactory) {
         super(Family.all(PlayerComponent.class, TransformComponent.class, JoystickComponent.class).get());
         playerMapper = ComponentMapper.getFor(PlayerComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
@@ -41,6 +43,7 @@ public class PlayerSystem extends IteratingSystem {
         this.chunk = chunk;
         this.bulletFactory = bulletFactory;
         this.statsComponent = statsComponent;
+        this.enemyFactory = enemyFactory;
     }
 
     @Override
@@ -52,12 +55,66 @@ public class PlayerSystem extends IteratingSystem {
             statsComponent.setHealthLevel(transform.item.userData.health);
         }
 
+
+        // Fire bullets
         player.timeSinceLastShot += deltaTime;
         timeToReadjust += deltaTime;
         if((settings.AUTO_FIRE || Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isTouched()) && player.timeSinceLastShot > player.fireRate){
-            bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation, player.bulletSpeed, player.bulletDamage, Color.YELLOW, "P_BULLET");
+            player.spawnBullets(transform.position,transform.turretRotation, bulletFactory, Color.YELLOW);
             player.timeSinceLastShot = 0f;
         }
+
+
+        // Spawn allies
+        spawnTime += deltaTime;
+        if (spawnTime > player.allySpawnerRate) {
+            spawnTime = 0f;
+            int spawnLength = 2 * itemSize;
+
+            // Define the spawn area rectangle
+            Rectangle spawnArea = new Rectangle(
+                transform.position.x - spawnLength / 2f,
+                transform.position.y - spawnLength / 2f,
+                spawnLength,
+                spawnLength
+            );
+
+            // Get items within the spawn area
+            ArrayList<Item> items = chunk.getObjectsIsInsideRect(chunk.allySpawnFilter, spawnArea);
+
+            // Define possible spawn positions
+            Vector2[] spawnPositions = new Vector2[]{
+                new Vector2(spawnArea.x, spawnArea.y),
+                new Vector2(spawnArea.x + spawnLength, spawnArea.y),
+                new Vector2(spawnArea.x, spawnArea.y + spawnLength),
+                new Vector2(spawnArea.x + spawnLength, spawnArea.y + spawnLength)
+            };
+
+            // Randomize spawn order
+            int[] cornerOrder = chunk.random.ints(0, 4).distinct().limit(4).toArray();
+
+            // Attempt to spawn at a randomized corner
+            for (int index : cornerOrder) {
+                Vector2 spawnPosition = spawnPositions[index];
+                boolean positionOccupied = false;
+
+                if (items != null) {
+                    for (Item item : items) {
+                        CollisionObject object = (CollisionObject) item.userData;
+                        if (object.getBounds().contains(spawnPosition)) {
+                            positionOccupied = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!positionOccupied) {
+                    enemyFactory.createTank(spawnPosition, true);
+                    break;
+                }
+            }
+        }
+
 
 
         Vector2 direction = new Vector2(0, 0);
@@ -69,7 +126,7 @@ public class PlayerSystem extends IteratingSystem {
         else{
             if ((lockedTarget == null || timeToReadjust > 1f)&& player.enemyCount > 0) {
                 timeToReadjust = 0f;
-                ArrayList<Item> enemies = chunk.getObjectsIsInsideRect(chunk.enemyFilter, new Rectangle(transform.position.x - chunkSize / 2f, transform.position.y - chunkSize / 2f, chunkSize, chunkSize), chunk.world);
+                ArrayList<Item> enemies = chunk.getObjectsIsInsideRect(chunk.enemyFilter, new Rectangle(transform.position.x - chunkSize / 2f, transform.position.y - chunkSize / 2f, chunkSize, chunkSize));
 
                 if (enemies != null && !enemies.isEmpty()) {
                     float minDistance = Float.MAX_VALUE;
@@ -179,8 +236,8 @@ public class PlayerSystem extends IteratingSystem {
                 case "CAR":
                     otherObject.health = 0;
                     speedBoost *= .4f;
+                    addScore();
                     return Response.cross;
-                case "PLAYER":
                 case "ENEMY":
                     return Response.bounce;
                 case "HORIZONTAL":
@@ -190,8 +247,13 @@ public class PlayerSystem extends IteratingSystem {
                 case "DECORATION":
                     speedBoost *= .4f;
                     return Response.cross;
+
             }
-            return null;
+            return Response.cross;
         }
     };
+
+    private void addScore(){
+        statsComponent.addScore(1);
+    }
 }

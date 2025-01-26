@@ -31,22 +31,21 @@ public class DeathScreen implements Screen {
         float buttonInitialX = Gdx.graphics.getWidth() / 2f - buttonWidth / 2f;
 
         // Load the skin
-        Skin skin = new FWSkin(Gdx.files.internal("ui_tank_game.json"));
 
         // Create UI elements
-        Label gameOverLabel = new Label("GAME OVER", skin);
-        Label scoreLabel = new Label("Score: " + finalScore, skin);
-        ImageTextButton mainMenuButton = new ImageTextButton("Main Menu", skin);
-        ImageTextButton retryButton = new ImageTextButton("Try Again", skin);
+        Label gameOverLabel = new Label("GAME OVER", game.skin);
+        Label scoreLabel = new Label("Score: " + finalScore, game.skin);
+        ImageTextButton mainMenuButton = new ImageTextButton("Main Menu", game.skin);
+        ImageTextButton retryButton = new ImageTextButton("Try Again", game.skin);
 
         // Style and position the labels
-        gameOverLabel.setStyle(skin.get("title", Label.LabelStyle.class));
+        gameOverLabel.setStyle(game.skin.get("title", Label.LabelStyle.class));
         gameOverLabel.setAlignment(1);
         gameOverLabel.setFontScale(2);
         gameOverLabel.setSize(buttonWidth, buttonHeight);
         gameOverLabel.setPosition(buttonInitialX, buttonInitialY + buttonSpacing * 2);
 
-        scoreLabel.setStyle(skin.get("title", Label.LabelStyle.class));
+        scoreLabel.setStyle(game.skin.get("title", Label.LabelStyle.class));
         scoreLabel.setAlignment(1);
         scoreLabel.setFontScale(1.5f);
         scoreLabel.setSize(buttonWidth, buttonHeight);

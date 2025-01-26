@@ -30,15 +30,12 @@ public class MainMenuScreen implements Screen {
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
 
-        //Skin skin = game.assetManager.get("ui_tank_game.json");
-        Skin skin = new FWSkin(Gdx.files.internal("ui_tank_game.json"));
-
-        Label titleLabel = new Label("Tank Game", skin);
-        ImageTextButton startButton = new ImageTextButton("Start", skin);
-        ImageTextButton optionsButton = new ImageTextButton("Options", skin);
-        ImageTextButton leaderboardButton = new ImageTextButton("Leaderboard", skin);
-        ImageTextButton aboutButton = new ImageTextButton("About", skin);
-        titleLabel.setStyle(skin.get("title", Label.LabelStyle.class));
+        Label titleLabel = new Label("Tank Game", game.skin);
+        ImageTextButton startButton = new ImageTextButton("Start", game.skin);
+        ImageTextButton optionsButton = new ImageTextButton("Options", game.skin);
+        ImageTextButton leaderboardButton = new ImageTextButton("Leaderboard", game.skin);
+        ImageTextButton aboutButton = new ImageTextButton("About", game.skin);
+        titleLabel.setStyle(game.skin.get("title", Label.LabelStyle.class));
 
         titleLabel.setAlignment(1);
         titleLabel.setFontScale(2);

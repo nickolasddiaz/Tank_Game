@@ -24,26 +24,24 @@ public class AboutScreen implements Screen {
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
 
-        Skin skin = new FWSkin(Gdx.files.internal("ui_tank_game.json"));
-
         // Create a table for layout
         Table table = new Table();
         table.setFillParent(true);
 
         // Add title
-        Label titleLabel = new Label("About", skin);
-        titleLabel.setStyle(skin.get("title", Label.LabelStyle.class));
+        Label titleLabel = new Label("About", game.skin);
+        titleLabel.setStyle(game.skin.get("title", Label.LabelStyle.class));
         titleLabel.setAlignment(Align.center);
         titleLabel.setFontScale(2);
 
         // Game description
-        Label descriptionLabel = new Label("Tank Game\nCreated by: Nickolas Diaz", skin);
+        Label descriptionLabel = new Label("Tank Game\nCreated by: Nickolas Diaz", game.skin);
         descriptionLabel.setAlignment(Align.center);
-        descriptionLabel.setStyle(skin.get("title", Label.LabelStyle.class));
+        descriptionLabel.setStyle(game.skin.get("title", Label.LabelStyle.class));
         descriptionLabel.setFontScale(0.7f);
 
         // Add clickable links using TextButtons
-        TypingButton websiteButton = new TypingButton("Personal Website", skin);
+        TypingButton websiteButton = new TypingButton("Personal Website", game.skin);
         websiteButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -65,7 +63,7 @@ public class AboutScreen implements Screen {
             }
         });
 
-        TypingButton githubButton = new TypingButton("Game GitHub", skin);
+        TypingButton githubButton = new TypingButton("Game GitHub", game.skin);
         githubButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -84,7 +82,7 @@ public class AboutScreen implements Screen {
             }
         });
 
-        TypingButton playGameButton = new TypingButton("Game Website", skin);
+        TypingButton playGameButton = new TypingButton("Game Website", game.skin);
         playGameButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -104,7 +102,7 @@ public class AboutScreen implements Screen {
         });
 
         // Back Button
-        ImageTextButton backButton = new ImageTextButton("Back to Main Menu", skin);
+        ImageTextButton backButton = new ImageTextButton("Back to Main Menu", game.skin);
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {

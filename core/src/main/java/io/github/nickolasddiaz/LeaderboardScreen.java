@@ -17,8 +17,6 @@ public class LeaderboardScreen implements Screen {
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
 
-        Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
-
         // Main root table
         Table rootTable = new Table();
         rootTable.setFillParent(true);
@@ -28,17 +26,17 @@ public class LeaderboardScreen implements Screen {
         Table topTable = new Table();
         rootTable.add(topTable).top().expandX().pad(10).row();
 
-        Label titleLabel = new Label("Leaderboard", skin, "title");
+        Label titleLabel = new Label("Leaderboard", game.skin, "title");
         topTable.add(titleLabel).expandX().padBottom(10);
 
         // Back button
-        ImageTextButton backButton = new ImageTextButton("Back to Main Menu", skin);
+        ImageTextButton backButton = new ImageTextButton("Back to Main Menu", game.skin);
         topTable.row();
         topTable.add(backButton).center().padTop(10);
 
         // Leaderboard Table inside a ScrollPane
         Table leaderboardTable = new Table();
-        ScrollPane scrollPane = new ScrollPane(leaderboardTable, skin);
+        ScrollPane scrollPane = new ScrollPane(leaderboardTable, game.skin);
         scrollPane.setFadeScrollBars(false);
         scrollPane.setScrollbarsVisible(true);
         scrollPane.getStyle().background = null;
@@ -52,9 +50,9 @@ public class LeaderboardScreen implements Screen {
 
         // Add player leaderboard entries
         for (int i = 0; i < players.length; i++) {
-            Label rankLabel = new Label((i + 1) + ".", skin);
-            Label playerLabel = new Label(players[i], skin);
-            Label scoreLabel = new Label(String.valueOf(scores[i]), skin);
+            Label rankLabel = new Label((i + 1) + ".", game.skin);
+            Label playerLabel = new Label(players[i], game.skin);
+            Label scoreLabel = new Label(String.valueOf(scores[i]), game.skin);
 
             leaderboardTable.add(rankLabel).padRight(10).width(50).align(Align.left);
             leaderboardTable.add(playerLabel).expandX().align(Align.left).padRight(20);

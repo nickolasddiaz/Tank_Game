@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.CameraComponent;
 import io.github.nickolasddiaz.components.SettingsComponent;
+import io.github.nickolasddiaz.components.StatsComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 
 import static io.github.nickolasddiaz.utils.MapGenerator.TILE_SIZE;
@@ -20,9 +21,10 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
     private final CameraComponent camera;
     private final SettingsComponent settings;
     private final ShapeRenderer shapeRenderer;
+    private final StatsComponent stats;
     private final Engine engine;
 
-    public SpriteRenderSystem(SpriteBatch batch, CameraComponent camera, SettingsComponent settings, ShapeRenderer shapeRenderer, Engine engine) {
+    public SpriteRenderSystem(SpriteBatch batch, CameraComponent camera, SettingsComponent settings, ShapeRenderer shapeRenderer, StatsComponent stats, Engine engine) {
         super(Family.all(TransformComponent.class).get(),
             (e1, e2) -> 0);
 
@@ -32,6 +34,7 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
         this.shapeRenderer = shapeRenderer;
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
         this.engine = engine;
+        this.stats = stats;
     }
 
     @Override
@@ -48,6 +51,7 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
         if(transform.item.userData.health <= 0){
             transform.dispose();
             engine.removeEntity(entity);
+            //stats.addScore(1);
             return;
         }
 

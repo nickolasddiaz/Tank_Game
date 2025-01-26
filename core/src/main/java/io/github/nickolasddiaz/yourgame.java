@@ -9,8 +9,10 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.github.tommyettinger.textra.FWSkin;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.systems.*;
 
@@ -35,6 +37,8 @@ public class yourgame extends Game {
     public Entity player;
     public BulletFactory bulletFactory;
     public FitViewport stageViewport;
+    public Skin skin;
+    public PlayerComponent playerComponent;
 
 
 
@@ -45,21 +49,22 @@ public class yourgame extends Game {
 
         // Create player entity with properly initialized components
         player = new Entity();
+        skin = new FWSkin(Gdx.files.internal("ui_tank_game.json"));
         this.atlas = new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas"));
         //tank sprite is 30x50 now is 76x128
 
         // Add other components
-        PlayerComponent playerComponent = new PlayerComponent();
         settings = new SettingsComponent();
+        chunk = new ChunkComponent(engine);
+        playerComponent = new PlayerComponent(chunk.random);
         player.add(playerComponent);
-        chunk = new ChunkComponent();
         player.add(chunk);
         //tank size is 30 width and 50 height
-        transform =new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "PLAYER", chunk.world, new Vector2(0f,0f), 0f,1000,chunk);
+        transform =new TransformComponent(new Sprite(atlas.findRegion("tank")),itemSize *2, (int) (itemSize *1.2f),null, true, "PLAYER", chunk.world, new Vector2(0f,0f), 0f,105);
         player.add(transform);
         camera = new CameraComponent();
         player.add(camera);
-        statsComponent = new StatsComponent();
+        statsComponent = new StatsComponent(transform);
         player.add(statsComponent);
         player.add(new JoystickComponent());
         player.add(settings);
@@ -75,8 +80,8 @@ public class yourgame extends Game {
         this.setScreen(new MainMenuScreen(this));
 
         engine.addSystem(new CarSystem(engine, chunk));
-        engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer, engine));
-        bulletFactory = new BulletFactory(chunk.world, engine, atlas, chunk);
+        engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer, statsComponent, engine));
+        bulletFactory = new BulletFactory(chunk.world, engine, atlas);
         enemyFactory = new EnemyFactory(engine, atlas, camera, chunk, statsComponent, transform, settings,playerComponent, bulletFactory,chunk);
         transform.turretComponent(
             new Sprite(atlas.findRegion("turret")),
@@ -84,8 +89,6 @@ public class yourgame extends Game {
             itemSize*1.48f,                                // turret width
             itemSize                                 // turret height
         ); //52 width 20 height modified 77 width and 20 height for better axis rotation
-
-
     }
 
     public void render() {
