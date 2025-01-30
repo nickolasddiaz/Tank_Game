@@ -5,29 +5,20 @@ import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.dongbat.jbump.CollisionFilter;
-import com.dongbat.jbump.Item;
-import com.dongbat.jbump.Response;
+import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.components.*;
-import io.github.nickolasddiaz.utils.CollisionObject;
 import io.github.nickolasddiaz.utils.GraphNode;
-
-import java.util.ArrayList;
 
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
-
 public class EnemySystem extends IteratingSystem {
-    private final ComponentMapper<EnemyComponent> EnemyMapper;
+    private final ComponentMapper<EnemyComponent> enemyMapper;
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ChunkComponent chunk;
     private final TransformComponent player;
@@ -35,68 +26,142 @@ public class EnemySystem extends IteratingSystem {
     private final Engine engine;
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
     private final BulletFactory bulletFactory;
-    private float speedBoost = 1f;
-    private float collisionAngle = 0f;
 
-
-
-    public EnemySystem(Engine engine, TransformComponent player, CameraComponent camera, SettingsComponent settings, BulletFactory bulletFactory, ChunkComponent chunk) {
+    public EnemySystem(Engine engine, TransformComponent player, CameraComponent camera,
+                       SettingsComponent settings, BulletFactory bulletFactory, ChunkComponent chunk) {
         super(Family.all(EnemyComponent.class, TransformComponent.class).get());
-        EnemyMapper = ComponentMapper.getFor(EnemyComponent.class);
-        transformMapper = ComponentMapper.getFor(TransformComponent.class);
+        this.enemyMapper = ComponentMapper.getFor(EnemyComponent.class);
+        this.transformMapper = ComponentMapper.getFor(TransformComponent.class);
         this.player = player;
         this.engine = engine;
-        shapeRenderer.setProjectionMatrix(camera.camera.combined);
-        shapeRenderer.setColor(Color.GREEN);
         this.settings = settings;
         this.bulletFactory = bulletFactory;
         this.chunk = chunk;
+        shapeRenderer.setProjectionMatrix(camera.camera.combined);
+        shapeRenderer.setColor(Color.GREEN);
+
+        setupCollisionListener();
+    }
+
+    private void setupCollisionListener() {
+        chunk.world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+                handleCollision(contact);
+            }
+
+            @Override
+            public void endContact(Contact contact) {}
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {}
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse impulse) {}
+        });
+    }
+
+    private void handleCollision(Contact contact) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Body bodyA = fixtureA.getBody();
+        Body bodyB = fixtureB.getBody();
+
+        TransformComponent transformA = (TransformComponent) bodyA.getUserData();
+        TransformComponent transformB = (TransformComponent) bodyB.getUserData();
+
+        if (transformA == null || transformB == null) return;
+
+        short categoryA = fixtureA.getFilterData().categoryBits;
+        short categoryB = fixtureB.getFilterData().categoryBits;
+
+        // Handle different collision scenarios
+        if (categoryA == ChunkComponent.ENEMY || categoryB == ChunkComponent.ENEMY ||
+            categoryA == ChunkComponent.ALLY || categoryB == ChunkComponent.ALLY) {
+
+            TransformComponent enemy = (categoryA == ChunkComponent.ENEMY || categoryA == ChunkComponent.ALLY) ?
+                transformA : transformB;
+            TransformComponent other = (categoryA == ChunkComponent.ENEMY || categoryA == ChunkComponent.ALLY) ?
+                transformB : transformA;
+            short otherCategory = (categoryA == ChunkComponent.ENEMY || categoryA == ChunkComponent.ALLY) ?
+                categoryB : categoryA;
+
+            handleEnemyCollision(enemy, other, otherCategory);
+        }
+    }
+
+    private void handleEnemyCollision(TransformComponent enemy, TransformComponent other, short category) {
+        switch (category) {
+            case ChunkComponent.STRUCTURE:
+            case ChunkComponent.OCEAN:
+                // Apply bounce effect
+                Vector2 normal = enemy.position.cpy().sub(other.position).nor();
+                enemy.body.setLinearVelocity(
+                    normal.x * enemy.body.getLinearVelocity().len() * 0.5f,
+                    normal.y * enemy.body.getLinearVelocity().len() * 0.5f
+                );
+                break;
+
+            case ChunkComponent.CAR:
+                other.health = 0;
+                enemy.body.setLinearDamping(2f); // Slow down after hitting car
+                break;
+
+            case ChunkComponent.HORIZONTAL_ROAD:
+            case ChunkComponent.VERTICAL_ROAD:
+                enemy.body.setLinearDamping(0f); // Remove damping on roads
+                break;
+
+            case ChunkComponent.DECORATION:
+                enemy.body.setLinearDamping(1.5f); // Add more damping in decoration
+                break;
+        }
     }
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
-        EnemyComponent enemyComponent = EnemyMapper.get(entity);
+        EnemyComponent enemyComponent = enemyMapper.get(entity);
         TransformComponent transform = transformMapper.get(entity);
 
-        //make sure the enemy is in a valid chunk and still alive
-        Vector2 chunkPosition = new Vector2(
-            (int) Math.floor(transform.position.x / chunkSize),
-            (int) Math.floor(transform.position.y / chunkSize)
-        );
-
-        if(enemyComponent.isAlly) {
-            transform.turretRotation = player.turretRotation;
-        }else{
-            Vector2 targetPosition = player.position;
-            transform.turretRotation = (float) Math.toDegrees(Math.atan2(targetPosition.y - transform.position.y, targetPosition.x - transform.position.x));
-        }
-
-        if (!chunk.mapChunks.containsKey(chunkPosition) || enemyComponent.health <= 0) {
+        // Check if enemy is in valid chunk and alive
+        Vector2 chunkPosition = chunk.getChunkPosition(transform.position);
+        if (!chunk.mapChunks.containsKey(chunkPosition) || transform.health <= 0) {
             transform.dispose();
             engine.removeEntity(entity);
             return;
         }
 
-        enemyComponent.timeSinceLastShot += deltaTime;
-        if(enemyComponent.timeSinceLastShot > enemyComponent.fireRate){
-            enemyComponent.timeSinceLastShot = 0f;
-            if(player.position.dst(transform.position) < chunkSize)
-                bulletFactory.createBullet(transform.position.cpy(), transform.turretRotation + (chunk.random.nextFloat()-.5f)*10f, enemyComponent.bulletSpeed, enemyComponent.bulletDamage,1.5f,
-                    (enemyComponent.isAlly)? Color.YELLOW :Color.RED, (enemyComponent.isAlly)? "P_BULLET" : "E_BULLET");
-        }
+        // Handle turret rotation
+        updateTurretRotation(transform, enemyComponent);
 
-        // Check if enemy is within minimum distance of player
+        // Handle shooting
+        handleShooting(transform, enemyComponent, deltaTime);
+
+        // Check distance to player
         float distanceToPlayer = transform.position.dst(player.position);
         if (distanceToPlayer <= enemyComponent.minDistance) {
             return;
         }
+
+        // Update pathfinding
+        updatePathfinding(transform, enemyComponent, deltaTime);
+
+        // Move enemy
         if (enemyComponent.path.getCount() > 1 || enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
             moveEnemy(transform, enemyComponent, deltaTime);
-            if(settings.DEBUG) {
+
+            if (settings.DEBUG) {
                 renderNextPathRect(transform.position, enemyComponent.nextPathWorld, enemyComponent);
             }
         }
 
+        // Update transform from physics body
+        transform.updateTransform();
+    }
+
+    private void updatePathfinding(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
+        // Only recalculate path if player has moved outside the lazy path rectangle or if we don't have a valid path yet
         enemyComponent.timeSinceLastPathfinding += deltaTime;
         if (enemyComponent.timeSinceLastPathfinding < enemyComponent.pathfindingCooldown) {
             return;
@@ -156,59 +221,49 @@ public class EnemySystem extends IteratingSystem {
             }
         }
 
-        // Move the enemy along its unique path
-        if (enemyComponent.nextPathWorld != null && transform.position.dst(enemyComponent.nextPathWorld) <= 3 * itemSize) {
-            getNextPath(chunk, transform.position, enemyComponent);
-        }
-
-        if (chunk.world.getRect(transform.item) == null) {
-            Gdx.app.log("Invalid item or missing rect: ", "error");
-            Rectangle rect = transform.item.userData.getBounds();
-            chunk.world.add(transform.item, transform.position.x, transform.position.y, rect.width, rect.height);
-        }
-        Response.Result result = chunk.world.move(transform.item, transform.position.x, transform.position.y, CollisionFilter);
-        transform.position.set(result.goalX, result.goalY);
-
-        transform.speedBoost = speedBoost;
-        speedBoost = 1f;
-        if(collisionAngle != 0) {
-            transform.setCollided(collisionAngle);
-            collisionAngle = 0;
-        }
 
     }
 
-    private void renderNextPathRect(Vector2 enemy, Vector2 path, EnemyComponent car) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.rect(car.nextPathRect.x, car.nextPathRect.y, car.nextPathRect.width, car.nextPathRect.height);
-        shapeRenderer.line(enemy, path);
-        shapeRenderer.end();
+    private void updateTurretRotation(TransformComponent transform, EnemyComponent enemyComponent) {
+        if (enemyComponent.isAlly) {
+            transform.turretRotation = player.turretRotation;
+        } else {
+            Vector2 targetPosition = player.position;
+            transform.turretRotation = (float) Math.toDegrees(
+                Math.atan2(
+                    targetPosition.y - transform.position.y,
+                    targetPosition.x - transform.position.x
+                )
+            );
+        }
     }
-
-    private void getNextPath(ChunkComponent chunk, Vector2 enemyPosition, EnemyComponent enemyComponent) {
-        do {
-            if (enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
-                enemyComponent.nextPath.set(enemyComponent.path.get(++enemyComponent.pathIndex).position);
-            } else {
-                break;
+    private void handleShooting(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
+        enemyComponent.timeSinceLastShot += deltaTime;
+        if (enemyComponent.timeSinceLastShot > enemyComponent.fireRate) {
+            enemyComponent.timeSinceLastShot = 0f;
+            if (player.position.dst(transform.position) < chunkSize) {
+                Vector2 bulletPosition = transform.position.cpy();
+                bulletFactory.createBullet(
+                    bulletPosition,
+                    transform.turretRotation + (chunk.random.nextFloat() - 0.5f) * 10f,
+                    enemyComponent.bulletSpeed,
+                    enemyComponent.bulletDamage,
+                    1.5f,
+                    enemyComponent.isAlly ? Color.YELLOW : Color.RED,
+                    enemyComponent.isAlly
+                );
             }
-        } while (chunk.isObjectInRay(chunk.GridToWorldCoordinates(enemyComponent.nextPath), enemyPosition, chunk.obstaclesFilter));
-        enemyComponent.nextPathWorld = chunk.GridToWorldCoordinates(enemyComponent.nextPath);
-        enemyComponent.nextPathRect.set(
-            enemyComponent.nextPathWorld.x,
-            enemyComponent.nextPathWorld.y,
-            itemSize,
-            itemSize
-        );
+        }
     }
 
     private void moveEnemy(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
         Vector2 direction = new Vector2(enemyComponent.nextPathWorld).sub(transform.position).nor();
 
-        // Gradual rotation
+        // Calculate target angle
         float targetAngle = direction.angleDeg();
         float angleDifference = ((targetAngle - transform.rotation + 540) % 360) - 180;
 
+        // Apply rotation
         if (Math.abs(angleDifference) > 5) {
             float turnSpeed = Math.min(enemyComponent.spinSpeed * deltaTime, Math.abs(angleDifference) * 0.5f);
             transform.rotation += Math.signum(angleDifference) * turnSpeed;
@@ -217,52 +272,42 @@ public class EnemySystem extends IteratingSystem {
         }
         transform.rotation = (transform.rotation + 360) % 360;
 
-        // Movement
+        // Apply movement force
         float angleRad = (float) Math.toRadians(transform.rotation);
-        transform.movement = new Vector2((float) Math.cos(angleRad), (float) Math.sin(angleRad)).scl(enemyComponent.speed * deltaTime);
+        Vector2 force = new Vector2(
+            (float) Math.cos(angleRad) * enemyComponent.speed,
+            (float) Math.sin(angleRad) * enemyComponent.speed
+        );
+        transform.body.applyForceToCenter(force, true);
+
+        // Limit maximum velocity
+        Vector2 velocity = transform.body.getLinearVelocity();
+        float maxSpeed = enemyComponent.speed * 2;
+        if (velocity.len2() > maxSpeed * maxSpeed) {
+            velocity.nor().scl(maxSpeed);
+            transform.body.setLinearVelocity(velocity);
+        }
     }
 
+
+    private void renderNextPathRect(Vector2 enemy, Vector2 path, EnemyComponent enemyComponent) {
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.rect(
+            enemyComponent.nextPathRect.x,
+            enemyComponent.nextPathRect.y,
+            enemyComponent.nextPathRect.width,
+            enemyComponent.nextPathRect.height
+        );
+        shapeRenderer.line(enemy, path);
+        shapeRenderer.end();
+    }
 
     public static class ManhattanDistance implements Heuristic<GraphNode> {
         @Override
         public float estimate(GraphNode node, GraphNode endNode) {
-            return Math.abs(node.position.x - endNode.position.x) + Math.abs(node.position.y - endNode.position.y);
+            return Math.abs(node.position.x - endNode.position.x) +
+                Math.abs(node.position.y - endNode.position.y);
         }
     }
 
-    private final CollisionFilter CollisionFilter = new CollisionFilter() {
-        @Override
-        public Response filter(Item item, Item other) {
-            if(other == null) {
-                return null;
-            }
-            CollisionObject otherObject = (CollisionObject) other.userData;
-            switch (otherObject.getObjectType()) {
-                case "OCEAN":
-                    if (Intersector.overlapConvexPolygons(otherObject.getPolygon(), ((CollisionObject) item.userData).getPolygon())) {
-                        return Response.slide;
-                    }
-                    return Response.bounce;
-                case "STRUCTURE":
-//                    float collisionAngle = chunk.getAngleFromPoint(transform.item.userData.getPolygon(), object.getBounds());
-//                    transform.setCollided(collisionAngle);
-                    return Response.slide;
-                case "CAR":
-                    otherObject.health = 0;
-                    speedBoost *= .4f;
-                    return Response.cross;
-                case "PLAYER":
-                case "ENEMY":
-                    return Response.bounce;
-                case "HORIZONTAL":
-                case "VERTICAL":
-                    speedBoost += .4f;
-                    return Response.cross;
-                case "DECORATION":
-                    speedBoost *= .4f;
-                    return Response.cross;
-            }
-            return null;
-        }
-    };
 }

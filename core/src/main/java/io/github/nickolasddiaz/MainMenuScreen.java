@@ -100,7 +100,7 @@ public class MainMenuScreen implements Screen {
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
 
-        game.engine.update(delta);
+        game.updateGame(delta);
         stage.act(delta);
         stage.draw();
     }

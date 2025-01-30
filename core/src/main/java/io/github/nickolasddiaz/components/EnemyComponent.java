@@ -10,9 +10,9 @@ import io.github.nickolasddiaz.utils.GraphNode;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class EnemyComponent implements Component {
-    public float health = 100;
+    public float health;
     public float speed;
-    public float enemyType = 0;
+    public float enemyType;
     public float minDistance = 6f*itemSize;
     public float spinSpeed;
     public GraphPath<GraphNode> path;
@@ -23,10 +23,10 @@ public class EnemyComponent implements Component {
     public final Rectangle nextPathRect = new Rectangle();
     public int pathIndex = 0;
 
-    public float fireRate = 0.5f;
+    public float fireRate;
     public float timeSinceLastShot = 0f;
-    public float bulletSpeed = 20f * itemSize;
-    public int bulletDamage = 1;
+    public float bulletSpeed;
+    public int bulletDamage;
 
     public float pathfindingCooldown = 0.5f; // Seconds between pathfinding attempts
     public float timeSinceLastPathfinding = 0f;

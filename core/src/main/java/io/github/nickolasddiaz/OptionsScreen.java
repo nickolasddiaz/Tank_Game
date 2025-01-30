@@ -157,7 +157,7 @@ public class OptionsScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 game.settings.IS_MOBILE = mobileCheckBox.isChecked();
                 if(game.settings.IS_MOBILE) {
-                    game.engine.addSystem(new JoystickInputSystem());
+                    game.engine.addSystem(new JoystickInputSystem(game.skin));
                 }
                 else{
                     game.engine.removeSystem(game.engine.getSystem(JoystickInputSystem.class));
@@ -209,7 +209,7 @@ public class OptionsScreen implements Screen {
             }
         }
         if(dispose)
-            game.engine.update(delta);
+            game.updateGame(delta);
 
         stage.act(delta);
         stage.draw();

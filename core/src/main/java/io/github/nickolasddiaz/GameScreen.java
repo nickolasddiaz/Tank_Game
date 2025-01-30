@@ -5,7 +5,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.systems.*;
 
 public class GameScreen implements Screen {
@@ -20,15 +19,15 @@ public class GameScreen implements Screen {
         this.game = game;
         game.engine.removeEntity(game.car);
 
-        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk,game.bulletFactory,game.statsComponent,game.enemyFactory,new MissileFactory(game.chunk.world,game.engine,game.atlas,game.chunk),new LandMineFactory(game.chunk.world,game.engine,game.atlas,game.chunk.random)));
-        game.engine.addSystem(new StatsRenderSystem());
+        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk,game.bulletFactory,game.statsComponent,game.enemyFactory,new MissileFactory(game.engine,game.skin,game.chunk),new LandMineFactory(game.chunk.world,game.engine,game.skin,game.chunk.random)));
+        game.engine.addSystem(new StatsRenderSystem(game.skin));
         if(game.settings.IS_MOBILE) {
-            game.engine.addSystem(new JoystickInputSystem());
+            game.engine.addSystem(new JoystickInputSystem(game.skin));
         }
 
         game.engine.addSystem(new BulletSystem(game.engine, game.chunk, game.statsComponent));
         game.engine.addSystem(new MissileSystem(game.engine, game.chunk, game.statsComponent));
-        game.engine.addSystem(new LandMineSystem(game.engine, game.chunk, game.statsComponent));
+        //game.engine.addSystem(new LandMineSystem(game.engine, game.chunk, game.statsComponent));
 
         Button pauseButton = new Button(game.skin);
         pauseButton.setStyle(game.skin.get("pause", Button.ButtonStyle.class));
@@ -84,14 +83,14 @@ public class GameScreen implements Screen {
 
         seconds += delta;
         if(!game.settings.paused)
-            game.engine.update(delta);
+            game.updateGame(delta);
         stage.act(delta);
         stage.draw();
 
-        if (game.engine.getSystem(PlayerSystem.class).getEntities().size() == 0) {
-            game.statsComponent.setHealthLevel(0);
-            game.setScreen(new DeathScreen(game, game.statsComponent.getScore()));
-        }
+//        if (game.engine.getSystem(PlayerSystem.class).getEntities().size() == 0) {
+//            game.statsComponent.setHealthLevel(0);
+//            game.setScreen(new DeathScreen(game, game.statsComponent.getScore()));
+//        }
 
         //float spawn = 40f / (game.statsComponent.getStars()/5f) ;
         float spawn = 4;

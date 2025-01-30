@@ -2,7 +2,6 @@ package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -14,7 +13,11 @@ public class StatsRenderSystem extends EntitySystem {
     StatsComponent statsComponent;
     SettingsComponent settingsComponent;
     float regenerationTime = 0f;
+    private final Skin skin;
 
+    public StatsRenderSystem(Skin skin) {
+        this.skin = skin;
+    }
 
     @Override
     public void addedToEngine(Engine engine) {
@@ -30,16 +33,12 @@ public class StatsRenderSystem extends EntitySystem {
 
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
-        Skin skin = new Skin(Gdx.files.internal("ui_tank_game.json"));
-
 
         float iconSize = Gdx.graphics.getWidth() / 30f;
 
-        TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas"));
-
         statsComponent.starImages = new Image[10];
         for (int i = 0; i < 10; i++) {
-            statsComponent.starImages[i] = new Image(atlas.findRegion(i % 2 == 0 ? "left_star" : "right_star"));
+            statsComponent.starImages[i] = new Image(skin.getDrawable(i % 2 == 0 ? "left_star" : "right_star"));
             statsComponent.starImages[i].setSize(iconSize, iconSize);
             stage.addActor(statsComponent.starImages[i]);
         }
@@ -53,7 +52,7 @@ public class StatsRenderSystem extends EntitySystem {
                 case 2: regionName = "bottom_right_heart"; break;
                 default: regionName = "top_right_heart"; break;
             }
-            statsComponent.heartImages[i] = new Image(atlas.findRegion(regionName));
+            statsComponent.heartImages[i] = new Image(skin.getDrawable(regionName));
             statsComponent.heartImages[i].setSize(iconSize, iconSize);
             stage.addActor(statsComponent.heartImages[i]);
         }

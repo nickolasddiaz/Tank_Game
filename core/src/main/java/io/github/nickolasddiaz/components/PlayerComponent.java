@@ -7,6 +7,7 @@ import io.github.nickolasddiaz.systems.BulletFactory;
 
 import java.util.Random;
 
+import static io.github.nickolasddiaz.components.ChunkComponent.BULLET;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class PlayerComponent implements Component {
@@ -72,7 +73,7 @@ public class PlayerComponent implements Component {
 
     public void spawnBullets(Vector2 position, float rotation, BulletFactory bulletFactory, Color color){
         for (float shotAngle : calculateShotAngles(rotation)) {
-            bulletFactory.createBullet(position.cpy(), shotAngle, bulletSpeed, calculateDamage(), bulletSize, color, "P_BULLET");
+            bulletFactory.createBullet(position.cpy(), shotAngle, bulletSpeed, calculateDamage(), bulletSize, color, true);
         }
     }
 }

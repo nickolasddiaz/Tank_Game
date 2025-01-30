@@ -47,7 +47,7 @@ public class StatsComponent implements Component {
     }
 
     public int getStars() { return stars; }
-    public int getHealth() { return playerTransform.getHealth(); }
+    public int getHealth() { return playerTransform.health; }
 
     public void addStarLevel(int wantedLevel) {
         int passes = stars/10;
@@ -81,7 +81,7 @@ public class StatsComponent implements Component {
         starsLabel.setText(stars + "S");
     }
     public void addHealthLevel(int healthLevel){
-        playerTransform.item.userData.health += healthLevel;
+        playerTransform.health += healthLevel;
         setHealthLevel(getHealth());
     }
 
@@ -89,7 +89,7 @@ public class StatsComponent implements Component {
         if (healthLevel < 0) {
             healthLevel = 0;
         }
-        playerTransform.item.userData.health = healthLevel;
+        playerTransform.health = healthLevel;
         int level = getHealth() % 12;
         int flatLevel = (getHealth() - level) / 12;
         Color color = setColor(flatLevel);

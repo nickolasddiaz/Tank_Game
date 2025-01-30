@@ -1,16 +1,11 @@
+// TransformComponent.java
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
-import com.dongbat.jbump.Item;
-import com.dongbat.jbump.World;
-import io.github.nickolasddiaz.utils.CollisionObject;
-
-
-import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
+import com.badlogic.gdx.physics.box2d.*;
 
 public class TransformComponent implements Component {
     public Vector2 position;
@@ -24,43 +19,48 @@ public class TransformComponent implements Component {
     public float speedBoost = 1f;
     public Vector2 movement = new Vector2();
 
-
-    public Item<CollisionObject> item;
-    public World<CollisionObject> world;
+    public Body body;
+    public int health;
 
     public boolean hasTurret = false;
-    public Sprite turretSprite; //52x20
+    public Sprite turretSprite;
     public float turretRotation = 0f;
     public Vector2 turretOffSetPosition;
     public int turretLength;
 
-
-    public TransformComponent(Sprite sprite, int width, int height, Color color, boolean isPolygon, String objectType, World<CollisionObject> world, Vector2 position, float rotation, int health) {
+    public TransformComponent(World world, Sprite sprite, int width, int height, Color color,
+                              boolean isDynamic, short categoryBits, Vector2 position, float rotation, int health) {
         this.position = position;
         this.rotation = rotation;
-
-        this.world = world;
         this.sprite = sprite;
         this.sprite.setSize(width, height);
         this.color = color;
+        this.health = health;
 
-        if(isPolygon) {
-            Polygon polygonBounds = new Polygon(new float[] { // Create polygon with correct vertex ordering (clockwise)
-                0, 0,  // bottom left
-                width, 0,   // bottom right
-                width, height,    // top right
-                0, height    // top left
-            });
+        // Create Box2D body
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.type = isDynamic ? BodyDef.BodyType.DynamicBody : BodyDef.BodyType.StaticBody;
+        bodyDef.position.set(position);
+        bodyDef.angle = (float)Math.toRadians(rotation);
 
-            // Create AABB that encompasses the sprite at any rotation
-            float maxDimension = (float) Math.sqrt(width * width + height * height);
-            polygonBounds.setOrigin(width/2f, height/2f); // Set origin to center for proper rotation
-            item = world.add(new Item<>(new CollisionObject(polygonBounds, objectType, health)), 0, 0,
-                maxDimension/2 + (height-width),
-                maxDimension/2f);
-        } else {
-            item = world.add(new Item<>(new CollisionObject(sprite.getBoundingRectangle(), objectType, health)), sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
-        }
+        // Create shape
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(width/2f, height/2f);
+
+        // Create fixture
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.density = isDynamic ? 1.0f : 0.0f;
+        fixtureDef.friction = 0.4f;
+        fixtureDef.restitution = 0.2f;
+        fixtureDef.filter.categoryBits = categoryBits;
+
+        // Create body and add fixture
+        body = world.createBody(bodyDef);
+        body.createFixture(fixtureDef);
+        body.setUserData(this);
+
+        shape.dispose();
     }
 
     public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, float width, int height) {
@@ -72,24 +72,40 @@ public class TransformComponent implements Component {
         this.hasTurret = true;
     }
 
-    public void updateBounds() {
-        if (item != null && item.userData != null) {
-            item.userData.updateRotation(rotation);
-            item.userData.updatePosition(position);
+    public void updateTransform() {
+        // Update position and rotation from Box2D body
+        if(body != null) {
+            position.set(body.getPosition());
+            rotation = (float)Math.toDegrees(body.getAngle());
         }
     }
 
-    public void dispose(){
-        world.remove(item);
-    }
-    public void setCollided(float rotation){
-        tempPosition = position.cpy();
-        tempRotation = rotation;
-        bouncePosition = position.add(new Vector2(itemSize, 0).setAngleDeg(rotation -180f));
-        collided = true;
-    }
-    public int getHealth(){
-        return item.userData.health;
+    public void applyMovement() {
+        if(body == null) return;
+        if (movement.len2() > 0) {
+            float force = speedBoost * 1000f; // Adjust force magnitude as needed
+            body.applyForceToCenter(
+                movement.x * force,
+                movement.y * force,
+                true
+            );
+        }
+        movement.setZero();
+        speedBoost = 1f;
     }
 
+    public void setCollided(float rotation) {
+        tempPosition = position.cpy();
+        tempRotation = rotation;
+        Vector2 bounceDir = new Vector2(1, 0).setAngleDeg(rotation - 180f);
+        body.setLinearVelocity(bounceDir.scl(10f)); // Adjust bounce velocity as needed
+        collided = true;
+    }
+
+    public void dispose() {
+        if (body != null && body.getWorld() != null) {
+            body.getWorld().destroyBody(body);
+            body = null;
+        }
+    }
 }

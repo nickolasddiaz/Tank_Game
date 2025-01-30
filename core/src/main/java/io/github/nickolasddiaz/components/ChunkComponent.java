@@ -1,27 +1,19 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
-import com.badlogic.ashley.core.Engine;
-import com.badlogic.ashley.core.Family;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.dongbat.jbump.CollisionFilter;
-import com.dongbat.jbump.Item;
-import com.dongbat.jbump.Response;
-import com.dongbat.jbump.World;
-import io.github.nickolasddiaz.utils.CollisionObject;
+import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.utils.WorldGraph;
-
 import java.util.*;
+
 
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 // units are used in determining positioning in the game world
@@ -38,98 +30,169 @@ public class ChunkComponent implements Component {
     public Random random = new Random(System.currentTimeMillis());
     public float carWidth = 64;
     public WorldGraph pathfindingGraph;
-    private final Engine engine;
+
+    // Filter bits for collision categories
+    public static final short FROM_THE_PLAYER = 0x0001; //this is to know which projectile is from the player 1 is the player and 0 is the enemy
+    public static final short HORIZONTAL_ROAD = 0x0002;
+    public static final short VERTICAL_ROAD =   0x0004;
+    public static final short STRUCTURE =       0x0008;
+    public static final short DECORATION =      0x0016;
+    public static final short OCEAN =           0x0032;
+    public static final short CAR =             0x0064;
+    public static final short ENEMY =           0x0128;
+    public static final short PLAYER =          0x0256;
+    public static final short ALLY =            0x0512;
+    public static final short BULLET =          0x1024;
+    public static final short MISSILE =         0x2048;
+    public static final short MINE =            0x4096;
+
+    public static final short STRUCTURE_FILTER = STRUCTURE + DECORATION + OCEAN;
+    public static final short PROJECTILE_FILTER = BULLET + MINE + MISSILE;
+    public static final short VEHICLE_FILTER = CAR + PLAYER + ENEMY + ALLY;
 
 
-    public World<CollisionObject> world;
 
+    public World world;
+    // Store bodies for each chunk to manage cleanup
+    private final HashMap<Vector2, ArrayList<Body>> chunkBodies = new HashMap<>();
 
-    private final HashMap<Vector2, ArrayList<CollisionObject>> chunkItems = new HashMap<>();
+    public ChunkComponent() {
+        this.world = new World(new Vector2(0, 0), true);
 
-    public ChunkComponent(Engine engine) {
-        world = new World<>();
-        world.setTileMode(false);
-        this.engine = engine;
     }
+    // Helper method to create a body for a rectangle object
+    public Body createRectangleBody(World world, Rectangle rect, short category) {
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.StaticBody;
+        bodyDef.position.set((rect.x + rect.width/2), (rect.y + rect.height/2));
 
-    public boolean getObjectIsInsideBoolean(Vector2 playerPosition, CollisionFilter filter) {
-        ArrayList<Item> items = new ArrayList<>();
-        world.queryPoint(playerPosition.x, playerPosition.y, filter, items);
-        return items.isEmpty();
-    }
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(rect.width/2, rect.height/2);
 
-    public Rectangle getObjectIsInside(Vector2 playerPosition, CollisionFilter filter) {
-        ArrayList<Item> items = new ArrayList<>();
-        world.queryPoint(playerPosition.x, playerPosition.y, filter, items);
-        return items.isEmpty() ? null : ((RectangleMapObject) items.get(0).userData).getRectangle();
-    }
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.density = 1.0f;
+        fixtureDef.filter.categoryBits = category;
 
-
-    public Rectangle getObjectIsInsideRect(Rectangle playerRect, CollisionFilter filter) {
-        ArrayList<Item> items = new ArrayList<>();
-        world.queryRect(playerRect.x, playerRect.y, playerRect.width, playerRect.height,filter, items);
-        return items.isEmpty() ? null : ((CollisionObject) items.get(0).userData).getBounds();
-    }
-
-    public ArrayList<Item> getObjectsIsInsideRect(CollisionFilter filter,Rectangle playerRect) {
-        ArrayList<Item> items = new ArrayList<>();
-        world.queryRect(playerRect.x, playerRect.y, playerRect.width, playerRect.height, filter, items);
-        return items.isEmpty() ? null : items;
-    }
-
-    public boolean isObjectInRay(Vector2 start, Vector2 end, CollisionFilter filter) {
-        ArrayList<Item> items = new ArrayList<>();
-        world.querySegment(start.x, start.y, end.x, end.y, filter, items);
-        return items.isEmpty();
-    }
-
-    public Rectangle getObjectIsInsideRectMapChunk(Rectangle playerRect, String objectName) { // old slow version
-        for(Map.Entry<Vector2, TiledMap> entry : mapChunks.entrySet()) {
-            TiledMap chunkMap = entry.getValue();
-            MapObjects objects = chunkMap.getLayers().get("OBJECTS").getObjects();
-            for (MapObject obj : objects) {
-                if (obj.getName() != null) {
-                    if (obj instanceof RectangleMapObject) {
-                        RectangleMapObject rectObj = (RectangleMapObject) obj;
-                        Rectangle rect = rectObj.getRectangle();
-                        if (objectName.equals(rectObj.getName()) && playerRect.overlaps(rect)) {
-                            return rect;
-                        }
-                    }
-                }
-            }
+        // Updated collision filtering
+        if (category == HORIZONTAL_ROAD || category == VERTICAL_ROAD) {
+            fixtureDef.filter.maskBits = VEHICLE_FILTER;
+        } else if (category == STRUCTURE) {
+            fixtureDef.filter.maskBits = PROJECTILE_FILTER | VEHICLE_FILTER;
+        } else if (category == DECORATION) {
+            fixtureDef.filter.maskBits = VEHICLE_FILTER;
         }
-        return null;
+
+        Body body = world.createBody(bodyDef);
+        body.createFixture(fixtureDef);
+
+        shape.dispose();
+        return body;
     }
+
+    // Helper method to create a body for a polygon object
+    public Body createChainShape(World world, Polygon polygon, short category) {
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.StaticBody;
+        bodyDef.position.set(polygon.getX(), polygon.getY());
+        bodyDef.angle = (float)Math.toRadians(polygon.getRotation());
+
+        ChainShape shape = new ChainShape();
+        float[] vertices = polygon.getVertices();
+
+        shape.createLoop(vertices);
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.density = 1.0f;
+        fixtureDef.filter.categoryBits = category;
+
+        if (category == OCEAN) {
+            fixtureDef.filter.maskBits = VEHICLE_FILTER - CAR;
+        }
+
+        Body body = world.createBody(bodyDef);
+        body.createFixture(fixtureDef);
+
+        shape.dispose();
+        return body;
+    }
+
+    // Query methods for collision detection
+    public boolean isPointInside(Vector2 point, short categoryBits) {
+        final boolean[] result = {false};
+        world.QueryAABB(fixture -> {
+            if ((fixture.getFilterData().categoryBits & categoryBits) != 0) {
+                result[0] = true;
+                return false;
+            }
+            return true;
+        }, point.x - 0.1f, point.y - 0.1f, point.x + 0.1f, point.y + 0.1f);
+        return result[0];
+    }
+
+    public Body[] getBodiesInRect(Rectangle rect, short categoryBits) {
+        ArrayList<Body> result = new ArrayList<>();
+        world.QueryAABB(fixture -> {
+            if ((fixture.getFilterData().categoryBits & categoryBits) != 0) {
+                result.add(fixture.getBody());
+            }
+            return true;
+        }, rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
+        return result.toArray(new Body[0]);
+    }
+
 
     // Cache objects for a specific chunk
     public void cacheObjects(Vector2 chunkPosition, TiledMap chunkMap) {
-        ArrayList<CollisionObject> items = new ArrayList<>();
+        ArrayList<Body> bodies = new ArrayList<>();
         MapObjects objects = chunkMap.getLayers().get("OBJECTS").getObjects();
 
         objects.forEach(obj -> {
             if (obj.getName() != null) {
-                CollisionObject collisionObject;
-                Rectangle bounds;
-
+                Body body;
                 if (obj instanceof RectangleMapObject) {
                     RectangleMapObject rectObj = (RectangleMapObject) obj;
-                    collisionObject = new CollisionObject(rectObj.getRectangle(), rectObj.getName(),10);
-                    bounds = rectObj.getRectangle();
+                    body = createRectangleBody(world, rectObj.getRectangle(), getFilterBit(rectObj.getName()));
+                    bodies.add(body);
                 } else if (obj instanceof PolygonMapObject) {
                     PolygonMapObject polyObj = (PolygonMapObject) obj;
-                    collisionObject = new CollisionObject(polyObj.getPolygon(), polyObj.getName(),10);
-                    bounds = polyObj.getPolygon().getBoundingRectangle();
-                } else {
-                    return;
+                     body = createChainShape(world, polyObj.getPolygon(), getFilterBit(polyObj.getName()));
+                    bodies.add(body);
                 }
-
-                Item<CollisionObject> item = new Item<>(collisionObject);
-                items.add(item.userData);
-                world.add(item, bounds.x, bounds.y, bounds.width, bounds.height);
             }
         });
-        chunkItems.put(chunkPosition, items);
+        chunkBodies.put(chunkPosition, bodies);
+    }
+
+    public short getFilterBit(String name){
+        switch (name){
+            case "HORIZONTAL": return HORIZONTAL_ROAD;
+            case "VERTICAL": return VERTICAL_ROAD;
+            case "STRUCTURE": return STRUCTURE;
+            case "DECORATION": return DECORATION;
+            case "OCEAN": return OCEAN;
+            case "CAR": return CAR;
+            case "ENEMY": return ENEMY;
+            case "PLAYER": return PLAYER;
+            case "ALLY": return ALLY;
+            case "BULLET": return BULLET;
+            case "MISSILE": return MISSILE;
+            case "MINE": return MINE;
+            default: return 0;
+        }
+    }
+
+    // Clear Box2D bodies for unloaded chunks
+    public void clearChunkBodies(Vector2 chunkPosition) {
+        ArrayList<Body> bodies = chunkBodies.get(chunkPosition);
+        if (bodies != null) {
+            for (Body body : bodies) {
+                world.destroyBody(body);
+            }
+            bodies.clear();
+            chunkBodies.remove(chunkPosition);
+        }
     }
 
     public void cacheObjectsNodes() {
@@ -174,7 +237,6 @@ public class ChunkComponent implements Component {
         }
     }
 
-
     public Vector2 getChunkPosition(Vector2 position) {
         return new Vector2((int) Math.floor(position.x / chunkSize), (int) Math.floor(position.y / chunkSize));
     }
@@ -194,57 +256,4 @@ public class ChunkComponent implements Component {
             currentChunk.y * chunkSize  + (grid.y * itemSize) - chunkSize
         );
     }
-
-    public void clearWorlds() {
-        world = new World<>();
-        chunkItems.clear();
-    }
-    public void addWorlds(){
-        engine.getEntitiesFor(Family.all(TransformComponent.class).get()).forEach(entity -> {
-            Item<CollisionObject> transform = entity.getComponent(TransformComponent.class).item;
-
-            if (transform.userData != null && transform.userData.health > 0) {
-                Rectangle bounds = transform.userData.getBounds();
-                world.add(transform, bounds.x, bounds.y, bounds.width, bounds.height);
-            }
-        });
-    }
-
-
-    public float getAngleFromPoint(Polygon polygon, Rectangle rect){
-        Vector2 polygonCenter = new Vector2(polygon.getX() + polygon.getOriginX(), polygon.getY() + polygon.getOriginY());
-        Vector2 point = new Vector2(rect.x + rect.width / 2, rect.y + rect.height / 2);
-        return getAngleFromPoint(polygonCenter, point);
-    }
-
-    public float getAngleFromPoint(Vector2 polygonCenter, Vector2 point) {
-        Vector2 toPoint = new Vector2(point).sub(polygonCenter); // Create vector from center to point
-        return MathUtils.atan2(toPoint.y, toPoint.x) * MathUtils.radiansToDegrees;  // Calculate angle in degrees
-    }
-
-    public Polygon rectangletoPolygon(Rectangle rect){
-        return  new Polygon(new float[]{
-            rect.x, rect.y,
-            rect.x + rect.width, rect.y,
-            rect.x + rect.width, rect.y + rect.height,
-            rect.x, rect.y + rect.height
-        });
-    }
-
-    public CollisionFilter createFilter(String... objectTypes) {
-        return (item, other) -> {
-            for (String type : objectTypes) {
-                if (type.equals(((CollisionObject) item.userData).getObjectType())) {
-                    return Response.cross;
-                }
-            }
-            return null;
-        };
-    }
-
-    public CollisionFilter obstaclesFilter = createFilter("STRUCTURE", "DECORATION");
-    public CollisionFilter verticalFilter = createFilter("VERTICAL");
-    public CollisionFilter horizontalFilter = createFilter("HORIZONTAL");
-    public CollisionFilter enemyFilter = createFilter("ENEMY");
-    public CollisionFilter allySpawnFilter = createFilter("PLAYER","STRUCTURE","OCEAN", "ENEMY", "ALLY");
 }

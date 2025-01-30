@@ -3,44 +3,47 @@ package io.github.nickolasddiaz.systems;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.*;
 
+import static io.github.nickolasddiaz.components.ChunkComponent.HORIZONTAL_ROAD;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class CarFactory {
     private final Engine engine;
-    private final TextureAtlas atlas;
+    private final Skin skin;
     CameraComponent cameraComponent;
     ChunkComponent chunkComponent;
     Color[] carColors = new Color[]{Color.BLUE, Color.GREEN, Color.PURPLE, Color.YELLOW, Color.CHARTREUSE, Color.PINK, Color.WHITE, Color.GRAY, Color.RED, Color.ORANGE};
 
-    public CarFactory(Engine engine, TextureAtlas atlas, CameraComponent cameraComponent, ChunkComponent chunkComponent) {
+    public CarFactory(Engine engine, Skin skin, CameraComponent cameraComponent, ChunkComponent chunkComponent) {
         this.engine = engine;
-        this.atlas = atlas;
+        this.skin = skin;
         this.cameraComponent = cameraComponent;
         this.chunkComponent = chunkComponent;
     }
     public Entity createTank(TransformComponent transform){
         Entity tank = engine.createEntity();
-        CarComponent carComponent = null;
+        CarComponent carComponent;
 
-        Rectangle rect = chunkComponent.getObjectIsInsideRect(new Rectangle(0,0,chunkSize,chunkSize), chunkComponent.horizontalFilter);
-        if(rect == null) rect = chunkComponent.getObjectIsInsideRect(new Rectangle(-chunkSize,-chunkSize,2*chunkSize,2*chunkSize), chunkComponent.horizontalFilter);
+        Body[] rect = chunkComponent.getBodiesInRect(new Rectangle(0,0,chunkSize,chunkSize), HORIZONTAL_ROAD); // search within the center chunk
+        if(rect == null) rect = chunkComponent.getBodiesInRect(new Rectangle(-chunkSize,-chunkSize,2*chunkSize,2*chunkSize), HORIZONTAL_ROAD); // search within the 3x3 chunks
 
+        Body road = rect[chunkComponent.random.nextInt(rect.length)];
+        Rectangle roadRect = new Rectangle(road.getPosition().x, road.getPosition().y, road.getFixtureList().get(0).getShape().getRadius() * 2, road.getFixtureList().get(0).getShape().getRadius() * 2);
 
         // Create car component
         boolean isRight = chunkComponent.random.nextBoolean();
-        float spawnY = rect.y + ((isRight) ? 0 : rect.height - chunkComponent.carWidth);
-        float spawnX = rect.x + chunkComponent.random.nextFloat() * rect.width; // random x between rect.x and rect.x + rect.width
+        float spawnY = roadRect.y + ((isRight) ? 0 : roadRect.height - chunkComponent.carWidth);
+        float spawnX = roadRect.x + chunkComponent.random.nextFloat() * roadRect.width; // random x between rect.x and rect.x + rect.width
 
         transform.position = new Vector2(spawnX,spawnY);
         transform.rotation = 0f;
 
-        carComponent = new CarComponent(isRight, (isRight ? rect.x + rect.width - (float)MAP_SIZE / 2 : rect.x + (float)MAP_SIZE / 2));
+        carComponent = new CarComponent(isRight, (isRight ? roadRect.x + roadRect.width - (float)MAP_SIZE / 2 : roadRect.x + (float)MAP_SIZE / 2));
         carComponent.horizontal = true;
 
         tank.add(transform);
@@ -54,26 +57,48 @@ public class CarFactory {
         return tank;
     }
 
-    public void createCar(Vector2 position, boolean direction, float changeDirection, boolean horizontal, int carTypeIndex) {
+    public void createCar(Vector2 position, boolean direction, float changeDirection,
+                          boolean horizontal, int carTypeIndex) {
         Entity car = engine.createEntity();
 
-        // Create transform component
-        //car sprite is 26x60 now is 78x180
-        TransformComponent transformComponent = new TransformComponent(new Sprite(atlas.findRegion("car")), (int) (itemSize * 1.80f), (int) (itemSize *.78f), carColors[carTypeIndex], true, "CAR", chunkComponent.world,position, 0f, 1);
-        transformComponent.updateBounds();
-        car.add(transformComponent);
+        // Create transform component with Box2D body
+        TransformComponent transformComponent = new TransformComponent(
+            chunkComponent.world,
+            skin.getSprite("car"),
+            (int) (itemSize * 1.80f),
+            (int) (itemSize * .78f),
+            carColors[carTypeIndex],
+            true,  // isDynamic
+            ChunkComponent.CAR,
+            position,
+            horizontal ? (direction ? 0 : 180) : (direction ? 90 : 270),
+            1  // health
+        );
 
         // Create car component
         CarComponent carComponent = new CarComponent(direction, changeDirection);
         carComponent.horizontal = horizontal;
+
+        // Set initial velocity based on direction
+        if (horizontal) {
+            transformComponent.body.setLinearVelocity(
+                direction ? carComponent.speed : -carComponent.speed,
+                0
+            );
+        } else {
+            transformComponent.body.setLinearVelocity(
+                0,
+                direction ? carComponent.speed : -carComponent.speed
+            );
+        }
+
+        // Add components to entity
+        car.add(transformComponent);
         car.add(carComponent);
         car.add(chunkComponent);
-
-        // Add sprite component for rendering
         car.add(cameraComponent);
 
         // Add to engine
         engine.addEntity(car);
-
     }
 }

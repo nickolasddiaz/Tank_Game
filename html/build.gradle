@@ -39,15 +39,13 @@ dependencies {
   implementation "com.badlogicgames.gdx:gdx-ai:$aiVersion:sources"
   implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion:sources"
   implementation "com.badlogicgames.gdx:gdx:$gdxVersion:sources"
-  implementation "com.github.tommyettinger:gdx-backend-gwt:1.1210.1"
-  implementation "com.github.tommyettinger:gdx-backend-gwt:1.1210.1:sources"
+  implementation "com.github.tommyettinger:gdx-backend-gwt:$gdxBackendVersion"
+  implementation "com.github.tommyettinger:gdx-backend-gwt:$gdxBackendVersion:sources"
   implementation project(':core')
   implementation("com.badlogicgames.gdx:gdx-box2d-gwt:$gdxVersion:sources") {exclude group: "com.google.gwt", module: "gwt-user"}
-  implementation "com.github.tommyettinger:textratypist:1.1.0:sources"
-  implementation "com.github.tommyettinger:regexodus:0.1.16:sources"
-  implementation "com.github.tommyettinger:freetypist:1.1.0:sources"
-  implementation 'com.github.implicit-invocation:jbump:v1.0.2:sources'
-
+  implementation "com.github.tommyettinger:textratypist:$textratypistVersion:sources"
+  implementation "com.github.tommyettinger:regexodus:$regexodusVersion:sources"
+  implementation "com.github.tommyettinger:freetypist:$textratypistVersion:sources"
 
 
 

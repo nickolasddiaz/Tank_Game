@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.*;
 
 
@@ -30,14 +31,14 @@ public class JoystickInputSystem extends EntitySystem {
 
     private final Stage stage = new Stage();
 
-    public JoystickInputSystem() {
+    public JoystickInputSystem(Skin skin) {
         joystickMapper = ComponentMapper.getFor(JoystickComponent.class);
         settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
 
-        TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas"));
+        //TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas"));
 
-        joyStickImage = new Image(atlas.findRegion("handle"));
-        joyStickBaseImage = new Image(atlas.findRegion("handle_background"));
+        joyStickImage = new Image(skin.getDrawable("handle"));
+        joyStickBaseImage = new Image(skin.getDrawable("handle_background"));
 
 
         // Initialize shape renderers for joystick

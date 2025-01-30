@@ -1,7 +1,6 @@
 package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
@@ -110,9 +109,6 @@ public class ChunkSystem extends EntitySystem {
         HashMap<Vector2, boolean[][]> tempWalkChunks = new HashMap<>();
 
 
-        // First, clear all existing worlds
-        chunk.clearWorlds();
-
         // Load new chunks
         for (int x = (int)centerChunk.x - CHUNK_LOAD_RADIUS; x <= centerChunk.x + CHUNK_LOAD_RADIUS; x++) {
             for (int y = (int)centerChunk.y - CHUNK_LOAD_RADIUS; y <= centerChunk.y + CHUNK_LOAD_RADIUS; y++) {
@@ -132,13 +128,18 @@ public class ChunkSystem extends EntitySystem {
             }
         }
 
+        for (Vector2 chunkPos : chunk.mapChunks.keySet()) {
+            if (!newChunks.containsKey(chunkPos)) {
+                chunk.clearChunkBodies(chunkPos);
+            }
+        }
+
         chunk.walkChunks.clear();
         chunk.walkChunks.putAll(tempWalkChunks);
 
         chunk.mapChunks.clear();
         chunk.mapChunks.putAll(newChunks);
         chunk.cacheObjectsNodes();
-        chunk.addWorlds();
     }
 
     private void loadInitialChunks() {
