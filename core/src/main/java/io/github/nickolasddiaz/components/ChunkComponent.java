@@ -11,10 +11,12 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import io.github.nickolasddiaz.utils.CollisionCategory;
 import io.github.nickolasddiaz.utils.WorldGraph;
 import java.util.*;
 
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 // units are used in determining positioning in the game world
 // MAP_SIZE how many rows of tiles in a chunk, 80 tiles
@@ -30,27 +32,7 @@ public class ChunkComponent implements Component {
     public Random random = new Random(System.currentTimeMillis());
     public float carWidth = 64;
     public WorldGraph pathfindingGraph;
-
-    // Filter bits for collision categories
-    public static final short FROM_THE_PLAYER = 0x0001; //this is to know which projectile is from the player 1 is the player and 0 is the enemy
-    public static final short HORIZONTAL_ROAD = 0x0002;
-    public static final short VERTICAL_ROAD =   0x0004;
-    public static final short STRUCTURE =       0x0008;
-    public static final short DECORATION =      0x0016;
-    public static final short OCEAN =           0x0032;
-    public static final short CAR =             0x0064;
-    public static final short ENEMY =           0x0128;
-    public static final short PLAYER =          0x0256;
-    public static final short ALLY =            0x0512;
-    public static final short BULLET =          0x1024;
-    public static final short MISSILE =         0x2048;
-    public static final short MINE =            0x4096;
-
-    public static final short STRUCTURE_FILTER = STRUCTURE + DECORATION + OCEAN;
-    public static final short PROJECTILE_FILTER = BULLET + MINE + MISSILE;
-    public static final short VEHICLE_FILTER = CAR + PLAYER + ENEMY + ALLY;
-
-
+    public CollisionCategory category;
 
     public World world;
     // Store bodies for each chunk to manage cleanup
@@ -58,6 +40,7 @@ public class ChunkComponent implements Component {
 
     public ChunkComponent() {
         this.world = new World(new Vector2(0, 0), true);
+        category = new CollisionCategory();
 
     }
     // Helper method to create a body for a rectangle object
@@ -73,15 +56,7 @@ public class ChunkComponent implements Component {
         fixtureDef.shape = shape;
         fixtureDef.density = 1.0f;
         fixtureDef.filter.categoryBits = category;
-
-        // Updated collision filtering
-        if (category == HORIZONTAL_ROAD || category == VERTICAL_ROAD) {
-            fixtureDef.filter.maskBits = VEHICLE_FILTER;
-        } else if (category == STRUCTURE) {
-            fixtureDef.filter.maskBits = PROJECTILE_FILTER | VEHICLE_FILTER;
-        } else if (category == DECORATION) {
-            fixtureDef.filter.maskBits = VEHICLE_FILTER;
-        }
+        fixtureDef.filter.maskBits = categoryToFilterBits(category);
 
         Body body = world.createBody(bodyDef);
         body.createFixture(fixtureDef);
@@ -106,10 +81,7 @@ public class ChunkComponent implements Component {
         fixtureDef.shape = shape;
         fixtureDef.density = 1.0f;
         fixtureDef.filter.categoryBits = category;
-
-        if (category == OCEAN) {
-            fixtureDef.filter.maskBits = VEHICLE_FILTER - CAR;
-        }
+        fixtureDef.filter.maskBits = categoryToFilterBits(category);
 
         Body body = world.createBody(bodyDef);
         body.createFixture(fixtureDef);
@@ -148,39 +120,22 @@ public class ChunkComponent implements Component {
         ArrayList<Body> bodies = new ArrayList<>();
         MapObjects objects = chunkMap.getLayers().get("OBJECTS").getObjects();
 
+
         objects.forEach(obj -> {
             if (obj.getName() != null) {
                 Body body;
                 if (obj instanceof RectangleMapObject) {
                     RectangleMapObject rectObj = (RectangleMapObject) obj;
-                    body = createRectangleBody(world, rectObj.getRectangle(), getFilterBit(rectObj.getName()));
+                    body = createRectangleBody(world, rectObj.getRectangle(), category.getFilterBit(rectObj.getName()));
                     bodies.add(body);
                 } else if (obj instanceof PolygonMapObject) {
                     PolygonMapObject polyObj = (PolygonMapObject) obj;
-                     body = createChainShape(world, polyObj.getPolygon(), getFilterBit(polyObj.getName()));
+                     body = createChainShape(world, polyObj.getPolygon(), category.getFilterBit(polyObj.getName()));
                     bodies.add(body);
                 }
             }
         });
         chunkBodies.put(chunkPosition, bodies);
-    }
-
-    public short getFilterBit(String name){
-        switch (name){
-            case "HORIZONTAL": return HORIZONTAL_ROAD;
-            case "VERTICAL": return VERTICAL_ROAD;
-            case "STRUCTURE": return STRUCTURE;
-            case "DECORATION": return DECORATION;
-            case "OCEAN": return OCEAN;
-            case "CAR": return CAR;
-            case "ENEMY": return ENEMY;
-            case "PLAYER": return PLAYER;
-            case "ALLY": return ALLY;
-            case "BULLET": return BULLET;
-            case "MISSILE": return MISSILE;
-            case "MINE": return MINE;
-            default: return 0;
-        }
     }
 
     // Clear Box2D bodies for unloaded chunks

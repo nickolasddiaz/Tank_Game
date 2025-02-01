@@ -15,6 +15,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.utils.GraphNode;
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class EnemySystem extends IteratingSystem {
@@ -77,14 +78,14 @@ public class EnemySystem extends IteratingSystem {
         short categoryB = fixtureB.getFilterData().categoryBits;
 
         // Handle different collision scenarios
-        if (categoryA == ChunkComponent.ENEMY || categoryB == ChunkComponent.ENEMY ||
-            categoryA == ChunkComponent.ALLY || categoryB == ChunkComponent.ALLY) {
+        if (categoryA == ENEMY || categoryB == ENEMY ||
+            categoryA == ALLY || categoryB == ALLY) {
 
-            TransformComponent enemy = (categoryA == ChunkComponent.ENEMY || categoryA == ChunkComponent.ALLY) ?
+            TransformComponent enemy = (categoryA == ENEMY || categoryA == ALLY) ?
                 transformA : transformB;
-            TransformComponent other = (categoryA == ChunkComponent.ENEMY || categoryA == ChunkComponent.ALLY) ?
+            TransformComponent other = (categoryA == ENEMY || categoryA == ALLY) ?
                 transformB : transformA;
-            short otherCategory = (categoryA == ChunkComponent.ENEMY || categoryA == ChunkComponent.ALLY) ?
+            short otherCategory = (categoryA == ENEMY || categoryA == ALLY) ?
                 categoryB : categoryA;
 
             handleEnemyCollision(enemy, other, otherCategory);
@@ -93,27 +94,17 @@ public class EnemySystem extends IteratingSystem {
 
     private void handleEnemyCollision(TransformComponent enemy, TransformComponent other, short category) {
         switch (category) {
-            case ChunkComponent.STRUCTURE:
-            case ChunkComponent.OCEAN:
-                // Apply bounce effect
-                Vector2 normal = enemy.position.cpy().sub(other.position).nor();
-                enemy.body.setLinearVelocity(
-                    normal.x * enemy.body.getLinearVelocity().len() * 0.5f,
-                    normal.y * enemy.body.getLinearVelocity().len() * 0.5f
-                );
-                break;
-
-            case ChunkComponent.CAR:
+            case CAR:
                 other.health = 0;
                 enemy.body.setLinearDamping(2f); // Slow down after hitting car
                 break;
 
-            case ChunkComponent.HORIZONTAL_ROAD:
-            case ChunkComponent.VERTICAL_ROAD:
+            case HORIZONTAL_ROAD:
+            case VERTICAL_ROAD:
                 enemy.body.setLinearDamping(0f); // Remove damping on roads
                 break;
 
-            case ChunkComponent.DECORATION:
+            case DECORATION:
                 enemy.body.setLinearDamping(1.5f); // Add more damping in decoration
                 break;
         }
@@ -124,8 +115,10 @@ public class EnemySystem extends IteratingSystem {
         EnemyComponent enemyComponent = enemyMapper.get(entity);
         TransformComponent transform = transformMapper.get(entity);
 
+        transform.velocity.setZero();
+
         // Check if enemy is in valid chunk and alive
-        Vector2 chunkPosition = chunk.getChunkPosition(transform.position);
+        Vector2 chunkPosition = chunk.getChunkPosition(transform.getPosition());
         if (!chunk.mapChunks.containsKey(chunkPosition) || transform.health <= 0) {
             transform.dispose();
             engine.removeEntity(entity);
@@ -139,7 +132,7 @@ public class EnemySystem extends IteratingSystem {
         handleShooting(transform, enemyComponent, deltaTime);
 
         // Check distance to player
-        float distanceToPlayer = transform.position.dst(player.position);
+        float distanceToPlayer = transform.getPosition().dst(player.getPosition());
         if (distanceToPlayer <= enemyComponent.minDistance) {
             return;
         }
@@ -152,12 +145,11 @@ public class EnemySystem extends IteratingSystem {
             moveEnemy(transform, enemyComponent, deltaTime);
 
             if (settings.DEBUG) {
-                renderNextPathRect(transform.position, enemyComponent.nextPathWorld, enemyComponent);
+                renderNextPathRect(transform.getPosition(), enemyComponent.nextPathWorld, enemyComponent);
             }
         }
 
-        // Update transform from physics body
-        transform.updateTransform();
+
     }
 
     private void updatePathfinding(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
@@ -169,9 +161,9 @@ public class EnemySystem extends IteratingSystem {
         enemyComponent.timeSinceLastPathfinding = 0f;
 
         // Only recalculate path if player has moved outside the lazy path rectangle or if we don't have a valid path yet
-        if (!enemyComponent.lazyPath.contains(player.position) || enemyComponent.path.getCount() == 0) {
-            Vector2 startPos = chunk.worldToGridCoordinates(transform.position);
-            Vector2 endPos = chunk.worldToGridCoordinates(player.position);
+        if (!enemyComponent.lazyPath.contains(player.getPosition()) || enemyComponent.path.getCount() == 0) {
+            Vector2 startPos = chunk.worldToGridCoordinates(transform.getPosition());
+            Vector2 endPos = chunk.worldToGridCoordinates(player.getPosition());
 
             GraphNode startNode = chunk.pathfindingGraph.getNodeAt(startPos);
             GraphNode endNode = chunk.pathfindingGraph.getNodeAt(endPos);
@@ -206,8 +198,8 @@ public class EnemySystem extends IteratingSystem {
 
                 if (pathFound) {
                     enemyComponent.lazyPath.set(
-                        player.position.x - TILE_SIZE,
-                        player.position.y - TILE_SIZE,
+                        player.getPosition().x - TILE_SIZE,
+                        player.getPosition().y - TILE_SIZE,
                         TILE_SIZE * 2,
                         TILE_SIZE * 2
                     );
@@ -228,11 +220,11 @@ public class EnemySystem extends IteratingSystem {
         if (enemyComponent.isAlly) {
             transform.turretRotation = player.turretRotation;
         } else {
-            Vector2 targetPosition = player.position;
+            Vector2 targetPosition = player.getPosition();
             transform.turretRotation = (float) Math.toDegrees(
                 Math.atan2(
-                    targetPosition.y - transform.position.y,
-                    targetPosition.x - transform.position.x
+                    targetPosition.y - transform.getPosition().y,
+                    targetPosition.x - transform.getPosition().x
                 )
             );
         }
@@ -241,8 +233,8 @@ public class EnemySystem extends IteratingSystem {
         enemyComponent.timeSinceLastShot += deltaTime;
         if (enemyComponent.timeSinceLastShot > enemyComponent.fireRate) {
             enemyComponent.timeSinceLastShot = 0f;
-            if (player.position.dst(transform.position) < chunkSize) {
-                Vector2 bulletPosition = transform.position.cpy();
+            if (player.getPosition().dst(transform.getPosition()) < chunkSize) {
+                Vector2 bulletPosition = transform.getPosition().cpy();
                 bulletFactory.createBullet(
                     bulletPosition,
                     transform.turretRotation + (chunk.random.nextFloat() - 0.5f) * 10f,
@@ -257,7 +249,7 @@ public class EnemySystem extends IteratingSystem {
     }
 
     private void moveEnemy(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
-        Vector2 direction = new Vector2(enemyComponent.nextPathWorld).sub(transform.position).nor();
+        Vector2 direction = new Vector2(enemyComponent.nextPathWorld).sub(transform.getPosition()).nor();
 
         // Calculate target angle
         float targetAngle = direction.angleDeg();
@@ -272,21 +264,11 @@ public class EnemySystem extends IteratingSystem {
         }
         transform.rotation = (transform.rotation + 360) % 360;
 
-        // Apply movement force
-        float angleRad = (float) Math.toRadians(transform.rotation);
-        Vector2 force = new Vector2(
-            (float) Math.cos(angleRad) * enemyComponent.speed,
-            (float) Math.sin(angleRad) * enemyComponent.speed
+        // Apply movement velocity
+        transform.velocity = new Vector2(
+            (float) Math.cos(transform.rotation) * enemyComponent.speed,
+            (float) Math.sin(transform.rotation) * enemyComponent.speed
         );
-        transform.body.applyForceToCenter(force, true);
-
-        // Limit maximum velocity
-        Vector2 velocity = transform.body.getLinearVelocity();
-        float maxSpeed = enemyComponent.speed * 2;
-        if (velocity.len2() > maxSpeed * maxSpeed) {
-            velocity.nor().scl(maxSpeed);
-            transform.body.setLinearVelocity(velocity);
-        }
     }
 
 

@@ -10,6 +10,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.components.*;
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.HORIZONTAL_ROAD;
+import static io.github.nickolasddiaz.utils.CollisionCategory.VERTICAL_ROAD;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class CarSystem extends IteratingSystem {
@@ -33,43 +35,40 @@ public class CarSystem extends IteratingSystem {
         Body body = transform.body;
 
         // Check if in a valid chunk
-        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.position))) {
+        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition()))) {
             transform.dispose();
             engine.removeEntity(entity);
             return;
         }
         if(body == null) return;
+        transform.velocity.setZero();
 
         // Update position from Box2D body
-        transform.position.set(body.getPosition());
         transform.rotation = ((car.horizontal) ?
             (car.direction) ? 0 : 180 :
             (car.direction) ? 90 : 270);
-        body.setTransform(body.getPosition(), (float) Math.toRadians(transform.rotation));
 
         if (car.horizontal) {
-            moveCarBox2D(body, car, deltaTime);
             if (car.direction) {
-                if (car.changeDirection > transform.position.x) {
-                    body.setLinearVelocity(car.speed * deltaTime, 0);
+                if (car.changeDirection > transform.getPosition().x) {
+                    transform.velocity.set(car.speed, 0);
                     return;
                 }
             } else {
-                if (car.changeDirection < transform.position.x) {
-                    body.setLinearVelocity(-car.speed * deltaTime, 0);
+                if (car.changeDirection < transform.getPosition().x) {
+                    transform.velocity.set(-car.speed, 0);
                     return;
                 }
             }
         } else {
-            moveCarBox2D(body, car, deltaTime);
             if (car.direction) {
-                if (car.changeDirection > transform.position.y) {
-                    body.setLinearVelocity(0, car.speed * deltaTime);
+                if (car.changeDirection > transform.getPosition().y) {
+                    transform.velocity.set(0, car.speed);
                     return;
                 }
             } else {
-                if (car.changeDirection < transform.position.y) {
-                    body.setLinearVelocity(0, -car.speed * deltaTime);
+                if (car.changeDirection < transform.getPosition().y) {
+                    transform.velocity.set(0, -car.speed);
                     return;
                 }
             }
@@ -82,7 +81,7 @@ public class CarSystem extends IteratingSystem {
         float querySize = MAP_SIZE;
         chunk.world.QueryAABB(
             fixture -> {
-                if (fixture.getFilterData().categoryBits == ChunkComponent.HORIZONTAL_ROAD) {
+                if (fixture.getFilterData().categoryBits == HORIZONTAL_ROAD) {
                     Body roadBody = fixture.getBody();
                     Vector2 pos = roadBody.getPosition();
                     horizontalRoad[0] = new Rectangle(
@@ -92,15 +91,15 @@ public class CarSystem extends IteratingSystem {
                 }
                 return true;
             },
-            transform.position.x - querySize/2,
-            transform.position.y - querySize/2,
-            transform.position.x + querySize/2,
-            transform.position.y + querySize/2
+            transform.getPosition().x - querySize/2,
+            transform.getPosition().y - querySize/2,
+            transform.getPosition().x + querySize/2,
+            transform.getPosition().y + querySize/2
         );
 
         chunk.world.QueryAABB(
             fixture -> {
-                if (fixture.getFilterData().categoryBits == ChunkComponent.VERTICAL_ROAD) {
+                if (fixture.getFilterData().categoryBits == VERTICAL_ROAD) {
                     Body roadBody = fixture.getBody();
                     Vector2 pos = roadBody.getPosition();
                     verticalRoad[0] = new Rectangle(
@@ -110,25 +109,17 @@ public class CarSystem extends IteratingSystem {
                 }
                 return true;
             },
-            transform.position.x - querySize/2,
-            transform.position.y - querySize/2,
-            transform.position.x + querySize/2,
-            transform.position.y + querySize/2
+            transform.getPosition().x - querySize/2,
+            transform.getPosition().y - querySize/2,
+            transform.getPosition().x + querySize/2,
+            transform.getPosition().y + querySize/2
         );
 
 
-        handleRoadLogic(car, transform, body, horizontalRoad[0], verticalRoad[0]);
+        handleRoadLogic(car, transform, horizontalRoad[0], verticalRoad[0]);
     }
 
-    private void moveCarBox2D(Body body, CarComponent car, float deltaTime) {
-        Vector2 currentVel = body.getLinearVelocity();
-        if (currentVel.len() > car.speed) {
-            currentVel.nor().scl(car.speed);
-            body.setLinearVelocity(currentVel);
-        }
-    }
-
-    private void handleRoadLogic(CarComponent car, TransformComponent transform, Body body,
+    private void handleRoadLogic(CarComponent car, TransformComponent transform,
                                  Rectangle horizontalRoad, Rectangle verticalRoad) {
         if (horizontalRoad == null && verticalRoad == null) {
             transform.dispose();
@@ -139,17 +130,17 @@ public class CarSystem extends IteratingSystem {
 
         // Handle road changes and U-turns
         if (horizontalRoad != null && !car.horizontal) {
-            handleHorizontalRoadTransition(car, body, horizontalRoad);
+            handleHorizontalRoadTransition(car, transform, horizontalRoad);
         } else if (verticalRoad != null && car.horizontal) {
-            handleVerticalRoadTransition(car, body, verticalRoad);
+            handleVerticalRoadTransition(car, transform, verticalRoad);
         } else {
-            handleUTurn(car, transform, body, horizontalRoad, verticalRoad);
+            handleUTurn(car, transform, horizontalRoad, verticalRoad);
         }
     }
 
-    private void handleHorizontalRoadTransition(CarComponent car, Body body, Rectangle road) {
-        boolean right = road.x + road.width > body.getPosition().x + MAP_SIZE * 3;
-        boolean left = road.x < body.getPosition().x - MAP_SIZE * 3;
+    private void handleHorizontalRoadTransition(CarComponent car, TransformComponent transform, Rectangle road) {
+        boolean right = road.x + road.width > transform.body.getPosition().x + MAP_SIZE * 3;
+        boolean left = road.x < transform.body.getPosition().x - MAP_SIZE * 3;
         boolean direction = (right && left) ? chunk.random.nextBoolean() : right;
 
         car.horizontal = true;
@@ -158,12 +149,12 @@ public class CarSystem extends IteratingSystem {
             road.x + road.width - MAP_SIZE :
             road.x + MAP_SIZE;
 
-        body.setLinearVelocity(direction ? car.speed : -car.speed, 0);
+        transform.velocity = new Vector2(direction ? car.speed : -car.speed ,0f);
     }
 
-    private void handleVerticalRoadTransition(CarComponent car, Body body, Rectangle road) {
-        boolean up = road.y + road.height > body.getPosition().y + MAP_SIZE * 3;
-        boolean down = road.y < body.getPosition().y - MAP_SIZE * 3;
+    private void handleVerticalRoadTransition(CarComponent car, TransformComponent transform, Rectangle road) {
+        boolean up = road.y + road.height > transform.body.getPosition().y + MAP_SIZE * 3;
+        boolean down = road.y < transform.body.getPosition().y - MAP_SIZE * 3;
         boolean direction = (up && down) ? chunk.random.nextBoolean() : up;
 
         car.horizontal = false;
@@ -172,11 +163,10 @@ public class CarSystem extends IteratingSystem {
             road.y + road.height - MAP_SIZE :
             road.y + MAP_SIZE;
 
-        body.setLinearVelocity(0, direction ? car.speed : -car.speed);
+        transform.velocity = new Vector2(0f, direction ? car.speed : -car.speed);
     }
 
-    private void handleUTurn(CarComponent car, TransformComponent transform, Body body,
-                             Rectangle horizontalRoad, Rectangle verticalRoad) {
+    private void handleUTurn(CarComponent car, TransformComponent transform, Rectangle horizontalRoad, Rectangle verticalRoad) {
         if (horizontalRoad != null) {
             car.direction = !car.direction;
             car.changeDirection = car.direction ?
@@ -184,8 +174,8 @@ public class CarSystem extends IteratingSystem {
                 horizontalRoad.x + MAP_SIZE;
 
             float yPos = horizontalRoad.y + (car.direction ? 0 : horizontalRoad.height - chunk.carWidth);
-            body.setTransform(body.getPosition().x, yPos, body.getAngle());
-            body.setLinearVelocity(car.direction ? car.speed : -car.speed, 0);
+            transform.body.setTransform(transform.getPosition().x, yPos, transform.body.getAngle());
+            transform.velocity = new Vector2(car.direction ? car.speed : -car.speed, 0f);
         } else if (verticalRoad != null) {
             car.direction = !car.direction;
             car.changeDirection = car.direction ?
@@ -193,8 +183,9 @@ public class CarSystem extends IteratingSystem {
                 verticalRoad.y + MAP_SIZE;
 
             float xPos = verticalRoad.x + (car.direction ? verticalRoad.width - chunk.carWidth : 0);
-            body.setTransform(xPos, body.getPosition().y, body.getAngle());
-            body.setLinearVelocity(0, car.direction ? car.speed : -car.speed);
+            transform.body.setTransform(xPos, transform.getPosition().y, transform.body.getAngle());
+            transform.velocity = new Vector2(0f, car.direction ? car.speed : -car.speed);
+
         }
     }
 }

@@ -9,7 +9,8 @@ import io.github.nickolasddiaz.components.ChunkComponent;
 import io.github.nickolasddiaz.components.MissileComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 
-import static io.github.nickolasddiaz.components.ChunkComponent.MISSILE;
+import static io.github.nickolasddiaz.utils.CollisionCategory.E_MISSILE;
+import static io.github.nickolasddiaz.utils.CollisionCategory.P_MISSILE;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class MissileFactory {
@@ -27,8 +28,7 @@ public class MissileFactory {
     public void spawnMissile(Vector2 position, float rotation, float speed, int damage, float size, Color color, boolean team) {
         Entity missile = new Entity();
 
-        short categoryBits = (short) (MISSILE +
-            (team ? ChunkComponent.FROM_THE_PLAYER : 0));
+        short categoryBits = (team ? P_MISSILE : E_MISSILE);
 
         // Create transform component with missile properties
         TransformComponent transform = new TransformComponent(

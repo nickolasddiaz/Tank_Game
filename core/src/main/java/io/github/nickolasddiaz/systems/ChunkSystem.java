@@ -72,7 +72,7 @@ public class ChunkSystem extends EntitySystem {
 
     @Override
     public void update(float deltaTime) {
-        updateCamera(tankComponent.position.x, tankComponent.position.y);
+        updateCamera(tankComponent.getPosition().x, tankComponent.getPosition().y);
         renderChunks();
 
         if (settingsComponent.DEBUG) {

@@ -2,11 +2,15 @@ package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.components.BulletComponent;
 import io.github.nickolasddiaz.components.ChunkComponent;
 import io.github.nickolasddiaz.components.StatsComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
+
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
+
 
 public class BulletSystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
@@ -27,6 +31,18 @@ public class BulletSystem extends IteratingSystem {
         chunk.world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
+                Fixture fixtureA = contact.getFixtureA();
+                Fixture fixtureB = contact.getFixtureB();
+
+                // Early exit if either fixture is null
+                if (fixtureA == null || fixtureB == null) return;
+
+                Body bodyA = fixtureA.getBody();
+                Body bodyB = fixtureB.getBody();
+
+                // Early exit if either body is null
+                if (bodyA == null || bodyB == null) return;
+
                 handleBulletCollision(contact);
             }
 
@@ -52,60 +68,74 @@ public class BulletSystem extends IteratingSystem {
         short categoryB = fixtureB.getFilterData().categoryBits;
 
         // Check if either fixture is a bullet
-        if (categoryA == ChunkComponent.BULLET || categoryB == ChunkComponent.BULLET) {
-            TransformComponent bulletTransform = (categoryA == ChunkComponent.BULLET) ?
-                (TransformComponent) bodyA.getUserData() :
-                (TransformComponent) bodyB.getUserData();
+        boolean isABullet = isBullet(categoryA);
+        boolean isBBullet = isBullet(categoryB);
 
-            TransformComponent otherTransform = (categoryA == ChunkComponent.BULLET) ?
-                (TransformComponent) bodyB.getUserData() :
-                (TransformComponent) bodyA.getUserData();
+        if (isABullet || isBBullet) {
+            Object userDataA = bodyA.getUserData();
+            Object userDataB = bodyB.getUserData();
 
-            short otherCategory = (categoryA == ChunkComponent.BULLET) ? categoryB : categoryA;
+            // Early exit if user data is missing
+            if (userDataA == null || userDataB == null) return;
 
-            if (otherCategory != ChunkComponent.HORIZONTAL_ROAD && otherCategory != ChunkComponent.VERTICAL_ROAD) {
+            TransformComponent bulletTransform = isABullet ?
+                (TransformComponent) userDataA :
+                (TransformComponent) userDataB;
+
+            TransformComponent otherTransform = isABullet ?
+                (TransformComponent) userDataB :
+                (TransformComponent) userDataA;
+
+            short otherCategory = isABullet ? categoryB : categoryA;
+
+            // Don't process road collisions
+            if (otherCategory != HORIZONTAL_ROAD &&
+                otherCategory != VERTICAL_ROAD) {
                 handleBulletHit(bulletTransform, otherTransform, otherCategory);
             }
         }
     }
 
+    private boolean isBullet(short category) {
+        return (category & (P_BULLET | E_BULLET)) != 0;
+    }
+
     private void handleBulletHit(TransformComponent bullet, TransformComponent other, short category) {
-        boolean isPlayerBullet = (category & 1) != 0; // Check if bullet is from player
+        // Ensure the bullet still exists
+        if (bullet.body == null || bullet.body.getFixtureList().size == 0) return;
+
+        boolean isPlayerBullet = (bullet.body.getFixtureList().first().getFilterData().categoryBits == P_BULLET);
 
         switch (category) {
-            case ChunkComponent.OCEAN:
-            case ChunkComponent.STRUCTURE:
-                bullet.health = 0;
+            case OCEAN:
+            case STRUCTURE:
                 break;
 
-            case ChunkComponent.CAR:
+            case CAR:
                 other.health = 0;
-                bullet.health = 0;
                 if (!isPlayerBullet) {
                     statsComponent.addScore(1);
                 }
                 break;
 
-            case ChunkComponent.ALLY:
-            case ChunkComponent.PLAYER:
-                if (isPlayerBullet) {
-                    if (other.health > statsComponent.reduceDamage) {
-                        other.health -= bullet.health - statsComponent.reduceDamage;
-                    }
-                    bullet.health = 0;
+            case ALLY:
+            case PLAYER:
+                if (!isPlayerBullet && other.health > statsComponent.reduceDamage) {
+                    other.health -= bullet.health - statsComponent.reduceDamage;
                 }
                 break;
 
-            case ChunkComponent.ENEMY:
-                if (!isPlayerBullet) {
+            case ENEMY:
+                if (isPlayerBullet) {
                     other.health -= bullet.health;
-                    bullet.health = 0;
                     if (other.health <= 0) {
                         statsComponent.addScore(1);
                     }
                 }
                 break;
         }
+        // Mark bullet for destruction
+        bullet.health = 0;
     }
 
     @Override
@@ -113,11 +143,14 @@ public class BulletSystem extends IteratingSystem {
         TransformComponent transform = transformMapper.get(entity);
         BulletComponent bullet = bulletMapper.get(entity);
 
-        // Store previous position
-        transform.tempPosition.set(transform.position);
+        // Check if bullet still exists
+        if (transform.body == null) {
+            engine.removeEntity(entity);
+            return;
+        }
 
         // Check if bullet is out of bounds
-        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.position))) {
+        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition()))) {
             transform.dispose();
             engine.removeEntity(entity);
             return;
@@ -126,15 +159,7 @@ public class BulletSystem extends IteratingSystem {
         // Apply velocity to bullet
         float velocityX = (float) (bullet.bullet_speed * Math.cos(Math.toRadians(transform.rotation)));
         float velocityY = (float) (bullet.bullet_speed * Math.sin(Math.toRadians(transform.rotation)));
-        transform.body.setLinearVelocity(velocityX, velocityY);
-
-        // Update position from physics body
-        transform.updateTransform();
-
-        // Check if bullet should be destroyed
-        if (transform.health <= 0) {
-            transform.dispose();
-            engine.removeEntity(entity);
-        }
+        transform.velocity.set(velocityX, velocityY);
     }
 }
+

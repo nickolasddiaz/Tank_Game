@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.*;
 
 import static io.github.nickolasddiaz.components.ChunkComponent.*;
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class EnemyFactory {
@@ -30,6 +31,22 @@ public class EnemyFactory {
         this.playerComponent = playerComponent;
         engine.addSystem(new EnemySystem(engine, playerTransformComponent, cameraComponent, settings, bulletFactory,chunk));
     }
+    private Vector2 getPosition(){
+        Vector2 position = new Vector2();
+        int i = 0;
+        while (i < 10) {
+            position = new Vector2(chunkComponent.random.nextInt(chunkSize) - MAP_SIZE / 2f, chunkComponent.random.nextInt(chunkSize) - MAP_SIZE / 2f);
+            position.add(chunkComponent.currentChunk.scl(chunkSize));
+            if (chunkComponent.isPointInside(position, HORIZONTAL_ROAD)) {
+                break;
+            }
+            i++;
+        }
+        return position;
+    }
+    public void createTank(boolean ally){
+        createTank(getPosition(), ally);
+    }
 
     public void createTank(Vector2 spawnPosition, boolean isAlly){ {
         playerComponent.enemyCount++;
@@ -39,25 +56,14 @@ public class EnemyFactory {
         tank.add(cameraComponent);
         tank.add(chunkComponent);
         //enemy sprite is 30x50 now is 76x128
-        Vector2 tempPosition = spawnPosition.cpy();
-        float length,radiusAngle;
-        int i = 0;
-        while (i < 10) {
-            radiusAngle = (float) Math.toRadians(chunkComponent.random.nextInt(360));
-            length = chunkComponent.random.nextFloat() * chunkSize;
-            Vector2 position = new Vector2((float) Math.cos(radiusAngle) * length, (float) Math.sin(radiusAngle) * length);
-            if (chunkComponent.isPointInside(position, HORIZONTAL_ROAD)) {
-                tempPosition = position;
-                break;
-            }
-            i++;
-        }
+
         //transformComponent.color = carColors[carTypeIndex];
-        TransformComponent transformComponent = new TransformComponent(chunkComponent.world, skin.getSprite("tank"),itemSize *2, (int) (itemSize *1.2f), (isAlly)? Color.GREEN : null, true, (isAlly)? ALLY : ENEMY, tempPosition, 0f,2);
+        TransformComponent transformComponent = new TransformComponent(chunkComponent.world, skin.getSprite("tank"),itemSize *2, (int) (itemSize *1.2f), (isAlly)? Color.GREEN : null,
+             true, (isAlly)? ALLY : ENEMY, spawnPosition, 0f,2);
 
         tank.add(transformComponent);
         //(float) statsComponent.getStars() /15
-        EnemyComponent enemyComponent = new EnemyComponent(0f,10f,10f,1f, 20f * itemSize, 5, isAlly);
+        EnemyComponent enemyComponent = new EnemyComponent(0f,10f,10f,5f, 20f * itemSize, 5,isAlly);
         tank.add(enemyComponent);
         transformComponent.turretComponent(
             skin.getSprite("turret"),

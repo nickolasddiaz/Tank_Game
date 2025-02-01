@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.components.*;
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.chunkSize;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
@@ -47,68 +48,57 @@ public class PlayerSystem extends IteratingSystem {
         this.landMineFactory = landMineFactory;
 
         // Set up collision handling
-        chunk.world.setContactListener(new ContactListener() {
+        ContactListener contact =  new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
-                handleCollision(contact, true);
+                Gdx.app.log("player collision", "test");
+                handleCollision(contact);
             }
 
             @Override
-            public void endContact(Contact contact) {
-                handleCollision(contact, false);
-            }
+            public void endContact(Contact contact) {}
 
             @Override
             public void preSolve(Contact contact, Manifold oldManifold) {}
 
             @Override
             public void postSolve(Contact contact, ContactImpulse impulse) {}
-        });
+        };
     }
 
-    private void handleCollision(Contact contact, boolean begin) {
+    private void handleCollision(Contact contact) {
         Body bodyA = contact.getFixtureA().getBody();
         Body bodyB = contact.getFixtureB().getBody();
         TransformComponent transformA = (TransformComponent) bodyA.getUserData();
         TransformComponent transformB = (TransformComponent) bodyB.getUserData();
+        Gdx.app.log("player collision", "test");
 
         if (transformA == null || transformB == null) return;
 
         // Get collision categories
-        short categoryA = contact.getFixtureA().getFilterData().categoryBits;
         short categoryB = contact.getFixtureB().getFilterData().categoryBits;
 
         // Handle player collisions
-        if (categoryA == ChunkComponent.PLAYER || categoryB == ChunkComponent.PLAYER) {
-            TransformComponent player = (categoryA == ChunkComponent.PLAYER) ? transformA : transformB;
-            TransformComponent other = (categoryA == ChunkComponent.PLAYER) ? transformB : transformA;
-            short otherCategory = (categoryA == ChunkComponent.PLAYER) ? categoryB : categoryA;
-
-            handlePlayerCollision(player, other, otherCategory);
-        }
+        handlePlayerCollision(transformA, transformB, categoryB);
     }
 
     private void handlePlayerCollision(TransformComponent player, TransformComponent other, short category) {
+        Gdx.app.log("player collision", String.valueOf(category));
         switch (category) {
-            case ChunkComponent.STRUCTURE:
-                chunk.destroyStructure(other.position);
+            case STRUCTURE:
+                chunk.destroyStructure(other.getPosition());
                 break;
-            case ChunkComponent.CAR:
+            case CAR:
                 other.health = 0;
                 player.speedBoost *= 0.4f;
                 statsComponent.addScore(1);
                 break;
-            case ChunkComponent.ENEMY:
-                // Handle bounce
-                Vector2 normal = other.position.cpy().sub(player.position).nor();
-                float angle = normal.angleDeg();
-                player.setCollided(angle);
-                break;
-            case ChunkComponent.HORIZONTAL_ROAD:
-            case ChunkComponent.VERTICAL_ROAD:
+            case HORIZONTAL_ROAD:
+            case VERTICAL_ROAD:
+                Gdx.app.log("boost","test");
                 player.speedBoost += 0.4f;
                 break;
-            case ChunkComponent.DECORATION:
+            case DECORATION:
                 player.speedBoost *= 0.4f;
                 break;
         }
@@ -130,7 +120,7 @@ public class PlayerSystem extends IteratingSystem {
             missileSpawnTime += deltaTime;
             if (missileSpawnTime > player.missileRate) {
                 missileSpawnTime = 0f;
-                missileFactory.spawnMissile(transform.position.cpy(), transform.turretRotation,
+                missileFactory.spawnMissile(transform.getPosition().cpy(), transform.turretRotation,
                     player.bulletSpeed, player.calculateDamage() * 4,
                     player.bulletSize, null, true);
             }
@@ -141,7 +131,7 @@ public class PlayerSystem extends IteratingSystem {
             landMineSpawnTime += deltaTime;
             if (landMineSpawnTime > player.mineRate) {
                 landMineSpawnTime = 0f;
-                landMineFactory.createLandMine(transform.position.cpy(), player.calculateDamage() * 2, true);
+                landMineFactory.createLandMine(transform.getPosition().cpy(), player.calculateDamage() * 2, true);
             }
         }
 
@@ -150,7 +140,7 @@ public class PlayerSystem extends IteratingSystem {
         timeToReadjust += deltaTime;
         if ((settings.AUTO_FIRE || Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isTouched())
             && player.timeSinceLastShot > player.fireRate) {
-            player.spawnBullets(transform.position, transform.turretRotation, bulletFactory, Color.YELLOW);
+            player.spawnBullets(transform.getPosition().cpy(), transform.turretRotation, bulletFactory, Color.YELLOW);
             player.timeSinceLastShot = 0f;
         }
 
@@ -159,12 +149,6 @@ public class PlayerSystem extends IteratingSystem {
 
         // Handle movement and rotation
         handleMovement(player, transform, joystick, deltaTime);
-
-        // Update transform from physics body
-        transform.updateTransform();
-
-        // Apply movement forces
-        transform.applyMovement();
     }
 
     private void handleAllySpawning(PlayerComponent player, TransformComponent transform, float deltaTime) {
@@ -174,16 +158,15 @@ public class PlayerSystem extends IteratingSystem {
             int spawnLength = 2 * itemSize;
 
             Rectangle spawnArea = new Rectangle(
-                transform.position.x - spawnLength / 2f,
-                transform.position.y - spawnLength / 2f,
+                transform.getPosition().x - spawnLength / 2f,
+                transform.getPosition().y - spawnLength / 2f,
                 spawnLength,
                 spawnLength
             );
 
             // Get bodies in spawn area
             Body[] bodies = chunk.getBodiesInRect(spawnArea,
-                (short)(ChunkComponent.PLAYER | ChunkComponent.STRUCTURE |
-                    ChunkComponent.OCEAN | ChunkComponent.ENEMY | ChunkComponent.ALLY));
+                (short)(PLAYER | STRUCTURE | OCEAN | ENEMY | ALLY));
 
             Vector2[] spawnPositions = new Vector2[]{
                 new Vector2(spawnArea.x, spawnArea.y),
@@ -221,13 +204,10 @@ public class PlayerSystem extends IteratingSystem {
             handleAutoAim(transform);
         }
 
-        if (transform.collided) return;
-
         Vector2 direction = new Vector2(0, 0);
         float speedMultiplier = 1f;
-
-        if (settings.IS_MOBILE) {
-            handleMobileMovement(player, transform, joystick, direction, speedMultiplier, deltaTime);
+        if (settings.IS_MOBILE && Gdx.input.isTouched()) {
+            handleMobileMovement(player, transform, joystick, speedMultiplier, deltaTime);
         } else {
             handleDesktopMovement(player, transform, direction, deltaTime);
         }
@@ -237,19 +217,19 @@ public class PlayerSystem extends IteratingSystem {
         if ((lockedTarget == null || timeToReadjust > 1f)) {
             timeToReadjust = 0f;
             Rectangle searchArea = new Rectangle(
-                transform.position.x - chunkSize / 2f,
-                transform.position.y - chunkSize / 2f,
+                transform.getPosition().x - chunkSize / 2f,
+                transform.getPosition().y - chunkSize / 2f,
                 chunkSize,
                 chunkSize
             );
 
-            Body[] enemies = chunk.getBodiesInRect(searchArea, ChunkComponent.ENEMY);
+            Body[] enemies = chunk.getBodiesInRect(searchArea, ENEMY);
 
             if (enemies.length > 0) {
                 float minDistance = Float.MAX_VALUE;
                 for (Body enemyBody : enemies) {
                     TransformComponent enemyTransform = (TransformComponent) enemyBody.getUserData();
-                    float distance = transform.position.dst(enemyTransform.position);
+                    float distance = transform.getPosition().dst(enemyTransform.getPosition());
                     if (distance < minDistance) {
                         minDistance = distance;
                         lockedTarget = enemyTransform;
@@ -258,60 +238,63 @@ public class PlayerSystem extends IteratingSystem {
             }
         } else {
             transform.turretRotation = (float) Math.toDegrees(Math.atan2(
-                lockedTarget.position.y - transform.position.y,
-                lockedTarget.position.x - transform.position.x));
+                lockedTarget.getPosition().y - transform.getPosition().y,
+                lockedTarget.getPosition().x - transform.getPosition().x));
         }
     }
 
     private void handleMobileMovement(PlayerComponent player, TransformComponent transform,
-                                      JoystickComponent joystick, Vector2 direction,
-                                      float speedMultiplier, float deltaTime) {
-        if (Gdx.input.isTouched()) {
-            Vector2 touchPos = new Vector2(Gdx.input.getX(),
-                Gdx.graphics.getHeight() - Gdx.input.getY());
+                                      JoystickComponent joystick, float speedMultiplier, float deltaTime) {
 
-            if (joystick.joyStickTouchCircle.contains(touchPos)) {
-                Vector2 center = new Vector2(joystick.joyStickBaseCircle.x,
-                    joystick.joyStickBaseCircle.y);
+        Vector2 touchPos = new Vector2(Gdx.input.getX(),
+            Gdx.graphics.getHeight() - Gdx.input.getY());
 
-                if (joystick.joyStickBaseCircle.contains(touchPos)) {
-                    joystick.stickPositionMovement = touchPos.cpy();
-                    speedMultiplier = touchPos.dst(center) / joystick.joyStickBaseCircle.radius;
-                } else {
-                    Vector2 offset = touchPos.cpy().sub(center);
-                    offset.nor().scl(joystick.joyStickBaseCircle.radius);
-                    joystick.stickPositionMovement = center.cpy().add(offset);
-                }
+        if (joystick.joyStickTouchCircle.contains(touchPos)) {
+            Vector2 center = new Vector2(joystick.joyStickBaseCircle.x,
+                joystick.joyStickBaseCircle.y);
 
-                direction = joystick.stickPositionMovement.cpy().sub(center).nor();
-                if (direction.len2() > 0) {
-                    handleDirectionalMovement(player, transform, direction,
-                        speedMultiplier, deltaTime);
-                }
+            if (joystick.joyStickBaseCircle.contains(touchPos)) {
+                joystick.stickPositionMovement = touchPos.cpy();
+                speedMultiplier = touchPos.dst(center) / joystick.joyStickBaseCircle.radius;
+            } else {
+                Vector2 offset = touchPos.cpy().sub(center);
+                offset.nor().scl(joystick.joyStickBaseCircle.radius);
+                joystick.stickPositionMovement = center.cpy().add(offset);
             }
+
+            Vector2 direction = joystick.stickPositionMovement.cpy().sub(center).nor();
+            handleDirectionalMovement(player, transform, direction, speedMultiplier, deltaTime);
+
         }
+
     }
 
     private void handleDesktopMovement(PlayerComponent player, TransformComponent transform,
                                        Vector2 direction, float deltaTime) {
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D))
-            direction.x -= 1f;
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A))
-            direction.x += 1f;
-        if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W))
-            direction.y += 1f;
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S))
-            direction.y -= 1f;
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) direction.x -= 1f;
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) direction.x += 1f;
+        if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W)) direction.y += 1f;
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) direction.y -= 1f;
 
-        if (direction.len2() > 0 && direction.y != 0) {
-            direction.nor();
-            handleDirectionalMovement(player, transform, direction, 1f, deltaTime);
-        }
+        direction.nor();
+        Vector2 movement = new Vector2(direction).scl(player.SPEED);
+        transform.rotation += direction.x * player.spinSpeed * deltaTime;
+        transform.rotation = (transform.rotation + 360) % 360;
+
+
+        float angleRad = (float) Math.toRadians(transform.rotation);
+        transform.velocity.x = MathUtils.cos(angleRad) * movement.y;
+        transform.velocity.y = MathUtils.sin(angleRad) * movement.y;
+
     }
 
     private void handleDirectionalMovement(PlayerComponent player, TransformComponent transform,
                                            Vector2 direction, float speedMultiplier, float deltaTime) {
-        Vector2 movement = new Vector2(direction).scl(deltaTime * player.SPEED * speedMultiplier);
+        Vector2 movement = new Vector2(direction).scl(player.SPEED * speedMultiplier);
+        float angleRad = (float) Math.toRadians(transform.rotation);
+        transform.velocity.x = MathUtils.cos(angleRad) * movement.len();
+        transform.velocity.y = MathUtils.sin(angleRad) * movement.len();
+
         float targetAngle = direction.angleDeg();
         float angleDifference = ((targetAngle - transform.rotation + 540) % 360) - 180;
 
@@ -323,9 +306,5 @@ public class PlayerSystem extends IteratingSystem {
             transform.rotation = targetAngle;
         }
         transform.rotation = (transform.rotation + 360) % 360;
-
-        float angleRad = (float) Math.toRadians(transform.rotation);
-        transform.movement.x = MathUtils.cos(angleRad) * movement.len();
-        transform.movement.y = MathUtils.sin(angleRad) * movement.len();
     }
 }

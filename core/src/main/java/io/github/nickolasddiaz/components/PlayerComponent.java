@@ -7,7 +7,6 @@ import io.github.nickolasddiaz.systems.BulletFactory;
 
 import java.util.Random;
 
-import static io.github.nickolasddiaz.components.ChunkComponent.BULLET;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class PlayerComponent implements Component {

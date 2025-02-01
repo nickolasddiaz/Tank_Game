@@ -3,8 +3,6 @@ package io.github.nickolasddiaz.systems;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -12,6 +10,8 @@ import io.github.nickolasddiaz.components.BulletComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 import io.github.nickolasddiaz.components.ChunkComponent;
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.E_BULLET;
+import static io.github.nickolasddiaz.utils.CollisionCategory.P_BULLET;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class BulletFactory {
@@ -28,9 +28,8 @@ public class BulletFactory {
     public void createBullet(Vector2 position, float rotation, float speed, int damage, float size, Color color, boolean team) {
         Entity entity = new Entity();
 
-        // Create transform component with bullet
-        short categoryBits = (short) (ChunkComponent.BULLET +
-            (team ? ChunkComponent.FROM_THE_PLAYER : 0));
+        short categoryBits = team ? P_BULLET : E_BULLET;
+
 
         TransformComponent transform = new TransformComponent(
             world,
@@ -38,7 +37,7 @@ public class BulletFactory {
             (int) (itemSize * size),
             (int) (itemSize * size),
             color,
-            true,  // isDynamic
+            true,      // isDynamic
             categoryBits,
             position,
             rotation,
@@ -46,16 +45,8 @@ public class BulletFactory {
         );
 
         // Set up bullet-specific physics properties
-        transform.body.setBullet(true);  // Enable continuous collision detection
-        transform.body.setGravityScale(0);  // Bullets don't use gravity
-
-        // Set up collision filtering
-        Filter filter = new Filter();
-        filter.categoryBits = categoryBits;
-        filter.maskBits = (short) (ChunkComponent.STRUCTURE | ChunkComponent.OCEAN |
-            ChunkComponent.CAR | ChunkComponent.ENEMY |
-            ChunkComponent.PLAYER | ChunkComponent.ALLY);
-        transform.body.getFixtureList().first().setFilterData(filter);
+        transform.body.setBullet(true);
+        transform.body.setGravityScale(0);
 
         // Add components to entity
         entity.add(transform);

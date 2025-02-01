@@ -2,22 +2,20 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.categoryToFilterBits;
+
 public class TransformComponent implements Component {
-    public Vector2 position;
+    public Vector2 velocity = new Vector2();
     public float rotation = 0f;
     public Sprite sprite;
     public Color color;
-    public Vector2 bouncePosition = new Vector2();
-    public Vector2 tempPosition = new Vector2();
-    public boolean collided = false;
-    public float tempRotation = 0f;
     public float speedBoost = 1f;
-    public Vector2 movement = new Vector2();
 
     public Body body;
     public int health;
@@ -30,7 +28,6 @@ public class TransformComponent implements Component {
 
     public TransformComponent(World world, Sprite sprite, int width, int height, Color color,
                               boolean isDynamic, short categoryBits, Vector2 position, float rotation, int health) {
-        this.position = position;
         this.rotation = rotation;
         this.sprite = sprite;
         this.sprite.setSize(width, height);
@@ -45,15 +42,18 @@ public class TransformComponent implements Component {
 
         // Create shape
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(width/2f, height/2f);
+        shape.setAsBox(width / 2f, height / 2f);
+
 
         // Create fixture
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = isDynamic ? 1.0f : 0.0f;
-        fixtureDef.friction = 0.4f;
+        fixtureDef.friction = 0.2f;
         fixtureDef.restitution = 0.2f;
         fixtureDef.filter.categoryBits = categoryBits;
+        fixtureDef.filter.maskBits = categoryToFilterBits(categoryBits);
+        fixtureDef.isSensor = true;
 
         // Create body and add fixture
         body = world.createBody(bodyDef);
@@ -72,40 +72,20 @@ public class TransformComponent implements Component {
         this.hasTurret = true;
     }
 
-    public void updateTransform() {
-        // Update position and rotation from Box2D body
-        if(body != null) {
-            position.set(body.getPosition());
-            rotation = (float)Math.toDegrees(body.getAngle());
-        }
-    }
-
     public void applyMovement() {
         if(body == null) return;
-        if (movement.len2() > 0) {
-            float force = speedBoost * 1000f; // Adjust force magnitude as needed
-            body.applyForceToCenter(
-                movement.x * force,
-                movement.y * force,
-                true
-            );
-        }
-        movement.setZero();
-        speedBoost = 1f;
+        body.setTransform(getPosition(), (float) Math.toRadians(rotation));
+        body.setLinearVelocity(velocity.scl(speedBoost));
     }
-
-    public void setCollided(float rotation) {
-        tempPosition = position.cpy();
-        tempRotation = rotation;
-        Vector2 bounceDir = new Vector2(1, 0).setAngleDeg(rotation - 180f);
-        body.setLinearVelocity(bounceDir.scl(10f)); // Adjust bounce velocity as needed
-        collided = true;
+    public Vector2 getPosition(){
+        return body.getPosition();
     }
 
     public void dispose() {
         if (body != null && body.getWorld() != null) {
             body.getWorld().destroyBody(body);
             body = null;
+            Gdx.app.log("TransformComponent", "Body destroyed");
         }
     }
 }

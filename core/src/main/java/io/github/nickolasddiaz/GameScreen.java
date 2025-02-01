@@ -87,16 +87,16 @@ public class GameScreen implements Screen {
         stage.act(delta);
         stage.draw();
 
-//        if (game.engine.getSystem(PlayerSystem.class).getEntities().size() == 0) {
-//            game.statsComponent.setHealthLevel(0);
-//            game.setScreen(new DeathScreen(game, game.statsComponent.getScore()));
-//        }
+        if (game.engine.getSystem(PlayerSystem.class).getEntities().size() == 0) {
+            game.statsComponent.setHealthLevel(0);
+            game.setScreen(new DeathScreen(game, game.statsComponent.getScore()));
+        }
 
         //float spawn = 40f / (game.statsComponent.getStars()/5f) ;
         float spawn = 4;
         while (seconds > spawn) {
             seconds -= spawn;
-            game.enemyFactory.createTank(game.transform.position,false);
+            game.enemyFactory.createTank(false);
         }
     }
 

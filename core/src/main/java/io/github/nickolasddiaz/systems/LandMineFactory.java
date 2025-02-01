@@ -11,6 +11,8 @@ import io.github.nickolasddiaz.components.TransformComponent;
 
 import java.util.Random;
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.E_MINE;
+import static io.github.nickolasddiaz.utils.CollisionCategory.P_MINE;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class LandMineFactory {
@@ -30,8 +32,7 @@ public class LandMineFactory {
     public void createLandMine(Vector2 position, int damage, boolean team) {
         Entity landMine = new Entity();
 
-        short categoryBits = (short) (ChunkComponent.MINE +
-            (team ? ChunkComponent.FROM_THE_PLAYER : 0));
+        short categoryBits = (team ? P_MINE : E_MINE);
 
         TransformComponent transform = new TransformComponent(
             world,

@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.components.*;
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.chunkSize;
 
 public class MissileSystem extends IteratingSystem {
@@ -64,7 +65,7 @@ public class MissileSystem extends IteratingSystem {
                 target = transformA;
             }
 
-            if (missile != null && target != null) {
+            if (missile != null) {
                 // Handle damage
                 target.health -= 1; // Adjust damage as needed
                 if (target.health <= 0) {
@@ -77,12 +78,13 @@ public class MissileSystem extends IteratingSystem {
     }
 
     private boolean isMissile(Body body) {
-        return (body.getFixtureList().get(0).getFilterData().categoryBits & ChunkComponent.MISSILE) != 0;
+        short categoryBits = body.getFixtureList().get(0).getFilterData().categoryBits;
+        return (categoryBits & P_MISSILE) != 0 || (categoryBits & E_MISSILE) != 0;
     }
 
     private boolean isTarget(Body body) {
         return (body.getFixtureList().get(0).getFilterData().categoryBits &
-            (ChunkComponent.ENEMY | ChunkComponent.STRUCTURE | ChunkComponent.OCEAN)) != 0;
+            (ENEMY | STRUCTURE | OCEAN)) != 0;
     }
 
     @Override
@@ -91,7 +93,7 @@ public class MissileSystem extends IteratingSystem {
         MissileComponent missile = missileMapper.get(entity);
 
         // Check if in a valid chunk
-        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.position))) {
+        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition()))) {
             transform.dispose();
             engine.removeEntity(entity);
             return;
@@ -108,10 +110,10 @@ public class MissileSystem extends IteratingSystem {
         if (missile.targetPosition != null) {
             // Calculate angle to target
             TransformComponent target = missile.targetPosition;
-            Vector2 targetPos = target.position;
+            Vector2 targetPos = target.getPosition();
             Vector2 directionToTarget = new Vector2(
-                targetPos.x - transform.position.x,
-                targetPos.y - transform.position.y
+                targetPos.x - transform.getPosition().x,
+                targetPos.y - transform.getPosition().y
             ).nor();
             float targetAngle = directionToTarget.angleDeg();
 
@@ -134,22 +136,13 @@ public class MissileSystem extends IteratingSystem {
 
         // Apply missile velocity
         Vector2 direction = new Vector2(1, 0).rotateRad(transform.body.getAngle());
-        transform.body.setLinearVelocity(direction.scl(missile.missile_speed));
-
-        // Update transform from physics body
-        transform.updateTransform();
-
-        // Check for destruction
-        if (transform.health <= 0) {
-            transform.dispose();
-            engine.removeEntity(entity);
-        }
+        transform.velocity.set(direction.scl(missile.missile_speed));
     }
 
     private void findTarget(MissileComponent missile, TransformComponent transform) {
         float searchAngle = 30f;
         float searchLength = chunkSize / 2f;
-        Vector2 currentPosition = transform.position;
+        Vector2 currentPosition = transform.getPosition();
         float currentRotation = transform.rotation;
 
         // Create AABB for broad phase
@@ -158,14 +151,14 @@ public class MissileSystem extends IteratingSystem {
 
         // Query the world for potential targets
         chunk.world.QueryAABB(fixture -> {
-            if ((fixture.getFilterData().categoryBits & ChunkComponent.ENEMY) != 0) {
+            if ((fixture.getFilterData().categoryBits & ENEMY) != 0) {
                 Body body = fixture.getBody();
                 TransformComponent potentialTarget = (TransformComponent)body.getUserData();
 
                 if (potentialTarget != null) {
                     Vector2 directionToTarget = new Vector2(
-                        potentialTarget.position.x - currentPosition.x,
-                        potentialTarget.position.y - currentPosition.y
+                        potentialTarget.getPosition().x - currentPosition.x,
+                        potentialTarget.getPosition().y - currentPosition.y
                     );
                     float angleToTarget = directionToTarget.angleDeg();
                     float distance = directionToTarget.len();
@@ -176,7 +169,7 @@ public class MissileSystem extends IteratingSystem {
 
                     if (angleDifference <= searchAngle && distance <= searchLength) {
                         if (missile.targetPosition == null ||
-                            distance < missile.targetPosition.position.dst(currentPosition)) {
+                            distance < missile.targetPosition.getPosition().dst(currentPosition)) {
                             missile.targetPosition = potentialTarget;
                         }
                     }

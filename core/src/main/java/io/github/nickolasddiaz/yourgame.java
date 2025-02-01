@@ -14,7 +14,8 @@ import com.github.tommyettinger.textra.FWSkin;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.systems.*;
 
-import static io.github.nickolasddiaz.components.ChunkComponent.PLAYER;
+import static io.github.nickolasddiaz.components.ChunkComponent.*;
+import static io.github.nickolasddiaz.utils.CollisionCategory.PLAYER;
 import static io.github.nickolasddiaz.utils.MapGenerator.TILE_SIZE;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
@@ -77,7 +78,7 @@ public class yourgame extends Game {
         this.setScreen(new MainMenuScreen(this));
 
         engine.addSystem(new CarSystem(engine, chunk));
-        engine.addSystem(new SpriteRenderSystem(batch,camera,settings, chunk.shapeRenderer, statsComponent, engine));
+        engine.addSystem(new SpriteRenderSystem(batch,camera,settings, engine));
         bulletFactory = new BulletFactory(chunk.world, engine, skin);
         enemyFactory = new EnemyFactory(engine, skin, camera, chunk, statsComponent, transform, settings,playerComponent, bulletFactory,chunk);
         transform.turretComponent(

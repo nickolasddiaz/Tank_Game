@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
@@ -34,8 +33,6 @@ public class JoystickInputSystem extends EntitySystem {
     public JoystickInputSystem(Skin skin) {
         joystickMapper = ComponentMapper.getFor(JoystickComponent.class);
         settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
-
-        //TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("ui_tank_game.atlas"));
 
         joyStickImage = new Image(skin.getDrawable("handle"));
         joyStickBaseImage = new Image(skin.getDrawable("handle_background"));
