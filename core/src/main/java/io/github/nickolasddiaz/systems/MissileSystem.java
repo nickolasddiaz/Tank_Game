@@ -14,77 +14,14 @@ public class MissileSystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ComponentMapper<MissileComponent> missileMapper;
     private final ChunkComponent chunk;
-    private final StatsComponent statsComponent;
     private final Engine engine;
 
-    public MissileSystem(Engine engine, ChunkComponent chunk, StatsComponent statsComponent) {
+    public MissileSystem(Engine engine, ChunkComponent chunk) {
         super(Family.all(TransformComponent.class, MissileComponent.class).get());
         this.engine = engine;
         this.transformMapper = ComponentMapper.getFor(TransformComponent.class);
         this.missileMapper = ComponentMapper.getFor(MissileComponent.class);
         this.chunk = chunk;
-        this.statsComponent = statsComponent;
-
-        // Set up collision handling
-        chunk.world.setContactListener(new ContactListener() {
-            @Override
-            public void beginContact(Contact contact) {
-                handleCollision(contact.getFixtureA(), contact.getFixtureB());
-            }
-
-            @Override
-            public void endContact(Contact contact) {}
-
-            @Override
-            public void preSolve(Contact contact, Manifold oldManifold) {}
-
-            @Override
-            public void postSolve(Contact contact, ContactImpulse impulse) {}
-        });
-    }
-
-    private void handleCollision(Fixture fixtureA, Fixture fixtureB) {
-        // Get the user data from both fixtures
-        Object userDataA = fixtureA.getBody().getUserData();
-        Object userDataB = fixtureB.getBody().getUserData();
-
-        // Handle missile collisions
-        TransformComponent missile = null;
-        TransformComponent target = null;
-
-        if (userDataA instanceof TransformComponent && userDataB instanceof TransformComponent) {
-            TransformComponent transformA = (TransformComponent) userDataA;
-            TransformComponent transformB = (TransformComponent) userDataB;
-
-            // Check if one is a missile and the other is a target
-            if (isMissile(transformA.body) && isTarget(transformB.body)) {
-                missile = transformA;
-                target = transformB;
-            } else if (isMissile(transformB.body) && isTarget(transformA.body)) {
-                missile = transformB;
-                target = transformA;
-            }
-
-            if (missile != null) {
-                // Handle damage
-                target.health -= 1; // Adjust damage as needed
-                if (target.health <= 0) {
-                    statsComponent.addScore(1);
-                }
-                // Mark missile for destruction
-                missile.health = 0;
-            }
-        }
-    }
-
-    private boolean isMissile(Body body) {
-        short categoryBits = body.getFixtureList().get(0).getFilterData().categoryBits;
-        return (categoryBits & P_MISSILE) != 0 || (categoryBits & E_MISSILE) != 0;
-    }
-
-    private boolean isTarget(Body body) {
-        return (body.getFixtureList().get(0).getFilterData().categoryBits &
-            (ENEMY | STRUCTURE | OCEAN)) != 0;
     }
 
     @Override

@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.github.tommyettinger.textra.FWSkin;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.systems.*;
+import io.github.nickolasddiaz.utils.EntityStats;
 
 import static io.github.nickolasddiaz.components.ChunkComponent.*;
 import static io.github.nickolasddiaz.utils.CollisionCategory.PLAYER;
@@ -30,11 +31,13 @@ public class yourgame extends Game {
     public CameraComponent camera;
     public TransformComponent transform;
     public Entity car;
-    public EnemyFactory enemyFactory;
     public StatsComponent statsComponent;
     public ChunkComponent chunk;
     public Entity player;
     public BulletFactory bulletFactory;
+    public MissileFactory missileFactory;
+    public LandMineFactory landMineFactory;
+    public EnemyFactory enemyFactory;
     public FitViewport stageViewport;
     public Skin skin;
     public PlayerComponent playerComponent;
@@ -54,8 +57,6 @@ public class yourgame extends Game {
         // Add other components
         settings = new SettingsComponent();
         chunk = new ChunkComponent();
-        playerComponent = new PlayerComponent(chunk.random);
-        player.add(playerComponent);
         player.add(chunk);
         //tank size is 30 width and 50 height
         transform =new TransformComponent(chunk.world, skin.getSprite("tank"),itemSize *2, (int) (itemSize *1.2f),null, true, PLAYER, new Vector2(0f,0f), 0f,105);
@@ -80,13 +81,20 @@ public class yourgame extends Game {
         engine.addSystem(new CarSystem(engine, chunk));
         engine.addSystem(new SpriteRenderSystem(batch,camera,settings, engine));
         bulletFactory = new BulletFactory(chunk.world, engine, skin);
-        enemyFactory = new EnemyFactory(engine, skin, camera, chunk, statsComponent, transform, settings,playerComponent, bulletFactory,chunk);
+        enemyFactory = new EnemyFactory(engine, skin, camera, chunk, statsComponent, transform, settings,playerComponent ,chunk);
         transform.turretComponent(
             skin.getSprite("turret"),
             new Vector2(itemSize*1.1f, itemSize * 0.5f),  // Position at center of tank
             itemSize*1.48f,                                // turret width
             itemSize                                 // turret height
         ); //52 width 20 height modified 77 width and 20 height for better axis rotation
+        missileFactory = new MissileFactory(engine, skin, chunk);
+        landMineFactory = new LandMineFactory(chunk.world,engine,skin,chunk.random);
+
+
+        playerComponent = new PlayerComponent(new EntityStats(chunk.random, true, bulletFactory, missileFactory, landMineFactory, enemyFactory, chunk));
+        player.add(playerComponent);
+        transform.addEntityStats(playerComponent.stats);
     }
 
     public void render() {

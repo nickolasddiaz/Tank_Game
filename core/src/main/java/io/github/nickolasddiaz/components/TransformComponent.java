@@ -2,29 +2,34 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import io.github.nickolasddiaz.utils.EntityStats;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.categoryToFilterBits;
 
 public class TransformComponent implements Component {
     public Vector2 velocity = new Vector2();
-    public float rotation = 0f;
+    public float rotation;
     public Sprite sprite;
     public Color color;
     public float speedBoost = 1f;
 
     public Body body;
-    public int health;
+    public float health;
 
     public boolean hasTurret = false;
     public Sprite turretSprite;
     public float turretRotation = 0f;
     public Vector2 turretOffSetPosition;
     public int turretLength;
+    public EntityStats stats;
+
+    public void addEntityStats(EntityStats stats){ //only player ally and enemy has stats
+        this.stats = stats;
+    }
 
     public TransformComponent(World world, Sprite sprite, int width, int height, Color color,
                               boolean isDynamic, short categoryBits, Vector2 position, float rotation, int health) {
@@ -53,7 +58,6 @@ public class TransformComponent implements Component {
         fixtureDef.restitution = 0.2f;
         fixtureDef.filter.categoryBits = categoryBits;
         fixtureDef.filter.maskBits = categoryToFilterBits(categoryBits);
-        fixtureDef.isSensor = true;
 
         // Create body and add fixture
         body = world.createBody(bodyDef);
@@ -85,7 +89,6 @@ public class TransformComponent implements Component {
         if (body != null && body.getWorld() != null) {
             body.getWorld().destroyBody(body);
             body = null;
-            Gdx.app.log("TransformComponent", "Body destroyed");
         }
     }
 }

@@ -18,6 +18,7 @@ public final class CollisionCategory {
     public static final short E_MINE =          16384;
     //16 options possible
 
+    public static final short ROAD = HORIZONTAL_ROAD | VERTICAL_ROAD;           //3
     public static final short STRUCTURE_FILTER = STRUCTURE | DECORATION | OCEAN;//28
     public static final short PLAYER_FILTER = P_BULLET | P_MISSILE | P_MINE;    //3584
     public static final short ENEMY_FILTER = E_BULLET | E_MISSILE | E_MINE;     //28627
@@ -32,12 +33,14 @@ public final class CollisionCategory {
         switch (category) { //both collisions have to be true in both ways example code bool collide = (filterA.maskBits & filterB.categoryBits) != 0 && (filterA.categoryBits & filterB.maskBits) != 0;
             //every filter here added will make collision boundaries
             case PLAYER: case ALLY: case ENEMY:
-                            return STRUCTURE_FILTER | VEHICLE_FILTER;
+                            return STRUCTURE_FILTER | VEHICLE_FILTER | ROAD | CAR | PROJECTILE_FILTER;
             case P_BULLET: case P_MISSILE: case P_MINE: case E_BULLET: case E_MISSILE: case E_MINE:
-                            return STRUCTURE;
-            case OCEAN:     return VEHICLE_FILTER;
-            case STRUCTURE: return VEHICLE_FILTER | PROJECTILE_FILTER;
-            default:        return 0x0; // CAR, HORIZONTAL_ROAD, VERTICAL_ROAD, and DECORATION will not get collision boundaries no matter what
+                            return STRUCTURE | VEHICLE_FILTER | CAR;
+            case OCEAN: case HORIZONTAL_ROAD: case VERTICAL_ROAD: case DECORATION:
+                            return VEHICLE_FILTER;
+            case STRUCTURE: case CAR:
+                return VEHICLE_FILTER | PROJECTILE_FILTER;
+            default:        return 0x0;
         }
     }
 

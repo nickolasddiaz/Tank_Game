@@ -8,14 +8,10 @@ import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.utils.GraphNode;
 
-import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class EnemySystem extends IteratingSystem {
@@ -23,91 +19,15 @@ public class EnemySystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ChunkComponent chunk;
     private final TransformComponent player;
-    private final SettingsComponent settings;
     private final Engine engine;
-    private final ShapeRenderer shapeRenderer = new ShapeRenderer();
-    private final BulletFactory bulletFactory;
 
-    public EnemySystem(Engine engine, TransformComponent player, CameraComponent camera,
-                       SettingsComponent settings, BulletFactory bulletFactory, ChunkComponent chunk) {
+    public EnemySystem(Engine engine, TransformComponent player, ChunkComponent chunk) {
         super(Family.all(EnemyComponent.class, TransformComponent.class).get());
         this.enemyMapper = ComponentMapper.getFor(EnemyComponent.class);
         this.transformMapper = ComponentMapper.getFor(TransformComponent.class);
         this.player = player;
         this.engine = engine;
-        this.settings = settings;
-        this.bulletFactory = bulletFactory;
         this.chunk = chunk;
-        shapeRenderer.setProjectionMatrix(camera.camera.combined);
-        shapeRenderer.setColor(Color.GREEN);
-
-        setupCollisionListener();
-    }
-
-    private void setupCollisionListener() {
-        chunk.world.setContactListener(new ContactListener() {
-            @Override
-            public void beginContact(Contact contact) {
-                handleCollision(contact);
-            }
-
-            @Override
-            public void endContact(Contact contact) {}
-
-            @Override
-            public void preSolve(Contact contact, Manifold oldManifold) {}
-
-            @Override
-            public void postSolve(Contact contact, ContactImpulse impulse) {}
-        });
-    }
-
-    private void handleCollision(Contact contact) {
-        Fixture fixtureA = contact.getFixtureA();
-        Fixture fixtureB = contact.getFixtureB();
-
-        Body bodyA = fixtureA.getBody();
-        Body bodyB = fixtureB.getBody();
-
-        TransformComponent transformA = (TransformComponent) bodyA.getUserData();
-        TransformComponent transformB = (TransformComponent) bodyB.getUserData();
-
-        if (transformA == null || transformB == null) return;
-
-        short categoryA = fixtureA.getFilterData().categoryBits;
-        short categoryB = fixtureB.getFilterData().categoryBits;
-
-        // Handle different collision scenarios
-        if (categoryA == ENEMY || categoryB == ENEMY ||
-            categoryA == ALLY || categoryB == ALLY) {
-
-            TransformComponent enemy = (categoryA == ENEMY || categoryA == ALLY) ?
-                transformA : transformB;
-            TransformComponent other = (categoryA == ENEMY || categoryA == ALLY) ?
-                transformB : transformA;
-            short otherCategory = (categoryA == ENEMY || categoryA == ALLY) ?
-                categoryB : categoryA;
-
-            handleEnemyCollision(enemy, other, otherCategory);
-        }
-    }
-
-    private void handleEnemyCollision(TransformComponent enemy, TransformComponent other, short category) {
-        switch (category) {
-            case CAR:
-                other.health = 0;
-                enemy.body.setLinearDamping(2f); // Slow down after hitting car
-                break;
-
-            case HORIZONTAL_ROAD:
-            case VERTICAL_ROAD:
-                enemy.body.setLinearDamping(0f); // Remove damping on roads
-                break;
-
-            case DECORATION:
-                enemy.body.setLinearDamping(1.5f); // Add more damping in decoration
-                break;
-        }
     }
 
     @Override
@@ -128,9 +48,6 @@ public class EnemySystem extends IteratingSystem {
         // Handle turret rotation
         updateTurretRotation(transform, enemyComponent);
 
-        // Handle shooting
-        handleShooting(transform, enemyComponent, deltaTime);
-
         // Check distance to player
         float distanceToPlayer = transform.getPosition().dst(player.getPosition());
         if (distanceToPlayer <= enemyComponent.minDistance) {
@@ -143,11 +60,16 @@ public class EnemySystem extends IteratingSystem {
         // Move enemy
         if (enemyComponent.path.getCount() > 1 || enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
             moveEnemy(transform, enemyComponent, deltaTime);
-
-            if (settings.DEBUG) {
-                renderNextPathRect(transform.getPosition(), enemyComponent.nextPathWorld, enemyComponent);
-            }
         }
+
+        enemyComponent.stats.health = transform.health;
+
+        enemyComponent.stats.emulate(deltaTime, transform.getPosition(), transform.turretRotation, transform.velocity, true);
+
+        transform.health = enemyComponent.stats.health;
+
+
+        transform.velocity = enemyComponent.stats.velocity;
 
 
     }
@@ -217,7 +139,7 @@ public class EnemySystem extends IteratingSystem {
     }
 
     private void updateTurretRotation(TransformComponent transform, EnemyComponent enemyComponent) {
-        if (enemyComponent.isAlly) {
+        if (enemyComponent.stats.team) {
             transform.turretRotation = player.turretRotation;
         } else {
             Vector2 targetPosition = player.getPosition();
@@ -227,24 +149,6 @@ public class EnemySystem extends IteratingSystem {
                     targetPosition.x - transform.getPosition().x
                 )
             );
-        }
-    }
-    private void handleShooting(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
-        enemyComponent.timeSinceLastShot += deltaTime;
-        if (enemyComponent.timeSinceLastShot > enemyComponent.fireRate) {
-            enemyComponent.timeSinceLastShot = 0f;
-            if (player.getPosition().dst(transform.getPosition()) < chunkSize) {
-                Vector2 bulletPosition = transform.getPosition().cpy();
-                bulletFactory.createBullet(
-                    bulletPosition,
-                    transform.turretRotation + (chunk.random.nextFloat() - 0.5f) * 10f,
-                    enemyComponent.bulletSpeed,
-                    enemyComponent.bulletDamage,
-                    1.5f,
-                    enemyComponent.isAlly ? Color.YELLOW : Color.RED,
-                    enemyComponent.isAlly
-                );
-            }
         }
     }
 
@@ -257,7 +161,7 @@ public class EnemySystem extends IteratingSystem {
 
         // Apply rotation
         if (Math.abs(angleDifference) > 5) {
-            float turnSpeed = Math.min(enemyComponent.spinSpeed * deltaTime, Math.abs(angleDifference) * 0.5f);
+            float turnSpeed = Math.min(enemyComponent.stats.spinSpeed * deltaTime, Math.abs(angleDifference) * 0.5f);
             transform.rotation += Math.signum(angleDifference) * turnSpeed;
         } else {
             transform.rotation = targetAngle;
@@ -266,22 +170,9 @@ public class EnemySystem extends IteratingSystem {
 
         // Apply movement velocity
         transform.velocity = new Vector2(
-            (float) Math.cos(transform.rotation) * enemyComponent.speed,
-            (float) Math.sin(transform.rotation) * enemyComponent.speed
+            (float) Math.cos(transform.rotation) * enemyComponent.stats.speed,
+            (float) Math.sin(transform.rotation) * enemyComponent.stats.speed
         );
-    }
-
-
-    private void renderNextPathRect(Vector2 enemy, Vector2 path, EnemyComponent enemyComponent) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.rect(
-            enemyComponent.nextPathRect.x,
-            enemyComponent.nextPathRect.y,
-            enemyComponent.nextPathRect.width,
-            enemyComponent.nextPathRect.height
-        );
-        shapeRenderer.line(enemy, path);
-        shapeRenderer.end();
     }
 
     public static class ManhattanDistance implements Heuristic<GraphNode> {

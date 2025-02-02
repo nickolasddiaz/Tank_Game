@@ -12,7 +12,6 @@ public class StatsRenderSystem extends EntitySystem {
     private Stage stage;
     StatsComponent statsComponent;
     SettingsComponent settingsComponent;
-    float regenerationTime = 0f;
     private final Skin skin;
 
     public StatsRenderSystem(Skin skin) {
@@ -106,12 +105,9 @@ public class StatsRenderSystem extends EntitySystem {
 
     @Override
     public void update(float deltaTime) {
-        regenerationTime += deltaTime;
-        if (regenerationTime > statsComponent.regenerationRate) {
-            regenerationTime = 0f;
-            statsComponent.addHealthLevel(statsComponent.regeneration);
+        if( (int) statsComponent.player.health != statsComponent.localHealth){
+            statsComponent.setHealthLevel((int) statsComponent.player.health);
         }
-
 
         stage.act(deltaTime);
         stage.draw();

@@ -279,35 +279,35 @@ public class PowerUpScreen extends InputAdapter implements Screen {
     }
     private void applyUpgrade(UpgradeType upgrade, int multiplier) {
         switch (upgrade) {
-            case REGENERATION: game.statsComponent.regeneration += multiplier;break;
-            case SPEED: game.playerComponent.SPEED += itemSize * 10f * multiplier;break;
+            case REGENERATION: game.playerComponent.stats.regeneration += multiplier;break;
+            case SPEED: game.playerComponent.stats.speed += itemSize * 10f * multiplier;break;
             case HEALTH_INCREASE: game.statsComponent.addHealthLevel(15 * multiplier);break;
-            case ALLY_SPAWNER: game.playerComponent.allySpawnerRate /= 1.4f * multiplier;break;
-            case EXTRA_SHOT: game.playerComponent.amountOfBullets += multiplier;break;
-            case BACK_SHOTS: game.playerComponent.backShotsAmount += multiplier;break;
-            case BETTER_ARMOR: game.statsComponent.reduceDamage += multiplier;break;
+            case ALLY_SPAWNER: game.playerComponent.stats.allySpawnerRate /= 1.4f * multiplier;break;
+            case EXTRA_SHOT: game.playerComponent.stats.amountOfBullets += multiplier;break;
+            case BACK_SHOTS: game.playerComponent.stats.backShotsAmount += multiplier;break;
+            case BETTER_ARMOR: game.playerComponent.stats.reduceDamage += multiplier;break;
             case LUCK: game.statsComponent.luck += multiplier;break;
-            case BULLET_SPEED: game.playerComponent.bulletSpeed += 2f * itemSize * multiplier;break;
-            case BULLET_DAMAGE: game.playerComponent.bulletDamage += 2 * multiplier;break;
-            case BULLET_SIZE: game.playerComponent.bulletSize += 0.4f * multiplier;break;
-            case FIRE_RATE: game.playerComponent.fireRate *= 0.8f * multiplier;break;
-            case CRITICAL_DAMAGE: game.playerComponent.criticalDamageMultiplier += .5f * multiplier;break;
-            case CRITICAL_CHANCE: game.playerComponent.criticalChance += 0.25f * multiplier;break;
-            case FREEZE_SHOT: game.playerComponent.freezeAmount += 0.5f * multiplier;break;
-            case BURN_DAMAGE: game.playerComponent.burnAmount += 2 *multiplier;break;
-            case EXPLOSIVE_INCREASE: game.playerComponent.explosiveRadiusAndDamage += multiplier;break;
+            case BULLET_SPEED: game.playerComponent.stats.bulletSpeed += 2f * itemSize * multiplier;break;
+            case BULLET_DAMAGE: game.playerComponent.stats.bulletDamage += 2 * multiplier;break;
+            case BULLET_SIZE: game.playerComponent.stats.bulletSize += 0.4f * multiplier;break;
+            case FIRE_RATE: game.playerComponent.stats.fireRate *= 0.8f * multiplier;break;
+            case CRITICAL_DAMAGE: game.playerComponent.stats.criticalDamageMultiplier += .5f * multiplier;break;
+            case CRITICAL_CHANCE: game.playerComponent.stats.criticalChance += 0.25f * multiplier;break;
+            case FREEZE_SHOT: game.playerComponent.stats.freezeDuration += 0.5f * multiplier;break;
+            case BURN_DAMAGE: game.playerComponent.stats.burnDuration += 2 *multiplier;break;
+            case EXPLOSIVE_INCREASE: game.playerComponent.stats.explosiveRadiusAndDamage += multiplier;break;
             case POINT_MULTIPLIER: game.statsComponent.pointMultiplier += 0.4f * multiplier;break;
             case DECREASE_WANTED_LEVEL: game.statsComponent.addStarLevel(-multiplier*3);break;
             case RE_ROLL_NUMBER: game.statsComponent.reRollNumber += multiplier;break;
-            case DESTROY_HOUSES: game.playerComponent.CanDestroy = true;break;
-            case MISSILE: game.playerComponent.CanShootMissile = true; game.playerComponent.missileRate *= .8f * multiplier;  break;
-            case MINE: game.playerComponent.CanShootMine = true; game.playerComponent.mineRate *= .7f * multiplier; break;
+            case DESTROY_HOUSES: game.playerComponent.stats.CanDestroy = true;break;
+            case MISSILE: game.playerComponent.stats.CanShootMissile = true; game.playerComponent.stats.missileRate *= .8f * multiplier;  break;
+            case MINE: game.playerComponent.stats.CanShootMine = true; game.playerComponent.stats.mineRate *= .7f * multiplier; break;
             case ALL_AROUND:
-                game.statsComponent.regeneration += multiplier;
-                game.playerComponent.SPEED += itemSize * 10f * multiplier;
+                game.playerComponent.stats.regeneration += multiplier;
+                game.playerComponent.stats.speed += itemSize * 10f * multiplier;
                 game.statsComponent.addHealthLevel(15 * multiplier);
-                game.playerComponent.bulletSpeed += 2f * itemSize * multiplier;
-                game.playerComponent.bulletDamage += 2 * multiplier;
+                game.playerComponent.stats.bulletSpeed += 2f * itemSize * multiplier;
+                game.playerComponent.stats.bulletDamage += 2 * multiplier;
                 break;
         }
     }

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.*;
+import io.github.nickolasddiaz.utils.EntityStats;
 
 import static io.github.nickolasddiaz.components.ChunkComponent.*;
 import static io.github.nickolasddiaz.utils.CollisionCategory.*;
@@ -21,7 +22,7 @@ public class EnemyFactory {
     PlayerComponent playerComponent;
 
 
-    public EnemyFactory(Engine engine, Skin skin, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerTransformComponent, SettingsComponent settings, PlayerComponent playerComponent, BulletFactory bulletFactory,ChunkComponent chunk) {
+    public EnemyFactory(Engine engine, Skin skin, CameraComponent cameraComponent, ChunkComponent chunkComponent, StatsComponent statsComponent, TransformComponent playerTransformComponent, SettingsComponent settings, PlayerComponent playerComponent ,ChunkComponent chunk) {
         this.engine = engine;
         this.skin = skin;
         this.cameraComponent = cameraComponent;
@@ -29,7 +30,7 @@ public class EnemyFactory {
         this.statsComponent = statsComponent;
         this.settings = settings;
         this.playerComponent = playerComponent;
-        engine.addSystem(new EnemySystem(engine, playerTransformComponent, cameraComponent, settings, bulletFactory,chunk));
+        engine.addSystem(new EnemySystem(engine, playerTransformComponent,chunk));
     }
     private Vector2 getPosition(){
         Vector2 position = new Vector2();
@@ -44,12 +45,11 @@ public class EnemyFactory {
         }
         return position;
     }
-    public void createTank(boolean ally){
-        createTank(getPosition(), ally);
+    public void createTank(boolean ally, EntityStats stats){
+        createTank(getPosition(), ally, stats);
     }
 
-    public void createTank(Vector2 spawnPosition, boolean isAlly){ {
-        playerComponent.enemyCount++;
+    public void createTank(Vector2 spawnPosition, boolean isAlly, EntityStats stats){ {
         Entity tank = engine.createEntity();
 
         tank.add(statsComponent);
@@ -63,7 +63,8 @@ public class EnemyFactory {
 
         tank.add(transformComponent);
         //(float) statsComponent.getStars() /15
-        EnemyComponent enemyComponent = new EnemyComponent(0f,10f,10f,5f, 20f * itemSize, 5,isAlly);
+        EnemyComponent enemyComponent = new EnemyComponent(0f, stats.clone());
+        transformComponent.addEntityStats(enemyComponent.stats);
         tank.add(enemyComponent);
         transformComponent.turretComponent(
             skin.getSprite("turret"),

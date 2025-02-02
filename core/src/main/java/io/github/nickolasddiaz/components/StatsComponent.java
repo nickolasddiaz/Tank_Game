@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import io.github.nickolasddiaz.utils.EntityStats;
 
 
 import java.util.Random;
@@ -11,11 +12,14 @@ import java.util.Random;
 public class StatsComponent implements Component {
     private int score = 0;
     private int stars = 0;
-    private final TransformComponent playerTransform;
+    public final TransformComponent player;
     public boolean upgrade = false;
+    public int localHealth;
 
-    public StatsComponent(TransformComponent playerTransform) {
-        this.playerTransform = playerTransform;
+
+    public StatsComponent(TransformComponent player) {
+        this.player = player;
+        localHealth = (int) player.health;
     }
 
     public final Color[] starColors = new Color[10];
@@ -26,9 +30,6 @@ public class StatsComponent implements Component {
 
     public Label scoreLabel, healthLabel, starsLabel;
 
-    public int reduceDamage = 0;
-    public int regeneration = 1;
-    public float regenerationRate = 10f;
     public float pointMultiplier = 1f;
     public int luck = 10;
     public int reRollNumber = 100;
@@ -47,7 +48,7 @@ public class StatsComponent implements Component {
     }
 
     public int getStars() { return stars; }
-    public int getHealth() { return playerTransform.health; }
+    public int getHealth() { return (int) player.health; }
 
     public void addStarLevel(int wantedLevel) {
         int passes = stars/10;
@@ -81,7 +82,7 @@ public class StatsComponent implements Component {
         starsLabel.setText(stars + "S");
     }
     public void addHealthLevel(int healthLevel){
-        playerTransform.health += healthLevel;
+        player.health += healthLevel;
         setHealthLevel(getHealth());
     }
 
@@ -89,7 +90,7 @@ public class StatsComponent implements Component {
         if (healthLevel < 0) {
             healthLevel = 0;
         }
-        playerTransform.health = healthLevel;
+        localHealth = healthLevel;
         int level = getHealth() % 12;
         int flatLevel = (getHealth() - level) / 12;
         Color color = setColor(flatLevel);
@@ -115,26 +116,16 @@ public class StatsComponent implements Component {
 
     private Color setColor(int level) {
         switch (level) {
-            case -1:
-                return null;
-            case 1:
-                return Color.YELLOW;
-            case 2:
-                return Color.ORANGE;
-            case 3:
-                return Color.RED;
-            case 4:
-                return Color.PINK;
-            case 5:
-                return Color.BLUE;
-            case 6:
-                return Color.GREEN;
-            case 7:
-                return Color.PURPLE;
-            case 8:
-                return Color.CYAN;
-            case 9:
-                return Color.GRAY;
+            case -1:return null;
+            case 1: return Color.YELLOW;
+            case 2: return Color.ORANGE;
+            case 3: return Color.RED;
+            case 4: return Color.PINK;
+            case 5: return Color.BLUE;
+            case 6: return Color.GREEN;
+            case 7: return Color.PURPLE;
+            case 8: return Color.CYAN;
+            case 9: return Color.GRAY;
             default: {
                 Random random = new Random(level);
                 return new Color(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f);

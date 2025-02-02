@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import io.github.nickolasddiaz.systems.*;
+import io.github.nickolasddiaz.utils.EntityStats;
 
 public class GameScreen implements Screen {
     private final yourgame game;
@@ -19,15 +20,14 @@ public class GameScreen implements Screen {
         this.game = game;
         game.engine.removeEntity(game.car);
 
-        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk,game.bulletFactory,game.statsComponent,game.enemyFactory,new MissileFactory(game.engine,game.skin,game.chunk),new LandMineFactory(game.chunk.world,game.engine,game.skin,game.chunk.random)));
+        game.engine.addSystem(new PlayerSystem(game.settings, game.chunk));
         game.engine.addSystem(new StatsRenderSystem(game.skin));
         if(game.settings.IS_MOBILE) {
             game.engine.addSystem(new JoystickInputSystem(game.skin));
         }
 
-        game.engine.addSystem(new BulletSystem(game.engine, game.chunk, game.statsComponent));
-        game.engine.addSystem(new MissileSystem(game.engine, game.chunk, game.statsComponent));
-        //game.engine.addSystem(new LandMineSystem(game.engine, game.chunk, game.statsComponent));
+        game.engine.addSystem(new BulletSystem(game.engine, game.chunk));
+        game.engine.addSystem(new MissileSystem(game.engine, game.chunk));
 
         Button pauseButton = new Button(game.skin);
         pauseButton.setStyle(game.skin.get("pause", Button.ButtonStyle.class));
@@ -96,7 +96,7 @@ public class GameScreen implements Screen {
         float spawn = 4;
         while (seconds > spawn) {
             seconds -= spawn;
-            game.enemyFactory.createTank(false);
+            game.enemyFactory.createTank(false, new EntityStats(game.chunk.random, false, game.bulletFactory, game.missileFactory, game.landMineFactory, game.enemyFactory, game.chunk, game.statsComponent.getStars()));
         }
     }
 

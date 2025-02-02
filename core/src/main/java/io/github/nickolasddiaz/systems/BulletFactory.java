@@ -8,7 +8,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.BulletComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
-import io.github.nickolasddiaz.components.ChunkComponent;
+import io.github.nickolasddiaz.utils.EntityStats;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.E_BULLET;
 import static io.github.nickolasddiaz.utils.CollisionCategory.P_BULLET;
@@ -25,7 +25,7 @@ public class BulletFactory {
         this.skin = skin;
     }
 
-    public void createBullet(Vector2 position, float rotation, float speed, int damage, float size, Color color, boolean team) {
+    public void createBullet(Vector2 position, float rotation, float speed, EntityStats damage, float size, Color color, boolean team) {
         Entity entity = new Entity();
 
         short categoryBits = team ? P_BULLET : E_BULLET;
@@ -41,7 +41,7 @@ public class BulletFactory {
             categoryBits,
             position,
             rotation,
-            damage
+            damage.calculateDamage()
         );
 
         // Set up bullet-specific physics properties

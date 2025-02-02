@@ -1,6 +1,7 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
@@ -41,7 +42,7 @@ public class ChunkComponent implements Component {
     public ChunkComponent() {
         this.world = new World(new Vector2(0, 0), true);
         category = new CollisionCategory();
-
+        world.setContactListener(GameContactListener);
     }
     // Helper method to create a body for a rectangle object
     public Body createRectangleBody(World world, Rectangle rect, short category) {
@@ -57,6 +58,7 @@ public class ChunkComponent implements Component {
         fixtureDef.density = 1.0f;
         fixtureDef.filter.categoryBits = category;
         fixtureDef.filter.maskBits = categoryToFilterBits(category);
+        fixtureDef.isSensor = (category == DECORATION || category == HORIZONTAL_ROAD || category == VERTICAL_ROAD);
 
         Body body = world.createBody(bodyDef);
         body.createFixture(fixtureDef);
@@ -210,5 +212,76 @@ public class ChunkComponent implements Component {
             currentChunk.x * chunkSize  + (grid.x * itemSize) - chunkSize,
             currentChunk.y * chunkSize  + (grid.y * itemSize) - chunkSize
         );
+    }
+
+    ContactListener GameContactListener = new ContactListener() {
+        @Override
+        public void beginContact(Contact contact) {
+            short categoryABits = contact.getFixtureA().getFilterData().categoryBits;
+            short categoryBBits = contact.getFixtureB().getFilterData().categoryBits;
+
+            // Handle player projectiles (P_BULLET, P_MISSILE, P_MINE)
+            if ((categoryABits & (P_BULLET | P_MISSILE | P_MINE)) != 0) {
+                if ((categoryBBits & (ENEMY)) != 0) {
+                    handleDamage(categoryBBits, 1, (TransformComponent) contact.getFixtureB().getBody().getUserData(), contact.getFixtureB().getBody());
+                }
+            }
+            // Handle enemy projectiles (E_BULLET, E_MISSILE, E_MINE)
+            else if ((categoryABits & (E_BULLET | E_MISSILE | E_MINE)) != 0) {
+                if ((categoryBBits & (PLAYER | ALLY)) != 0) {
+                    handleDamage(categoryBBits, 1, (TransformComponent) contact.getFixtureB().getBody().getUserData(), contact.getFixtureB().getBody());
+                }
+            }
+            // Handle roads and decorations
+            else if ((categoryABits & (HORIZONTAL_ROAD | VERTICAL_ROAD | DECORATION)) != 0) {
+                handleSpeedBoost(categoryBBits, categoryABits != DECORATION, (TransformComponent) contact.getFixtureB().getBody().getUserData());
+            }
+            // Handle structure collisions
+            else if (categoryABits == STRUCTURE) {
+                structure(categoryBBits, (TransformComponent) contact.getFixtureB().getBody().getUserData(), contact.getFixtureB().getBody());
+            }
+            // Handle player collisions with structures
+            else if (categoryABits == PLAYER) {
+                structure(categoryBBits, (TransformComponent) contact.getFixtureA().getBody().getUserData(), contact.getFixtureA().getBody());
+            }
+        }
+
+        @Override
+        public void endContact(Contact contact) {}
+
+        @Override
+        public void preSolve(Contact contact, Manifold oldManifold) {}
+
+        @Override
+        public void postSolve(Contact contact, ContactImpulse impulse) {}
+    };
+
+    public void structure(short categoryBits, TransformComponent transform, Body bodyB){
+        switch (categoryBits) {
+            case PLAYER: case ALLY: case ENEMY:
+                if(transform.stats.CanDestroy) {
+                    destroyStructure(bodyB.getPosition());
+                    world.destroyBody(bodyB);
+                }
+        }
+    }
+
+    private void handleDamage(short categoryBits, int damage, TransformComponent transform, Body bodyB) {
+        switch (categoryBits) {
+            case PLAYER: case ALLY: case ENEMY:
+                transform.health -= damage;
+        }
+        world.destroyBody(bodyB);
+    }
+
+    private void handleSpeedBoost(short categoryBits, boolean roadOrBush, TransformComponent transform) {
+        switch (categoryBits) {
+            case PLAYER: case ALLY: case ENEMY:
+                if(roadOrBush) {
+                    transform.stats.onRoad = true;
+                } else {
+                    transform.stats.onBush = true;
+                }
+        }
     }
 }
