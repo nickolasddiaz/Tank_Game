@@ -43,12 +43,11 @@ public class PlayerSystem extends IteratingSystem{
         // Handle movement and rotation
         handleMovement(player, transform, joystick, deltaTime);
 
-        player.stats.emulate(deltaTime, transform.getPosition(), transform.turretRotation, transform.velocity,
+        transform.velocity = player.stats.emulate(deltaTime, transform.getPosition(), transform.turretRotation, transform.velocity,
             (settings.AUTO_FIRE || Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isTouched()));
 
         transform.health = player.stats.health;
 
-        transform.velocity = player.stats.velocity;
     }
 
     private void handleMovement(PlayerComponent player, TransformComponent transform,

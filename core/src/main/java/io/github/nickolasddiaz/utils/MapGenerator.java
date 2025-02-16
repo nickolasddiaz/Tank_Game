@@ -13,7 +13,6 @@ import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 
 import java.util.*;
 
@@ -24,14 +23,15 @@ public class MapGenerator {
     public static final float FREQUENCY = 0.01f; //how much noise will be generated
     public static final double ROAD_DENSITY = 0.1; //how many roads will there be
     public static final double DECORATION_DENSITY = 0.002; //how many decorations will there be
-    public static final int itemSize = TILE_SIZE*TILE_SIZE; // size of one tile
-    public static final int chunkSize = MAP_SIZE * itemSize; // unit of one chunk length
+    public static final float TILE_PER_METER = 32f;
+    public static final float itemSize = TILE_SIZE*TILE_SIZE / TILE_PER_METER ; // size of one tile in meters
+    public static final int chunkSize = (int) (MAP_SIZE * itemSize); // unit of one chunk length
     public static final int ALL_CHUNK_SIZE = 3 * MAP_SIZE; // unit of three chunk length
 
     // units are used in determining positioning in the game world
     // MAP_SIZE how many rows of tiles in a chunk, 80 tiles
-    // itemSize how many rows of units in a tile, 64 units
-    // chunkSize how many rows of units in a chunk, 5120 units = 80 * 64 or MAP_SIZE * itemSize
+    // itemSize how many meters of units in a tile, 2 meters or 64 units
+    // chunkSize how many meters of units in a chunk, 5120 units or 160 meters
     // ALL_CHUNK_SIZE how many tiles in a row of three chunks or the entire load length, 240 tiles = 3 * MAP_SIZE
 
     private final HashMap<Integer, TileType> biomes;
@@ -114,7 +114,7 @@ public class MapGenerator {
         return notWalkableGrid;
     }
 
-    private TiledMap convertToTiledMap(int[][] biomeMap, Integer[][] terrainMap, int xOffset, int yOffset) {
+    private TiledMap convertToTiledMap(int[][] biomeMap, Integer[][] terrainMap, float xOffset, float yOffset) {
         TiledMap map = new TiledMap();
         notWalkableGrid = new boolean[MAP_SIZE][MAP_SIZE];
 
@@ -250,7 +250,7 @@ public class MapGenerator {
         return map;
     }
 
-    private float[] addOceanVectors(Stack<Vector2> points, int[][] biomeMap, boolean[][] visited, int xOffset, int yOffset) {
+    private float[] addOceanVectors(Stack<Vector2> points, int[][] biomeMap, boolean[][] visited, float xOffset, float yOffset) {
         ArrayList<Float> vertices = new ArrayList<>();
         int[][] directions = {
             {0, 1},   // top
@@ -268,8 +268,8 @@ public class MapGenerator {
             int x = (int) current.x;
             int y = (int) current.y;
 
-            vertices.add((float) (x * itemSize) + xOffset);
-            vertices.add((float) (y * itemSize) + yOffset);
+            vertices.add((x * itemSize) + xOffset);
+            vertices.add((y * itemSize) + yOffset);
 
             boolean foundNext = false;
             for (int[] dir : directions) {

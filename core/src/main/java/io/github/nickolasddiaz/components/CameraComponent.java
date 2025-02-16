@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import static io.github.nickolasddiaz.utils.MapGenerator.TILE_PER_METER;
 import static io.github.nickolasddiaz.utils.MapGenerator.TILE_SIZE;
 
 public class CameraComponent implements Component {
@@ -20,7 +21,7 @@ public class CameraComponent implements Component {
         viewport = new ScreenViewport(camera);
 
         camera.setToOrtho(false, Gdx.graphics.getWidth() * TILE_SIZE, Gdx.graphics.getHeight() * TILE_SIZE);
-        viewport.update(Gdx.graphics.getWidth() * TILE_SIZE, Gdx.graphics.getHeight() * TILE_SIZE, true);
+        viewport.update((int) (Gdx.graphics.getWidth() * TILE_SIZE  / TILE_PER_METER), (int) (Gdx.graphics.getHeight() * TILE_SIZE  / TILE_PER_METER), true);
         cameraBounds = new Rectangle();
         batch = new SpriteBatch();
 

@@ -50,7 +50,7 @@ public class ChunkSystem extends EntitySystem {
         settingsMapper = ComponentMapper.getFor(SettingsComponent.class);
 
         // Initialize rendering tools
-        chunkRenderer = new OrthogonalTiledMapRenderer(null, TILE_SIZE);
+        chunkRenderer = new OrthogonalTiledMapRenderer(null, TILE_SIZE/TILE_PER_METER);
         mapGenerator = new MapGenerator((int)System.currentTimeMillis());
         tempMatrix = new Matrix4();
     }
@@ -165,7 +165,7 @@ public class ChunkSystem extends EntitySystem {
                     float spawnY = rect.y + ((isRight) ? 0 : rect.height - chunk.carWidth);
                     float spawnX = rect.x + chunk.random.nextFloat() * rect.width; // random x between rect.x and rect.x + rect.width
                     carFactory.createCar(new Vector2(spawnX, spawnY), isRight,
-                        (isRight ? rect.x + rect.width - (float)MAP_SIZE / 2 : rect.x + (float)MAP_SIZE / 2),
+                        (isRight ? rect.x + rect.width - itemSize / 2 : rect.x + itemSize / 2),
                         true, chunk.random.nextInt(10));
                 } else if ("VERTICAL".equals(object.getName())) {
                     Rectangle rect = ((RectangleMapObject) object).getRectangle();
@@ -173,7 +173,7 @@ public class ChunkSystem extends EntitySystem {
                     float spawnX = rect.x + ((isUp) ? rect.width - chunk.carWidth : 0);
                     float spawnY = rect.y + chunk.random.nextFloat() * rect.height; // random y between rect.y and rect.y + rect.height
                     carFactory.createCar(new Vector2(spawnX, spawnY), isUp,
-                        (isUp ? rect.y + rect.height - (float)MAP_SIZE / 2 : rect.y + (float)MAP_SIZE / 2),
+                        (isUp ? rect.y + rect.height - itemSize / 2 : rect.y + itemSize / 2),
                         false, chunk.random.nextInt(10));
                 }
             }

@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 import io.github.nickolasddiaz.utils.CollisionCategory;
 import io.github.nickolasddiaz.utils.WorldGraph;
 import java.util.*;
@@ -21,8 +22,8 @@ import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 // units are used in determining positioning in the game world
 // MAP_SIZE how many rows of tiles in a chunk, 80 tiles
-// itemSize how many rows of units in a tile, 64 units
-// chunkSize how many rows of units in a chunk, 5120 units = 80 * 64 or MAP_SIZE * itemSize
+// itemSize how many meters of units in a tile, 2 meters or 64 units
+// chunkSize how many meters of units in a chunk, 5120 units or 160 meters
 // ALL_CHUNK_SIZE how many tiles in a row of three chunks or the entire load length, 240 tiles = 3 * MAP_SIZE
 
 public class ChunkComponent implements Component {
@@ -31,7 +32,7 @@ public class ChunkComponent implements Component {
     public HashMap<Vector2, boolean[][]> walkChunks = new HashMap<>();
     public Vector2 currentChunk = new Vector2(0, 0);
     public Random random = new Random(System.currentTimeMillis());
-    public float carWidth = 64;
+    public float carWidth = 64/TILE_PER_METER;
     public WorldGraph pathfindingGraph;
     public CollisionCategory category;
 
@@ -43,6 +44,7 @@ public class ChunkComponent implements Component {
         this.world = new World(new Vector2(0, 0), true);
         category = new CollisionCategory();
         world.setContactListener(GameContactListener);
+        shapeRenderer.setAutoShapeType(true);
     }
     // Helper method to create a body for a rectangle object
     public Body createRectangleBody(World world, Rectangle rect, short category) {
@@ -179,7 +181,7 @@ public class ChunkComponent implements Component {
 
     public void destroyStructure(Vector2 position) {
         Vector2 grid = worldToGridCoordinates(position);
-        Vector2 mapPosition = new Vector2(grid.x % MAP_SIZE, grid.y % MAP_SIZE);
+        Vector2 mapPosition = new Vector2(grid.x % MAP_SIZE-itemSize, grid.y % MAP_SIZE-itemSize/2);
         // Get the chunk map based on the chunk position
         TiledMap chunkMap = mapChunks.get(getChunkPosition(position));
         // Retrieve the desired layer 2 where the structure resides
@@ -217,37 +219,92 @@ public class ChunkComponent implements Component {
     ContactListener GameContactListener = new ContactListener() {
         @Override
         public void beginContact(Contact contact) {
-            short categoryABits = contact.getFixtureA().getFilterData().categoryBits;
-            short categoryBBits = contact.getFixtureB().getFilterData().categoryBits;
+            Fixture fixtureA = contact.getFixtureA();
+            Fixture fixtureB = contact.getFixtureB();
+            short categoryA = fixtureA.getFilterData().categoryBits;
+            short categoryB = fixtureB.getFilterData().categoryBits;
 
-            // Handle player projectiles (P_BULLET, P_MISSILE, P_MINE)
-            if ((categoryABits & (P_BULLET | P_MISSILE | P_MINE)) != 0) {
-                if ((categoryBBits & (ENEMY)) != 0) {
-                    handleDamage(categoryBBits, 1, (TransformComponent) contact.getFixtureB().getBody().getUserData(), contact.getFixtureB().getBody());
-                }
+            // Ensure that the lower category bit is always `fixtureA` for consistent processing
+            if (categoryA > categoryB) {
+                Fixture temp = fixtureA;
+                fixtureA = fixtureB;
+                fixtureB = temp;
+                short tempCategory = categoryA;
+                categoryA = categoryB;
+                categoryB = tempCategory;
             }
-            // Handle enemy projectiles (E_BULLET, E_MISSILE, E_MINE)
-            else if ((categoryABits & (E_BULLET | E_MISSILE | E_MINE)) != 0) {
-                if ((categoryBBits & (PLAYER | ALLY)) != 0) {
-                    handleDamage(categoryBBits, 1, (TransformComponent) contact.getFixtureB().getBody().getUserData(), contact.getFixtureB().getBody());
-                }
-            }
-            // Handle roads and decorations
-            else if ((categoryABits & (HORIZONTAL_ROAD | VERTICAL_ROAD | DECORATION)) != 0) {
-                handleSpeedBoost(categoryBBits, categoryABits != DECORATION, (TransformComponent) contact.getFixtureB().getBody().getUserData());
-            }
-            // Handle structure collisions
-            else if (categoryABits == STRUCTURE) {
-                structure(categoryBBits, (TransformComponent) contact.getFixtureB().getBody().getUserData(), contact.getFixtureB().getBody());
-            }
-            // Handle player collisions with structures
-            else if (categoryABits == PLAYER) {
-                structure(categoryBBits, (TransformComponent) contact.getFixtureA().getBody().getUserData(), contact.getFixtureA().getBody());
+
+            switch (categoryA) {
+                case CAR:
+                    if ((categoryB & (P_BULLET | P_MISSILE | P_MINE | E_BULLET | E_MISSILE | E_MINE)) != 0) {
+                        handleDamage((TransformComponent) fixtureB.getBody().getUserData(), fixtureA.getBody());
+                    } else if ((categoryB & (ENEMY | PLAYER | ALLY)) != 0) {
+                        ((TransformComponent) fixtureA.getBody().getUserData()).health = 0;
+                    }
+                    break;
+
+                case ENEMY:
+                    if ((categoryB & (P_BULLET | P_MISSILE | P_MINE)) != 0) {
+                        handleDamage((TransformComponent) fixtureB.getBody().getUserData(), fixtureA.getBody());
+                    }
+                    break;
+
+                case PLAYER:
+                case ALLY:
+                    if ((categoryB & (E_BULLET | E_MISSILE | E_MINE)) != 0) {
+                        handleDamage((TransformComponent) fixtureB.getBody().getUserData(), fixtureA.getBody());
+                    }
+                    break;
+
+                case HORIZONTAL_ROAD:
+                case VERTICAL_ROAD:
+                case DECORATION:
+                    if ((categoryB & (PLAYER | ALLY | ENEMY)) != 0) {
+                        handleSpeedBoost(categoryA != DECORATION, (TransformComponent) fixtureB.getBody().getUserData(),true);
+                    }
+                    break;
+
+                case STRUCTURE:
+                    if ((categoryB & (PLAYER | ALLY | ENEMY)) != 0) {
+                        structure((TransformComponent) fixtureB.getBody().getUserData(), fixtureA.getBody());
+                    } else if ((categoryB & (P_BULLET | P_MISSILE | P_MINE | E_BULLET | E_MISSILE | E_MINE)) != 0) {
+                        ((TransformComponent) fixtureB.getBody().getUserData()).health = 0;
+                    }
+                    break;
+                default:
+                    break;
             }
         }
 
         @Override
-        public void endContact(Contact contact) {}
+        public void endContact(Contact contact) {
+            Fixture fixtureA = contact.getFixtureA();
+            Fixture fixtureB = contact.getFixtureB();
+            short categoryA = fixtureA.getFilterData().categoryBits;
+            short categoryB = fixtureB.getFilterData().categoryBits;
+
+            // Ensure that the lower category bit is always `fixtureA` for consistent processing
+            if (categoryA > categoryB) {
+                Fixture temp = fixtureA;
+                fixtureA = fixtureB;
+                fixtureB = temp;
+                short tempCategory = categoryA;
+                categoryA = categoryB;
+                categoryB = tempCategory;
+            }
+
+            switch (categoryA) {
+                case HORIZONTAL_ROAD:
+                case VERTICAL_ROAD:
+                case DECORATION:
+                    if ((categoryB & (PLAYER | ALLY | ENEMY)) != 0) {
+                        handleSpeedBoost(categoryA != DECORATION, (TransformComponent) fixtureB.getBody().getUserData(),false);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
 
         @Override
         public void preSolve(Contact contact, Manifold oldManifold) {}
@@ -256,32 +313,21 @@ public class ChunkComponent implements Component {
         public void postSolve(Contact contact, ContactImpulse impulse) {}
     };
 
-    public void structure(short categoryBits, TransformComponent transform, Body bodyB){
-        switch (categoryBits) {
-            case PLAYER: case ALLY: case ENEMY:
-                if(transform.stats.CanDestroy) {
-                    destroyStructure(bodyB.getPosition());
-                    world.destroyBody(bodyB);
-                }
-        }
+
+    public void structure(TransformComponent transformB, Body bodyA){
+        if(transformB.stats.CanDestroy) {
+               destroyStructure(bodyA.getPosition());
+               bodyA.setUserData(true);
+          }
     }
 
-    private void handleDamage(short categoryBits, int damage, TransformComponent transform, Body bodyB) {
-        switch (categoryBits) {
-            case PLAYER: case ALLY: case ENEMY:
-                transform.health -= damage;
-        }
-        world.destroyBody(bodyB);
+    private void handleDamage(TransformComponent transform, Body bodyB) {
+        ((TransformComponent) bodyB.getUserData()).health -= transform.health;
+        transform.health = 0;
     }
 
-    private void handleSpeedBoost(short categoryBits, boolean roadOrBush, TransformComponent transform) {
-        switch (categoryBits) {
-            case PLAYER: case ALLY: case ENEMY:
-                if(roadOrBush) {
-                    transform.stats.onRoad = true;
-                } else {
-                    transform.stats.onBush = true;
-                }
-        }
+    private void handleSpeedBoost(boolean roadOrBush, TransformComponent transform, boolean apply) {
+            if(roadOrBush) transform.stats.onRoad = apply;
+            else transform.stats.onBush = apply;
     }
 }

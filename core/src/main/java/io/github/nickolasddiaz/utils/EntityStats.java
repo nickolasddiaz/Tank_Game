@@ -15,9 +15,10 @@ import java.util.List;
 import java.util.Random;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.*;
+import static io.github.nickolasddiaz.utils.MapGenerator.TILE_PER_METER;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
-public class EntityStats implements Cloneable{
+public class EntityStats{
     public float health = 4;
     public int reduceDamage = 0;
     public int regeneration = 1;
@@ -28,7 +29,7 @@ public class EntityStats implements Cloneable{
     public float burnDuration = 2;
     public int explosiveRadiusAndDamage = 1;
     public float bulletSize = 1.0f;
-    public float criticalDamageMultiplier = 120f;
+    public float criticalDamageMultiplier = 1.2f;
     public float criticalChance = 0.1f;
     public int backShotsAmount = 0;
     public boolean CanDestroy = true;
@@ -37,12 +38,12 @@ public class EntityStats implements Cloneable{
     public boolean CanShootMine = false;
     public float mineRate = 2f;
     public float speed = itemSize * 5f;
-    public float fireRate = 0.5f;
-    public float timeSinceLastShot = .5f;
+    public float fireRate = 2f;
+    public float timeSinceLastShot = 2f;
     public float bulletSpeed = 20f * itemSize;
     public int bulletDamage = 1;
 
-    public float spinSpeed = speed / 8f;
+    public float spinSpeed = speed / 2f * TILE_PER_METER;
     public boolean team; // true for ally, false for enemy
     private final BulletFactory bulletFactory;
     private final MissileFactory missileFactory;
@@ -78,7 +79,7 @@ public class EntityStats implements Cloneable{
             {bulletSpeed, itemSize * 0.5f},
             {bulletSize, 0.1f},
             {criticalChance, 0.05f},
-            {criticalDamageMultiplier, 10f},
+            {criticalDamageMultiplier, .5f},
             {amountOfBullets, 1},
             {backShotsAmount, 1}
         };
@@ -124,7 +125,7 @@ public class EntityStats implements Cloneable{
             backShotsAmount = (Integer) stats[11][0];
 
             // Update dependent stats
-            spinSpeed = speed/8f;
+            spinSpeed = speed/2f * TILE_PER_METER;
         }
 
         // Add special abilities based on level thresholds
@@ -146,7 +147,7 @@ public class EntityStats implements Cloneable{
         this.chunk = chunk;
     }
 
-    public void emulate(float delta, Vector2 position, float rotation, Vector2 velocity, boolean canShoot) {
+    public Vector2 emulate(float delta, Vector2 position, float rotation, Vector2 velocity, boolean canShoot) {
         // Handle regeneration
         if (regeneration > 0) {
             health += regeneration/regenerationRate * delta;
@@ -198,13 +199,14 @@ public class EntityStats implements Cloneable{
         if (allySpawnerRate > 0) {
             handleAllySpawning(delta, position);
         }
+        return velocity;
     }
 
     private void handleAllySpawning(float delta, Vector2 position) {
         spawnTime += delta;
         if (spawnTime > allySpawnerRate) {
             spawnTime = 0f;
-            int spawnLength = 2 * itemSize;
+            float spawnLength = 2 * itemSize;
 
             Rectangle spawnArea = new Rectangle(
                 position.x - spawnLength / 2f,
@@ -241,9 +243,9 @@ public class EntityStats implements Cloneable{
     }
 
     public int calculateDamage() {
-        float chance = criticalChance % 100;
-        float multiplier = (random.nextFloat() < chance) ? criticalDamageMultiplier : 1f;
-        return (int) (bulletDamage * multiplier * (criticalChance - chance) / 100);
+        float chance = random.nextFloat();
+        float multiplier = (chance < criticalChance) ? criticalDamageMultiplier : 1f;
+        return (int) (bulletDamage * multiplier);
     }
 
     private float[] calculateShotAngles(float rotation) {
@@ -268,18 +270,11 @@ public class EntityStats implements Cloneable{
     private void spawnBullets(Vector2 position, float rotation) {
         Color bulletColor = team ? Color.YELLOW : Color.RED;
         for (float shotAngle : calculateShotAngles(rotation)) {
-            bulletFactory.createBullet(position.cpy(), shotAngle, bulletSpeed, this, bulletSize, bulletColor, team);
+            bulletFactory.createBullet(position.cpy(), shotAngle, bulletSpeed, calculateDamage() + 1, bulletSize, bulletColor, team);
         }
     }
 
-    @Override
-    public EntityStats clone() {
-        try {
-            EntityStats clone = (EntityStats) super.clone();
-            clone.allySpawnerRate = 0; //prevent chaos from infinite ally spawning
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
+    public EntityStats clone(int level) {
+        return new EntityStats(random, team, bulletFactory, missileFactory, landMineFactory, enemyFactory, chunk, level);
     }
 }

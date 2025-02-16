@@ -6,12 +6,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.github.tommyettinger.textra.FWSkin;
-
 
 public class MainMenuScreen implements Screen {
 
@@ -23,7 +20,7 @@ public class MainMenuScreen implements Screen {
         float buttonHeight = Gdx.graphics.getHeight() / 10f;
         float buttonWidth = Gdx.graphics.getWidth() / 2f;
         float buttonSpacing = Gdx.graphics.getHeight() / 15f + buttonHeight;
-        float buttonInitialY = Gdx.graphics.getHeight() / 2f - 2.5f * buttonHeight;
+        float buttonInitialY = Gdx.graphics.getHeight() / 2.2f - 2.5f * buttonHeight;
         float buttonInitialX = Gdx.graphics.getWidth() / 2f - buttonWidth / 2f;
 
         this.game = game;

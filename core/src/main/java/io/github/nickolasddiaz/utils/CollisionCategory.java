@@ -1,21 +1,21 @@
 package io.github.nickolasddiaz.utils;
 
 public final class CollisionCategory {
-    public static final short HORIZONTAL_ROAD = 1;
-    public static final short VERTICAL_ROAD =   2;
-    public static final short STRUCTURE =       4;
-    public static final short DECORATION =      8;
-    public static final short OCEAN =           16;
-    public static final short CAR =             32;
-    public static final short ENEMY =           64;
-    public static final short PLAYER =          128;
-    public static final short ALLY =            256;
-    public static final short P_BULLET =        512;
-    public static final short P_MISSILE =       1024;
-    public static final short P_MINE =          2048;
-    public static final short E_BULLET =        4096;
-    public static final short E_MISSILE =       8192;
-    public static final short E_MINE =          16384;
+    public static final short HORIZONTAL_ROAD = 0x1;
+    public static final short VERTICAL_ROAD =   0x1 << 1;
+    public static final short STRUCTURE =       0x1 << 2;
+    public static final short DECORATION =      0x1 << 3;
+    public static final short OCEAN =           0x1 << 4;
+    public static final short CAR =             0x1 << 5;
+    public static final short ENEMY =           0x1 << 6;
+    public static final short PLAYER =          0x1 << 7;
+    public static final short ALLY =            0x1 << 8;
+    public static final short P_BULLET =        0x1 << 9;
+    public static final short P_MISSILE =       0x1 << 10;
+    public static final short P_MINE =          0x1 << 11;
+    public static final short E_BULLET =        0x1 << 12;
+    public static final short E_MISSILE =       0x1 << 13;
+    public static final short E_MINE =          0x1 << 14;
     //16 options possible
 
     public static final short ROAD = HORIZONTAL_ROAD | VERTICAL_ROAD;           //3

@@ -5,9 +5,11 @@ import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.utils.GraphNode;
@@ -19,15 +21,17 @@ public class EnemySystem extends IteratingSystem {
     private final ComponentMapper<TransformComponent> transformMapper;
     private final ChunkComponent chunk;
     private final TransformComponent player;
+    private final SettingsComponent settings;
     private final Engine engine;
 
-    public EnemySystem(Engine engine, TransformComponent player, ChunkComponent chunk) {
+    public EnemySystem(Engine engine, TransformComponent player, ChunkComponent chunk, SettingsComponent settings) {
         super(Family.all(EnemyComponent.class, TransformComponent.class).get());
         this.enemyMapper = ComponentMapper.getFor(EnemyComponent.class);
         this.transformMapper = ComponentMapper.getFor(TransformComponent.class);
         this.player = player;
         this.engine = engine;
         this.chunk = chunk;
+        this.settings = settings;
     }
 
     @Override
@@ -45,6 +49,9 @@ public class EnemySystem extends IteratingSystem {
             return;
         }
 
+        if(settings.DEBUG)
+            debug(transform.getPosition(), enemyComponent.nextPathWorld);
+
         // Handle turret rotation
         updateTurretRotation(transform, enemyComponent);
 
@@ -57,6 +64,8 @@ public class EnemySystem extends IteratingSystem {
         // Update pathfinding
         updatePathfinding(transform, enemyComponent, deltaTime);
 
+        getNextPath(chunk, transform.getPosition(), enemyComponent);
+
         // Move enemy
         if (enemyComponent.path.getCount() > 1 || enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
             moveEnemy(transform, enemyComponent, deltaTime);
@@ -64,14 +73,15 @@ public class EnemySystem extends IteratingSystem {
 
         enemyComponent.stats.health = transform.health;
 
-        enemyComponent.stats.emulate(deltaTime, transform.getPosition(), transform.turretRotation, transform.velocity, true);
+        transform.velocity = enemyComponent.stats.emulate(deltaTime, transform.getPosition(), transform.turretRotation, transform.velocity, true);
 
         transform.health = enemyComponent.stats.health;
+    }
 
-
-        transform.velocity = enemyComponent.stats.velocity;
-
-
+    private void getNextPath(ChunkComponent chunk, Vector2 Position, EnemyComponent enemyComponent) {
+        if(Position.dst(enemyComponent.nextPathWorld) < itemSize*itemSize && enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
+            enemyComponent.nextPathWorld.set(chunk.GridToWorldCoordinates((enemyComponent.path.get(++enemyComponent.pathIndex).position)));
+        }
     }
 
     private void updatePathfinding(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
@@ -93,17 +103,16 @@ public class EnemySystem extends IteratingSystem {
             // Handle null nodes by using previous path or creating direct path to player
             if (startNode == null || endNode == null) {
                 if (enemyComponent.previousPath != null && enemyComponent.previousPath.getCount() > 0) {
-                    //Gdx.app.log("EnemySystem", "Using previous path as fallback");
                     enemyComponent.path = enemyComponent.previousPath;
                 } else {
                     // Create a simple direct path to the player if no previous path exists
+                    Gdx.app.log("EnemySystem", "Creating direct path to player");
                     DefaultGraphPath<GraphNode> directPath = new DefaultGraphPath<>();
                     GraphNode simpleStartNode = new GraphNode(startPos);
                     GraphNode simpleEndNode = new GraphNode(endPos);
                     directPath.add(simpleStartNode);
                     directPath.add(simpleEndNode);
                     enemyComponent.path = directPath;
-                    //Gdx.app.log("EnemySystem", "Created direct path to player as fallback");
                 }
             } else {
                 // Store the current path as previous path before calculating new one
@@ -125,9 +134,9 @@ public class EnemySystem extends IteratingSystem {
                         TILE_SIZE * 2,
                         TILE_SIZE * 2
                     );
-                    //Gdx.app.log("EnemySystem", "Path found with " + enemyComponent.path.getCount() + " nodes");
+                    enemyComponent.pathIndex = 0;
+                    enemyComponent.nextPathWorld.set(chunk.GridToWorldCoordinates((enemyComponent.path.get(enemyComponent.pathIndex).position)));
                 } else {
-                    //Gdx.app.log("EnemySystem", "No path found, using previous path");
                     if (enemyComponent.previousPath != null) {
                         enemyComponent.path = enemyComponent.previousPath;
                     }
@@ -175,12 +184,19 @@ public class EnemySystem extends IteratingSystem {
         );
     }
 
-    public static class ManhattanDistance implements Heuristic<GraphNode> {
+    private static class ManhattanDistance implements Heuristic<GraphNode> {
         @Override
         public float estimate(GraphNode node, GraphNode endNode) {
             return Math.abs(node.position.x - endNode.position.x) +
                 Math.abs(node.position.y - endNode.position.y);
         }
+    }
+
+    private void debug(Vector2 start, Vector2 end){
+        chunk.shapeRenderer.begin();
+        chunk.shapeRenderer.setColor(Color.RED);
+        chunk.shapeRenderer.line(start, end);
+        chunk.shapeRenderer.end();
     }
 
 }

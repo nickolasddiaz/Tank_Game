@@ -35,17 +35,20 @@ gwt {
 }
 
 dependencies {
+  implementation "com.github.tommyettinger:gdx-backend-gwt:$gdxBackendVersion"
+  implementation "com.github.tommyettinger:gdx-backend-gwt:$gdxBackendVersion:sources"
   implementation "com.badlogicgames.ashley:ashley:$ashleyVersion:sources"
   implementation "com.badlogicgames.gdx:gdx-ai:$aiVersion:sources"
   implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion:sources"
   implementation "com.badlogicgames.gdx:gdx:$gdxVersion:sources"
-  implementation "com.github.tommyettinger:gdx-backend-gwt:$gdxBackendVersion"
-  implementation "com.github.tommyettinger:gdx-backend-gwt:$gdxBackendVersion:sources"
+  implementation "com.github.intrigus.gdx-freetype-gwt:gdx-freetype-gwt:$gdxFreetypeGWT"
+  implementation "com.github.intrigus.gdx-freetype-gwt:gdx-freetype-gwt:$gdxFreetypeGWT:sources"
   implementation project(':core')
   implementation("com.badlogicgames.gdx:gdx-box2d-gwt:$gdxVersion:sources") {exclude group: "com.google.gwt", module: "gwt-user"}
   implementation "com.github.tommyettinger:textratypist:$textratypistVersion:sources"
   implementation "com.github.tommyettinger:regexodus:$regexodusVersion:sources"
   implementation "com.github.tommyettinger:freetypist:$textratypistVersion:sources"
+
 
 
 

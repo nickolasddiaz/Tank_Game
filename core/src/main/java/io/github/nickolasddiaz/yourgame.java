@@ -7,7 +7,9 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.github.tommyettinger.textra.FWSkin;
@@ -15,7 +17,6 @@ import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.systems.*;
 import io.github.nickolasddiaz.utils.EntityStats;
 
-import static io.github.nickolasddiaz.components.ChunkComponent.*;
 import static io.github.nickolasddiaz.utils.CollisionCategory.PLAYER;
 import static io.github.nickolasddiaz.utils.MapGenerator.TILE_SIZE;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
@@ -108,6 +109,13 @@ public class yourgame extends Game {
     public void updateGame(float delta) {
         engine.update(delta);
         chunk.world.step(delta, 6, 2);
+        Array<Body> bodies = new Array<>();
+        chunk.world.getBodies(bodies);
+        for(Body body : bodies){ {
+            if(body.getUserData() instanceof Boolean){
+                chunk.world.destroyBody(body);
+            }
+        }
     }
-
+    }
 }

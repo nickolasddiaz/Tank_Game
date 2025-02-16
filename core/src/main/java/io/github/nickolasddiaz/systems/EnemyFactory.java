@@ -30,13 +30,13 @@ public class EnemyFactory {
         this.statsComponent = statsComponent;
         this.settings = settings;
         this.playerComponent = playerComponent;
-        engine.addSystem(new EnemySystem(engine, playerTransformComponent,chunk));
+        engine.addSystem(new EnemySystem(engine, playerTransformComponent,chunk, settings));
     }
     private Vector2 getPosition(){
         Vector2 position = new Vector2();
         int i = 0;
         while (i < 10) {
-            position = new Vector2(chunkComponent.random.nextInt(chunkSize) - MAP_SIZE / 2f, chunkComponent.random.nextInt(chunkSize) - MAP_SIZE / 2f);
+            position = new Vector2(chunkComponent.random.nextInt(chunkSize) - itemSize / 2f, chunkComponent.random.nextInt(chunkSize) - itemSize / 2f);
             position.add(chunkComponent.currentChunk.scl(chunkSize));
             if (chunkComponent.isPointInside(position, HORIZONTAL_ROAD)) {
                 break;
@@ -63,7 +63,7 @@ public class EnemyFactory {
 
         tank.add(transformComponent);
         //(float) statsComponent.getStars() /15
-        EnemyComponent enemyComponent = new EnemyComponent(0f, stats.clone());
+        EnemyComponent enemyComponent = new EnemyComponent(0f, stats.clone(statsComponent.getStars() /15));
         transformComponent.addEntityStats(enemyComponent.stats);
         tank.add(enemyComponent);
         transformComponent.turretComponent(

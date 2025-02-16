@@ -25,7 +25,7 @@ public class BulletFactory {
         this.skin = skin;
     }
 
-    public void createBullet(Vector2 position, float rotation, float speed, EntityStats damage, float size, Color color, boolean team) {
+    public void createBullet(Vector2 position, float rotation, float speed, int damage, float size, Color color, boolean team) {
         Entity entity = new Entity();
 
         short categoryBits = team ? P_BULLET : E_BULLET;
@@ -41,7 +41,7 @@ public class BulletFactory {
             categoryBits,
             position,
             rotation,
-            damage.calculateDamage()
+            damage
         );
 
         // Set up bullet-specific physics properties

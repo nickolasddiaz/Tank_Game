@@ -8,7 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.utils.EntityStats;
 
-import static io.github.nickolasddiaz.utils.CollisionCategory.categoryToFilterBits;
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 
 public class TransformComponent implements Component {
     public Vector2 velocity = new Vector2();
@@ -24,14 +24,14 @@ public class TransformComponent implements Component {
     public Sprite turretSprite;
     public float turretRotation = 0f;
     public Vector2 turretOffSetPosition;
-    public int turretLength;
+    public float turretLength;
     public EntityStats stats;
 
     public void addEntityStats(EntityStats stats){ //only player ally and enemy has stats
         this.stats = stats;
     }
 
-    public TransformComponent(World world, Sprite sprite, int width, int height, Color color,
+    public TransformComponent(World world, Sprite sprite, float width, float height, Color color,
                               boolean isDynamic, short categoryBits, Vector2 position, float rotation, int health) {
         this.rotation = rotation;
         this.sprite = sprite;
@@ -58,6 +58,7 @@ public class TransformComponent implements Component {
         fixtureDef.restitution = 0.2f;
         fixtureDef.filter.categoryBits = categoryBits;
         fixtureDef.filter.maskBits = categoryToFilterBits(categoryBits);
+        fixtureDef.isSensor = (PROJECTILE_FILTER & categoryBits) != 0;
 
         // Create body and add fixture
         body = world.createBody(bodyDef);
@@ -67,7 +68,7 @@ public class TransformComponent implements Component {
         shape.dispose();
     }
 
-    public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, float width, int height) {
+    public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, float width, float height) {
         this.turretSprite = turretSprite;
         this.turretSprite.setSize(width, height);
         this.turretOffSetPosition = turretOffSetPosition;
@@ -83,6 +84,12 @@ public class TransformComponent implements Component {
     }
     public Vector2 getPosition(){
         return body.getPosition();
+    }
+    public void setXPosition(float x){
+        body.setTransform(x, body.getPosition().y, body.getAngle());
+    }
+    public void setYPosition(float y){
+        body.setTransform(body.getPosition().x, y, body.getAngle());
     }
 
     public void dispose() {

@@ -1,10 +1,10 @@
 package io.github.nickolasddiaz.gwt;
 
 import com.badlogic.gdx.ApplicationListener;
+
+
 import com.badlogic.gdx.backends.gwt.GwtApplication;
 import com.badlogic.gdx.backends.gwt.GwtApplicationConfiguration;
-
-
 import io.github.nickolasddiaz.yourgame;
 
 /** Launches the GWT application. */

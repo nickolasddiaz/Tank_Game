@@ -10,7 +10,6 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.*;
 
-import static io.github.nickolasddiaz.components.ChunkComponent.*;
 import static io.github.nickolasddiaz.utils.CollisionCategory.CAR;
 import static io.github.nickolasddiaz.utils.CollisionCategory.HORIZONTAL_ROAD;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
@@ -33,9 +32,9 @@ public class CarFactory {
         CarComponent carComponent;
 
         Body[] rect = chunkComponent.getBodiesInRect(new Rectangle(0,0,chunkSize,chunkSize), HORIZONTAL_ROAD); // search within the center chunk
-        if(rect == null) rect = chunkComponent.getBodiesInRect(new Rectangle(-chunkSize,-chunkSize,2*chunkSize,2*chunkSize), HORIZONTAL_ROAD); // search within the 3x3 chunks
-        //Exception in thread "main" java.lang.IllegalArgumentException: bound must be positive (CarFactory.java:36)
-        Body road = rect[chunkComponent.random.nextInt(rect.length)];
+        if(rect == null || rect.length == 0) rect = chunkComponent.getBodiesInRect(new Rectangle(-chunkSize,-chunkSize,2*chunkSize,2*chunkSize), HORIZONTAL_ROAD); // search within the 3x3 chunks
+
+        Body road = rect[chunkComponent.random.nextInt(Math.abs(rect.length))];
         Rectangle roadRect = new Rectangle(road.getPosition().x, road.getPosition().y, road.getFixtureList().get(0).getShape().getRadius() * 2, road.getFixtureList().get(0).getShape().getRadius() * 2);
 
         // Create car component
@@ -43,10 +42,16 @@ public class CarFactory {
         float spawnY = roadRect.y + ((isRight) ? 0 : roadRect.height - chunkComponent.carWidth);
         float spawnX = roadRect.x + chunkComponent.random.nextFloat() * roadRect.width; // random x between rect.x and rect.x + rect.width
 
+        Gdx.app.log("CarFactory", "Creating tank at " + spawnX + ", " + spawnY);
+        Body[] rect2 = chunkComponent.getBodiesInRect(new Rectangle(spawnX,spawnY,itemSize,itemSize), HORIZONTAL_ROAD);
+        if(rect2.length == 0) {
+            Gdx.app.log("CarFactory", "No road found at " + spawnX + ", " + spawnY);
+        }
+
         transform.body.setTransform(spawnX,spawnY,0f);
         transform.rotation = 0f;
 
-        carComponent = new CarComponent(isRight, (isRight ? roadRect.x + roadRect.width - MAP_SIZE / 2f : roadRect.x + MAP_SIZE / 2f));
+        carComponent = new CarComponent(isRight, (isRight ? roadRect.x + roadRect.width - itemSize / 2f : roadRect.x + itemSize / 2f));
         carComponent.horizontal = true;
 
         tank.add(transform);
