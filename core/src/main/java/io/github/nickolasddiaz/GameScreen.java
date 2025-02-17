@@ -87,7 +87,7 @@ public class GameScreen implements Screen {
         stage.act(delta);
         stage.draw();
 
-        if (game.engine.getSystem(PlayerSystem.class).getEntities().size() == 0) {
+        if (game.statsComponent.getHealth() <= 0) {
             game.statsComponent.setHealthLevel(0);
             game.setScreen(new DeathScreen(game, game.statsComponent.getScore()));
         }

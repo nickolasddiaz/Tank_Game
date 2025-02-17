@@ -5,7 +5,6 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import io.github.nickolasddiaz.components.ChunkComponent;
 import io.github.nickolasddiaz.components.LandMineComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 
@@ -13,6 +12,7 @@ import java.util.Random;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.E_MINE;
 import static io.github.nickolasddiaz.utils.CollisionCategory.P_MINE;
+import static io.github.nickolasddiaz.utils.CollisionCategory.teamColor;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class LandMineFactory {
@@ -39,7 +39,7 @@ public class LandMineFactory {
             skin.getSprite("mine" + (random.nextInt(3) + 1)), // Random mine sprite from 1 to 3
             itemSize,
             itemSize,
-            null,
+            teamColor(team),
             true,
             categoryBits,
             position,

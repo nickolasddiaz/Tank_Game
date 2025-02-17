@@ -9,6 +9,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import io.github.nickolasddiaz.components.*;
 
+import static io.github.nickolasddiaz.utils.CollisionCategory.PLAYER;
+
 
 public class SpriteRenderSystem extends SortedIteratingSystem {
     private final SpriteBatch batch;
@@ -49,8 +51,10 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
         TransformComponent transform = transformMapper.get(entity);
 
         if (transform.health <= 0 || transform.body == null) {
-            transform.dispose();
-            engine.removeEntity(entity);
+            if(transform.body.getFixtureList().get(0).getFilterData().categoryBits != PLAYER) {
+                transform.dispose();
+                engine.removeEntity(entity);
+            }
             return;
         }
 
@@ -75,21 +79,37 @@ public class SpriteRenderSystem extends SortedIteratingSystem {
     }
 
     private void drawTurret(TransformComponent transform) {
+        // Calculate the center point of the tank
+        Vector2 tankCenter = transform.getPosition();
+
+        // Convert rotation angles to radians
+        float tankRotationRad = (float) Math.toRadians(transform.rotation);
+        float turretRotationRad = (float) Math.toRadians(transform.turretRotation);
+
+        // Calculate the offset position in the tank's local space
         Vector2 turretPosition = new Vector2();
-        float baseRotationRad = (float) Math.toRadians(transform.rotation);
 
-        turretPosition.x = transform.getPosition().x +
-            (transform.turretOffSetPosition.x * (float) Math.cos(baseRotationRad) -
-                transform.turretOffSetPosition.y * (float) Math.sin(baseRotationRad));
-        turretPosition.y = transform.getPosition().y +
-            (transform.turretOffSetPosition.x * (float) Math.sin(baseRotationRad) +
-                transform.turretOffSetPosition.y * (float) Math.cos(baseRotationRad));
+        // Rotate the offset around the tank's center
+        turretPosition.x = tankCenter.x +
+            (transform.turretOffSetPosition.x * (float) Math.cos(tankRotationRad) -
+                transform.turretOffSetPosition.y * (float) Math.sin(tankRotationRad));
+        turretPosition.y = tankCenter.y +
+            (transform.turretOffSetPosition.x * (float) Math.sin(tankRotationRad) +
+                transform.turretOffSetPosition.y * (float) Math.cos(tankRotationRad));
 
-        transform.turretSprite.setPosition(turretPosition.x, turretPosition.y);
-        transform.turretSprite.setRotation(transform.turretRotation);
+        // Set the turret sprite properties
         transform.turretSprite.setOriginCenter();
+        transform.turretSprite.setPosition(
+            turretPosition.x - transform.turretSprite.getWidth() / 2f,
+            turretPosition.y - transform.turretSprite.getHeight() / 2f
+        );
 
-        if (transform.color != null) transform.turretSprite.setColor(transform.color);
+        // The turret rotation should be absolute (not relative to tank rotation)
+        transform.turretSprite.setRotation(transform.turretRotation);
+
+        if (transform.color != null) {
+            transform.turretSprite.setColor(transform.color);
+        }
 
         transform.turretSprite.draw(batch);
     }

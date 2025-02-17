@@ -84,19 +84,13 @@ public class DeathScreen implements Screen {
     private void cleanupGame() {
         // Reset the entity system
         game.engine.removeAllEntities();
-
-        // Reset game components
-        //game.chunk.reset(); // You'll need to add a reset method to ChunkComponent
-        //game.statsComponent.reset(); // You'll need to add a reset method to StatsComponent
-
-        // Recreate necessary entities
         game.create(); // This will reinitialize the core game components
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clear(Color.BLACK);
-        game.updateGame(delta);
+        game.updateChunk(delta);
 
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);

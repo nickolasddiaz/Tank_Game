@@ -1,7 +1,6 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
@@ -12,7 +11,6 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.utils.Array;
 import io.github.nickolasddiaz.utils.CollisionCategory;
 import io.github.nickolasddiaz.utils.WorldGraph;
 import java.util.*;
@@ -194,6 +192,16 @@ public class ChunkComponent implements Component {
                 }
             }
         }
+        MapObjects objects = chunkMap.getLayers().get("OBJECTS").getObjects();
+        objects.forEach(obj -> {
+            if (obj instanceof RectangleMapObject) {
+                RectangleMapObject rectObj = (RectangleMapObject) obj;
+                Rectangle rect = rectObj.getRectangle();
+                if (rect.contains(position)) {
+                    objects.remove(obj);
+                }
+            }
+        });
     }
 
     public Vector2 getChunkPosition(Vector2 position) {

@@ -38,6 +38,8 @@ public class PlayerSystem extends IteratingSystem{
         TransformComponent transform = transformMapper.get(entity);
         JoystickComponent joystick = joystickMapper.get(entity);
 
+        if(player.stats.health <= 0) return;
+
         // Update health in stats
         player.stats.health = transform.health;
         // Handle movement and rotation

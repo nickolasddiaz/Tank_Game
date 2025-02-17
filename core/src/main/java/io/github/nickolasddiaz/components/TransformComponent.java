@@ -9,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.utils.EntityStats;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.*;
+import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class TransformComponent implements Component {
     public Vector2 velocity = new Vector2();
@@ -68,12 +69,12 @@ public class TransformComponent implements Component {
         shape.dispose();
     }
 
-    public void turretComponent(Sprite turretSprite, Vector2 turretOffSetPosition, float width, float height) {
+    public void turretComponent(Sprite turretSprite) { //turret sprite is 26+10x14 while the tank sprite is 50x26 where itemSize is 25
         this.turretSprite = turretSprite;
-        this.turretSprite.setSize(width, height);
-        this.turretOffSetPosition = turretOffSetPosition;
-        turretOffSetPosition.add(-width/1.5f, -height/1.5f);
-        this.turretLength = height;
+        this.turretSprite.setSize(itemSize*1.6f, itemSize*.6f);
+        // Adjust the offset to position the turret at the tank's center
+        turretOffSetPosition = new Vector2(0, 0);  // Start from center
+        this.turretLength = itemSize * 2;
         this.hasTurret = true;
     }
 

@@ -2,7 +2,6 @@ package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -19,7 +18,7 @@ public class CarFactory {
     private final Skin skin;
     CameraComponent cameraComponent;
     ChunkComponent chunkComponent;
-    Color[] carColors = new Color[]{Color.BLUE, Color.GREEN, Color.PURPLE, Color.YELLOW, Color.CHARTREUSE, Color.PINK, Color.WHITE, Color.GRAY, Color.RED, Color.ORANGE};
+    Color[] carColors = new Color[]{Color.BLUE, Color.GREEN, Color.PURPLE, Color.YELLOW, Color.CHARTREUSE, Color.PINK, Color.WHITE, Color.GRAY, Color.RED, Color.ORANGE, Color.CYAN, Color.MAGENTA, Color.BROWN, Color.TEAL, Color.OLIVE, Color.SKY, Color.LIME, Color.MAROON, Color.NAVY, Color.TEAL, Color.TEAL, Color.VIOLET, Color.FOREST, Color.SALMON, Color.TAN,  Color.MAROON, Color.NAVY, Color.TEAL, Color.TEAL, Color.VIOLET, Color.FOREST, Color.SALMON, Color.TAN};
 
     public CarFactory(Engine engine, Skin skin, CameraComponent cameraComponent, ChunkComponent chunkComponent) {
         this.engine = engine;
@@ -42,12 +41,6 @@ public class CarFactory {
         float spawnY = roadRect.y + ((isRight) ? 0 : roadRect.height - chunkComponent.carWidth);
         float spawnX = roadRect.x + chunkComponent.random.nextFloat() * roadRect.width; // random x between rect.x and rect.x + rect.width
 
-        Gdx.app.log("CarFactory", "Creating tank at " + spawnX + ", " + spawnY);
-        Body[] rect2 = chunkComponent.getBodiesInRect(new Rectangle(spawnX,spawnY,itemSize,itemSize), HORIZONTAL_ROAD);
-        if(rect2.length == 0) {
-            Gdx.app.log("CarFactory", "No road found at " + spawnX + ", " + spawnY);
-        }
-
         transform.body.setTransform(spawnX,spawnY,0f);
         transform.rotation = 0f;
 
@@ -66,7 +59,7 @@ public class CarFactory {
     }
 
     public void createCar(Vector2 position, boolean direction, float changeDirection,
-                          boolean horizontal, int carTypeIndex) {
+                          boolean horizontal) {
         Entity car = engine.createEntity();
 
         // Create transform component with Box2D body
@@ -75,7 +68,7 @@ public class CarFactory {
             skin.getSprite("car"),
             (int) (itemSize * 1.80f),
             (int) (itemSize * .78f),
-            carColors[carTypeIndex],
+            carColors[chunkComponent.random.nextInt(carColors.length)],
             true,  // isDynamic
             CAR,
             position,

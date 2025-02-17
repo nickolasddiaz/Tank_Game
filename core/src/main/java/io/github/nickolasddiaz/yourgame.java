@@ -5,6 +5,7 @@ import com.badlogic.ashley.core.Entity;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -17,7 +18,7 @@ import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.systems.*;
 import io.github.nickolasddiaz.utils.EntityStats;
 
-import static io.github.nickolasddiaz.utils.CollisionCategory.PLAYER;
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.TILE_SIZE;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
@@ -42,7 +43,7 @@ public class yourgame extends Game {
     public FitViewport stageViewport;
     public Skin skin;
     public PlayerComponent playerComponent;
-
+    private ChunkSystem chunkSystem;
 
 
     public void create() {
@@ -53,14 +54,15 @@ public class yourgame extends Game {
         // Create player entity with properly initialized components
         player = new Entity();
         skin = new FWSkin(Gdx.files.internal("ui_tank_game.json"));
-        //tank sprite is 30x50 now is 76x128
 
         // Add other components
-        settings = new SettingsComponent();
+        if(settings == null)
+            settings = new SettingsComponent();
         chunk = new ChunkComponent();
         player.add(chunk);
-        //tank size is 30 width and 50 height
-        transform =new TransformComponent(chunk.world, skin.getSprite("tank"),itemSize *2, (int) (itemSize *1.2f),null, true, PLAYER, new Vector2(0f,0f), 0f,105);
+        //turret sprite is 50x20 while the tank sprite is 50x26 where itemSize is 25
+        int tankType = tankType(chunk.random);
+        transform =new TransformComponent(chunk.world, skin.getSprite("hull" + tankType),itemSize * 2, itemSize,teamColor(true), true, PLAYER, new Vector2(0f,0f), 0f,500);
         player.add(transform);
         camera = new CameraComponent();
         player.add(camera);
@@ -72,7 +74,8 @@ public class yourgame extends Game {
         // Add entity to engine
         engine.addEntity(player);
         carFactory = new CarFactory(engine, skin, camera, chunk);
-        engine.addSystem(new ChunkSystem(carFactory, transform));
+        chunkSystem = new ChunkSystem(carFactory, transform);
+        engine.addSystem(chunkSystem);
         car = carFactory.createTank(transform);
 
         viewport = new ScreenViewport();
@@ -83,12 +86,7 @@ public class yourgame extends Game {
         engine.addSystem(new SpriteRenderSystem(batch,camera,settings, engine));
         bulletFactory = new BulletFactory(chunk.world, engine, skin);
         enemyFactory = new EnemyFactory(engine, skin, camera, chunk, statsComponent, transform, settings,playerComponent ,chunk);
-        transform.turretComponent(
-            skin.getSprite("turret"),
-            new Vector2(itemSize*1.1f, itemSize * 0.5f),  // Position at center of tank
-            itemSize*1.48f,                                // turret width
-            itemSize                                 // turret height
-        ); //52 width 20 height modified 77 width and 20 height for better axis rotation
+        transform.turretComponent(skin.getSprite("turret"+tankType));
         missileFactory = new MissileFactory(engine, skin, chunk);
         landMineFactory = new LandMineFactory(chunk.world,engine,skin,chunk.random);
 
@@ -111,11 +109,13 @@ public class yourgame extends Game {
         chunk.world.step(delta, 6, 2);
         Array<Body> bodies = new Array<>();
         chunk.world.getBodies(bodies);
-        for(Body body : bodies){ {
+        for(Body body : bodies){
             if(body.getUserData() instanceof Boolean){
                 chunk.world.destroyBody(body);
             }
         }
     }
+    public void updateChunk(float delta){
+        chunkSystem.update(delta);
     }
 }

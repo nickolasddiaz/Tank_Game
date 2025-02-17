@@ -82,6 +82,9 @@ public class StatsComponent implements Component {
         starsLabel.setText(stars + "S");
     }
     public void addHealthLevel(int healthLevel){
+        if(player.health + healthLevel <= 0){
+            setHealthLevel(0);return;
+        }
         player.health += healthLevel;
         setHealthLevel(getHealth());
     }
@@ -91,7 +94,7 @@ public class StatsComponent implements Component {
             healthLevel = 0;
         }
         localHealth = healthLevel;
-        int level = getHealth() % 12;
+        int level = Math.max(0, Math.min(getHealth() % 12, 11));
         int flatLevel = (getHealth() - level) / 12;
         Color color = setColor(flatLevel);
         Color secondColor = setColor(flatLevel - 1);

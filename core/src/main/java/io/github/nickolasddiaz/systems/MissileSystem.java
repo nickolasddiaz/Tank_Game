@@ -2,6 +2,7 @@ package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
@@ -30,7 +31,7 @@ public class MissileSystem extends IteratingSystem {
         MissileComponent missile = missileMapper.get(entity);
 
         // Check if in a valid chunk
-        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition()))) {
+        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition())) || transform.body == null) {
             transform.dispose();
             engine.removeEntity(entity);
             return;
@@ -44,7 +45,7 @@ public class MissileSystem extends IteratingSystem {
         }
 
         // Missile movement with optional tracking
-        if (missile.targetPosition != null) {
+        if (missile.targetPosition != null && missile.targetPosition.body != null) {
             // Calculate angle to target
             TransformComponent target = missile.targetPosition;
             Vector2 targetPos = target.getPosition();
@@ -64,10 +65,9 @@ public class MissileSystem extends IteratingSystem {
 
             // Apply rotation
             if (Math.abs(angleDifference) < rotationSpeed * deltaTime) {
-                transform.body.setTransform(transform.body.getPosition(), (float)Math.toRadians(targetAngle));
+                transform.rotation = targetAngle;
             } else {
-                float newAngle = transform.rotation + Math.signum(angleDifference) * rotationSpeed * deltaTime;
-                transform.body.setTransform(transform.body.getPosition(), (float)Math.toRadians(newAngle));
+                transform.rotation = transform.rotation + Math.signum(angleDifference) * rotationSpeed * deltaTime;
             }
         }
 
@@ -88,7 +88,7 @@ public class MissileSystem extends IteratingSystem {
 
         // Query the world for potential targets
         chunk.world.QueryAABB(fixture -> {
-            if ((fixture.getFilterData().categoryBits & ENEMY) != 0) {
+            if (((fixture.getFilterData().categoryBits & missile.searchBits) != 0)) {
                 Body body = fixture.getBody();
                 TransformComponent potentialTarget = (TransformComponent)body.getUserData();
 

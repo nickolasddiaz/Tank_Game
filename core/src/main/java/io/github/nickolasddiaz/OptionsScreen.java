@@ -118,6 +118,10 @@ public class OptionsScreen implements Screen {
         mainMenuButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (!dispose) {
+                    cleanupGame();
+                    game.settings.paused = false;
+                }
                 game.setScreen(new MainMenuScreen(game));
                 dispose();
             }
@@ -210,9 +214,17 @@ public class OptionsScreen implements Screen {
         }
         if(dispose)
             game.updateGame(delta);
+        else
+            game.updateChunk(delta);
 
         stage.act(delta);
         stage.draw();
+    }
+
+    private void cleanupGame() {
+        // Reset the entity system
+        game.engine.removeAllEntities();
+        game.create(); // This will reinitialize the core game components
     }
 
     @Override

@@ -9,8 +9,7 @@ import io.github.nickolasddiaz.components.ChunkComponent;
 import io.github.nickolasddiaz.components.MissileComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
 
-import static io.github.nickolasddiaz.utils.CollisionCategory.E_MISSILE;
-import static io.github.nickolasddiaz.utils.CollisionCategory.P_MISSILE;
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class MissileFactory {
@@ -45,7 +44,7 @@ public class MissileFactory {
         );
         missile.add(transform);
 
-        MissileComponent missileComponent = new MissileComponent(speed, chunk);
+        MissileComponent missileComponent = new MissileComponent(speed, chunk,team);
         missile.add(missileComponent);
 
         engine.addEntity(missile);

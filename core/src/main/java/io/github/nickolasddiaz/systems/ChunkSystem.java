@@ -166,7 +166,7 @@ public class ChunkSystem extends EntitySystem {
                     float spawnX = rect.x + chunk.random.nextFloat() * rect.width; // random x between rect.x and rect.x + rect.width
                     carFactory.createCar(new Vector2(spawnX, spawnY), isRight,
                         (isRight ? rect.x + rect.width - itemSize / 2 : rect.x + itemSize / 2),
-                        true, chunk.random.nextInt(10));
+                        true);
                 } else if ("VERTICAL".equals(object.getName())) {
                     Rectangle rect = ((RectangleMapObject) object).getRectangle();
                     boolean isUp = chunk.random.nextBoolean();
@@ -174,7 +174,7 @@ public class ChunkSystem extends EntitySystem {
                     float spawnY = rect.y + chunk.random.nextFloat() * rect.height; // random y between rect.y and rect.y + rect.height
                     carFactory.createCar(new Vector2(spawnX, spawnY), isUp,
                         (isUp ? rect.y + rect.height - itemSize / 2 : rect.y + itemSize / 2),
-                        false, chunk.random.nextInt(10));
+                        false);
                 }
             }
         }

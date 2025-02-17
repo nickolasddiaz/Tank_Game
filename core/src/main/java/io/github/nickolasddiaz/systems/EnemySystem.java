@@ -5,7 +5,6 @@ import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
@@ -58,6 +57,7 @@ public class EnemySystem extends IteratingSystem {
         // Check distance to player
         float distanceToPlayer = transform.getPosition().dst(player.getPosition());
         if (distanceToPlayer <= enemyComponent.minDistance) {
+            end(enemyComponent, transform, deltaTime);
             return;
         }
 
@@ -71,15 +71,16 @@ public class EnemySystem extends IteratingSystem {
             moveEnemy(transform, enemyComponent, deltaTime);
         }
 
+        end(enemyComponent, transform, deltaTime);
+    }
+    private void end(EnemyComponent enemyComponent, TransformComponent transform, float deltaTime) {
         enemyComponent.stats.health = transform.health;
-
         transform.velocity = enemyComponent.stats.emulate(deltaTime, transform.getPosition(), transform.turretRotation, transform.velocity, true);
-
         transform.health = enemyComponent.stats.health;
     }
 
     private void getNextPath(ChunkComponent chunk, Vector2 Position, EnemyComponent enemyComponent) {
-        if(Position.dst(enemyComponent.nextPathWorld) < itemSize*itemSize && enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
+        if(Position.dst(enemyComponent.nextPathWorld) < itemSize*itemSize*itemSize && enemyComponent.pathIndex < enemyComponent.path.getCount() - 1) {
             enemyComponent.nextPathWorld.set(chunk.GridToWorldCoordinates((enemyComponent.path.get(++enemyComponent.pathIndex).position)));
         }
     }
@@ -106,7 +107,6 @@ public class EnemySystem extends IteratingSystem {
                     enemyComponent.path = enemyComponent.previousPath;
                 } else {
                     // Create a simple direct path to the player if no previous path exists
-                    Gdx.app.log("EnemySystem", "Creating direct path to player");
                     DefaultGraphPath<GraphNode> directPath = new DefaultGraphPath<>();
                     GraphNode simpleStartNode = new GraphNode(startPos);
                     GraphNode simpleEndNode = new GraphNode(endPos);

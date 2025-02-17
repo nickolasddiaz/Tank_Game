@@ -1,5 +1,9 @@
 package io.github.nickolasddiaz.utils;
 
+import com.badlogic.gdx.graphics.Color;
+
+import java.util.Random;
+
 public final class CollisionCategory {
     public static final short HORIZONTAL_ROAD = 0x1;
     public static final short VERTICAL_ROAD =   0x1 << 1;
@@ -63,5 +67,11 @@ public final class CollisionCategory {
             case "E_MINE":      return E_MINE;
             default:            return 0x0;
         }
+    }
+    public static Color teamColor(boolean team){
+        return team ? new Color(0xc7fc92ff) : new Color(0xfaab8eff);
+    }
+    public static int tankType(Random random){
+        return random.nextInt(14);
     }
 }

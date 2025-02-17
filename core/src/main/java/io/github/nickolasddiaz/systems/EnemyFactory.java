@@ -8,7 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.utils.EntityStats;
 
-import static io.github.nickolasddiaz.components.ChunkComponent.*;
 import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
@@ -57,8 +56,8 @@ public class EnemyFactory {
         tank.add(chunkComponent);
         //enemy sprite is 30x50 now is 76x128
 
-        //transformComponent.color = carColors[carTypeIndex];
-        TransformComponent transformComponent = new TransformComponent(chunkComponent.world, skin.getSprite("tank"),itemSize *2, (int) (itemSize *1.2f), (isAlly)? Color.GREEN : null,
+        int tankType = tankType(chunkComponent.random);
+        TransformComponent transformComponent = new TransformComponent(chunkComponent.world, skin.getSprite("hull"+tankType),itemSize *2, (int) (itemSize *1.2f), teamColor(isAlly),
              true, (isAlly)? ALLY : ENEMY, spawnPosition, 0f,2);
 
         tank.add(transformComponent);
@@ -66,12 +65,7 @@ public class EnemyFactory {
         EnemyComponent enemyComponent = new EnemyComponent(0f, stats.clone(statsComponent.getStars() /15));
         transformComponent.addEntityStats(enemyComponent.stats);
         tank.add(enemyComponent);
-        transformComponent.turretComponent(
-            skin.getSprite("turret"),
-            new Vector2(itemSize*1.1f, itemSize * 0.5f),  // Position at center of tank
-            itemSize*1.48f,                                // turret width
-            itemSize                                 // turret height
-        ); //52 width 20 height modified 77 width and 20 height for better axis rotation
+        transformComponent.turretComponent(skin.getSprite("turret"+tankType));
 
 
         tank.add(settings);

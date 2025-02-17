@@ -321,6 +321,7 @@ public class PowerUpScreen extends InputAdapter implements Screen {
     public void render(float delta) {
         stage.act(delta);
         stage.draw();
+        game.updateChunk(delta);
     }
 
     @Override

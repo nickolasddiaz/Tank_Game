@@ -32,11 +32,11 @@ public class EntityStats{
     public float criticalDamageMultiplier = 1.2f;
     public float criticalChance = 0.1f;
     public int backShotsAmount = 0;
-    public boolean CanDestroy = true;
+    public boolean CanDestroy = false;
     public boolean CanShootMissile = false;
-    public float missileRate = 2f;
+    public float missileRate = 3f;
     public boolean CanShootMine = false;
-    public float mineRate = 2f;
+    public float mineRate = 5f;
     public float speed = itemSize * 5f;
     public float fireRate = 2f;
     public float timeSinceLastShot = 2f;
