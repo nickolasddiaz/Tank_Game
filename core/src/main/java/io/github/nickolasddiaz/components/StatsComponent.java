@@ -4,10 +4,11 @@ import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import io.github.nickolasddiaz.utils.EntityStats;
 
 
 import java.util.Random;
+
+import static io.github.nickolasddiaz.utils.CollisionCategory.getEnemySpawnRate;
 
 public class StatsComponent implements Component {
     private int score = 0;
@@ -32,29 +33,29 @@ public class StatsComponent implements Component {
 
     public float pointMultiplier = 1f;
     public int luck = 10;
-    public int reRollNumber = 100;
+    public int reRollNumber = 1;
     private int addStar = 0;
 
     public int getScore() { return score; }
     public void addScore(int score) {
         addStar++;
-        if(addStar < (10 + stars)){
+        if(addStar >= 18 * (1/getEnemySpawnRate(getStars()))){
             addStar = 0;
             addStarLevel(1);
         }
         this.score += (int) (score* pointMultiplier);
-
-        scoreLabel.setText("Score:\n" + this.score + "P");
+        if(scoreLabel != null)
+            scoreLabel.setText("Score:\n" + this.score);
     }
 
     public int getStars() { return stars; }
     public int getHealth() { return (int) player.health; }
 
     public void addStarLevel(int wantedLevel) {
-        int passes = stars/10;
+        int passes = stars/3;
         stars += wantedLevel;
-        if(stars/10 > passes){
-            upgrade = false;//true
+        if(stars/3 > passes){
+            upgrade = true;
         }
 
         if (stars < 0) {
@@ -73,13 +74,14 @@ public class StatsComponent implements Component {
         }
 
         for (int i = 0; i < 10; i++) {
-            if (starColors[i] != null) {
+            if (starColors[i] != null && starImages != null) {
                 starImages[i].setColor(starColors[i]);
-            } else {
+            } else if(starImages != null){
                 starImages[i].setColor(Color.CLEAR);
             }
         }
-        starsLabel.setText(stars + "S");
+        if(starsLabel != null)
+            starsLabel.setText(stars + "S");
     }
     public void addHealthLevel(int healthLevel){
         if(player.health + healthLevel <= 0){
@@ -119,7 +121,7 @@ public class StatsComponent implements Component {
 
     private Color setColor(int level) {
         switch (level) {
-            case -1:return null;
+            case -1:return Color.CLEAR;
             case 1: return Color.YELLOW;
             case 2: return Color.ORANGE;
             case 3: return Color.RED;

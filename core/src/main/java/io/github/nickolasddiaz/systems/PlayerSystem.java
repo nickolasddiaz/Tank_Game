@@ -72,7 +72,7 @@ public class PlayerSystem extends IteratingSystem{
     }
 
     private void handleAutoAim(TransformComponent transform) {
-        if ((lockedTarget == null || timeToReadjust > 1f)) {
+        if (lockedTarget == null || timeToReadjust > 1f) {
             timeToReadjust = 0f;
             Rectangle searchArea = new Rectangle(
                 transform.getPosition().x - chunkSize / 2f,
@@ -95,6 +95,10 @@ public class PlayerSystem extends IteratingSystem{
                 }
             }
         } else {
+            if(lockedTarget.body == null){
+                lockedTarget = null;
+                return;
+            }
             transform.turretRotation = (float) Math.toDegrees(Math.atan2(
                 lockedTarget.getPosition().y - transform.getPosition().y,
                 lockedTarget.getPosition().x - transform.getPosition().x));

@@ -20,6 +20,7 @@ public class TransformComponent implements Component {
 
     public Body body;
     public float health;
+    public Float timeToLive = null;
 
     public boolean hasTurret = false;
     public Sprite turretSprite;

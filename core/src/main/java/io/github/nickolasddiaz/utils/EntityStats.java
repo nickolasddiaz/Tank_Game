@@ -22,8 +22,9 @@ public class EntityStats{
     public float health = 4;
     public int reduceDamage = 0;
     public int regeneration = 1;
-    public float regenerationRate = 10f;
-    public float allySpawnerRate = 0f;
+    public float regenerationRate = 15f;
+    public float allySpawnerRate = 20f;
+    public boolean canSpawnAlly = false;
     public int amountOfBullets = 1;
     public float freezeDuration = 2;
     public float burnDuration = 2;
@@ -33,14 +34,14 @@ public class EntityStats{
     public float criticalChance = 0.1f;
     public int backShotsAmount = 0;
     public boolean CanDestroy = false;
-    public boolean CanShootMissile = false;
-    public float missileRate = 3f;
+    public boolean CanShootMissile = true;
+    public float missileRate = 4f;
     public boolean CanShootMine = false;
     public float mineRate = 5f;
     public float speed = itemSize * 5f;
     public float fireRate = 2f;
     public float timeSinceLastShot = 2f;
-    public float bulletSpeed = 20f * itemSize;
+    public float bulletSpeed = 15f * itemSize;
     public int bulletDamage = 1;
 
     public float spinSpeed = speed / 2f * TILE_PER_METER;
@@ -59,80 +60,73 @@ public class EntityStats{
     public boolean onBush = false;
     public float isOnFire = 0;
     public float isFrozen = 0;
-    public Vector2 velocity = new Vector2();
 
     private final Random random;
 
     public EntityStats(Random random, boolean team, BulletFactory bulletFactory,
                        MissileFactory missileFactory, LandMineFactory landMineFactory,
-                       EnemyFactory enemyFactory, ChunkComponent chunk, int level) {
+                       EnemyFactory enemyFactory, ChunkComponent chunk, int level, boolean canSpawn) {
         this(random, team, bulletFactory, missileFactory, landMineFactory, enemyFactory, chunk);
+        this.canSpawnAlly = canSpawn; // ensure that allys can recursively spawn allys
 
-        // Define all possible stats that can be improved
-        Object[][] stats = {
-            {health, 2f},                          // Base increase per level
-            {bulletDamage, 1},
-            {speed, itemSize * 0.5f},
-            {regeneration, 1},
-            {regenerationRate, -0.5f},             // Decrease time between regenerations
-            {fireRate, -0.02f},                    // Decrease time between shots
-            {bulletSpeed, itemSize * 0.5f},
-            {bulletSize, 0.1f},
-            {criticalChance, 0.05f},
-            {criticalDamageMultiplier, .5f},
-            {amountOfBullets, 1},
-            {backShotsAmount, 1}
-        };
+        // Base stat increases per level
+        float healthIncreasePerLevel = 2.0f;
+        int bulletDamageIncreasePerLevel = 1;
+        float speedIncreasePerLevel = itemSize * 0.5f;
+        float fireRateReducePerLevel = 0.1f; // Lower is better for fire rate
+        float bulletSpeedIncreasePerLevel = itemSize * 0.5f;
+        float bulletSizeIncreasePerLevel = 0.1f;
+        float criticalChanceIncreasePerLevel = 0.05f;
+        float criticalDamageMultiplierIncreasePerLevel = 0.2f;
+        int amountOfBulletsIncreaseEveryNLevels = 5; // Add a bullet every 5 levels
+        int backShotsAmountIncreaseEveryNLevels = 10; // Add a back shot every 10 levels
 
-        // For each level, improve 5 random stats
-        for (int i = 0; i < level; i++) {
-            // Create a copy of the stats array indices to randomly select from
-            List<Integer> availableStats = new ArrayList<>();
-            for (int j = 0; j < stats.length; j++) {
-                availableStats.add(j);
-            }
+        // Apply deterministic stat increases based on level
+        health += healthIncreasePerLevel * level;
+        bulletDamage += bulletDamageIncreasePerLevel * level;
+        speed += speedIncreasePerLevel * level;
+        fireRate = Math.max(0.1f, fireRate - (fireRateReducePerLevel * level)); // Prevent negative fire rate
+        bulletSpeed += bulletSpeedIncreasePerLevel * level;
+        bulletSize += bulletSizeIncreasePerLevel * level;
+        criticalChance = Math.min(1.0f, criticalChance + (criticalChanceIncreasePerLevel * level)); // Cap at 100%
+        criticalDamageMultiplier += criticalDamageMultiplierIncreasePerLevel * level;
 
-            // Select and improve 5 random stats
-            for (int j = 0; j < stats.length; j++) {
-                int selectedIndex = random.nextInt(availableStats.size());
-                int statIndex = availableStats.get(selectedIndex);
-                availableStats.remove(selectedIndex);
+        // Add bullets and back shots at specific level thresholds
+        amountOfBullets += level / amountOfBulletsIncreaseEveryNLevels;
+        backShotsAmount += level / backShotsAmountIncreaseEveryNLevels;
 
-                Object[] stat = stats[statIndex];
-                if (stat[0] instanceof Float) {
-                    float currentValue = (Float) stat[0];
-                    float increase = (Float) stat[1];
-                    stat[0] = currentValue + increase;
-                } else if (stat[0] instanceof Integer) {
-                    int currentValue = (Integer) stat[0];
-                    int increase = (Integer) stat[1];
-                    stat[0] = currentValue + increase;
+        // Update dependent stats
+        spinSpeed = speed / 2f * TILE_PER_METER;
+
+        // Assign exactly one special ability based on level and a random roll
+        // The higher the level, the more likely to get a special ability
+        if (level >= 3) { // Minimum level threshold for special abilities
+            float specialAbilityChance = Math.min(0.9f, 0.3f + (level * 0.05f)); // Cap at 90% chance
+
+            if (random.nextFloat() < specialAbilityChance) {
+                // Choose one special ability based on random value
+                int specialAbilityType = random.nextInt(4);
+
+                switch (specialAbilityType) {
+                    case 0:
+                        CanShootMine = true;
+                        mineRate = Math.max(1.0f, 5.0f - (level * 0.2f)); // Improve mine rate with level
+                        break;
+                    case 1:
+                        CanShootMissile = true;
+                        missileRate = Math.max(1.0f, 4.0f - (level * 0.15f)); // Improve missile rate with level
+                        break;
+                    case 2:
+                        CanDestroy = true;
+                        explosiveRadiusAndDamage += level / 2; // Increase explosive power with level
+                        break;
+                    case 3:
+                        canSpawnAlly = true;
+                        allySpawnerRate = Math.max(3.0f, 10.0f - (level * 0.3f)); // Improve ally spawn rate with level
+                        break;
                 }
             }
-
-            // Apply the improved stats back to the entity
-            health = (Float) stats[0][0];
-            bulletDamage = (Integer) stats[1][0];
-            speed = (Float) stats[2][0];
-            regeneration = (Integer) stats[3][0];
-            regenerationRate = (Float) stats[4][0];
-            fireRate = (Float) stats[5][0];
-            bulletSpeed = (Float) stats[6][0];
-            bulletSize = (Float) stats[7][0];
-            criticalChance = (Float) stats[8][0];
-            criticalDamageMultiplier = (Float) stats[9][0];
-            amountOfBullets = (Integer) stats[10][0];
-            backShotsAmount = (Integer) stats[11][0];
-
-            // Update dependent stats
-            spinSpeed = speed/2f * TILE_PER_METER;
         }
-
-        // Add special abilities based on level thresholds
-        if(random.nextFloat() > 15f/level) CanShootMine = true;
-        if(random.nextFloat() > 15f/level) CanShootMissile = true;
-        if(random.nextFloat() > 15f/level) CanDestroy = true;
-        //allySpawnerRate is left out as it will become too crazy
     }
 
     public EntityStats(Random random, boolean team, BulletFactory bulletFactory,
@@ -149,7 +143,7 @@ public class EntityStats{
 
     public Vector2 emulate(float delta, Vector2 position, float rotation, Vector2 velocity, boolean canShoot) {
         // Handle regeneration
-        if (regeneration > 0) {
+        if (regeneration > 0 && team) {
             health += regeneration/regenerationRate * delta;
         }
 
@@ -174,7 +168,7 @@ public class EntityStats{
             if (missileSpawnTime > missileRate) {
                 missileSpawnTime = 0f;
                 missileFactory.spawnMissile(position.cpy(), rotation,
-                    bulletSpeed, calculateDamage() * 4,
+                    bulletSpeed, calculateDamage() * ((team)? 4:1) * explosiveRadiusAndDamage,
                     bulletSize, null, team);
             }
         }
@@ -184,7 +178,7 @@ public class EntityStats{
             landMineSpawnTime += delta;
             if (landMineSpawnTime > mineRate) {
                 landMineSpawnTime = 0f;
-                landMineFactory.createLandMine(position.cpy(), calculateDamage() * 2, team);
+                landMineFactory.createLandMine(position.cpy(), calculateDamage() * explosiveRadiusAndDamage * ((team)? 4:1), team);
             }
         }
 
@@ -196,7 +190,7 @@ public class EntityStats{
         }
 
         // Handle ally spawning
-        if (allySpawnerRate > 0) {
+        if (canSpawnAlly) {
             handleAllySpawning(delta, position);
         }
         return velocity;
@@ -275,6 +269,6 @@ public class EntityStats{
     }
 
     public EntityStats clone(int level) {
-        return new EntityStats(random, team, bulletFactory, missileFactory, landMineFactory, enemyFactory, chunk, level);
+        return new EntityStats(random, team, bulletFactory, missileFactory, landMineFactory, enemyFactory, chunk, level, false);
     }
 }

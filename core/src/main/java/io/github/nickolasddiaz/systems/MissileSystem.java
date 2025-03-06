@@ -2,13 +2,11 @@ package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.nickolasddiaz.components.*;
 
-import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.chunkSize;
 
 public class MissileSystem extends IteratingSystem {
@@ -32,20 +30,30 @@ public class MissileSystem extends IteratingSystem {
 
         // Check if in a valid chunk
         if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition())) || transform.body == null) {
-            transform.dispose();
-            engine.removeEntity(entity);
+            transform.health = 0;
             return;
         }
 
         // Update tracking timer
         missile.trackingTimer += deltaTime;
         if (missile.trackingTimer >= MissileComponent.TRACKING_INTERVAL) {
-            findTarget(missile, transform);
+            // Check if current target is still valid before attempting to find a new one
+            if (missile.targetPosition == null || missile.targetPosition.body == null ||
+                missile.targetPosition.health <= 0) {
+                // Clear invalid target
+                missile.targetPosition = null;
+                // Find a new target
+                findTarget(missile, transform);
+            } else {
+                // Target still valid, check if we need to find a better one
+                findTarget(missile, transform);
+            }
             missile.trackingTimer = 0f;
         }
 
         // Missile movement with optional tracking
-        if (missile.targetPosition != null && missile.targetPosition.body != null) {
+        if (missile.targetPosition != null && missile.targetPosition.body != null &&
+            missile.targetPosition.health > 0) {
             // Calculate angle to target
             TransformComponent target = missile.targetPosition;
             Vector2 targetPos = target.getPosition();
@@ -69,6 +77,9 @@ public class MissileSystem extends IteratingSystem {
             } else {
                 transform.rotation = transform.rotation + Math.signum(angleDifference) * rotationSpeed * deltaTime;
             }
+        } else {
+            // No valid target, continue on current path
+            missile.targetPosition = null;
         }
 
         // Apply missile velocity
@@ -90,9 +101,11 @@ public class MissileSystem extends IteratingSystem {
         chunk.world.QueryAABB(fixture -> {
             if (((fixture.getFilterData().categoryBits & missile.searchBits) != 0)) {
                 Body body = fixture.getBody();
+                if (body == null) return true;
+
                 TransformComponent potentialTarget = (TransformComponent)body.getUserData();
 
-                if (potentialTarget != null) {
+                if (potentialTarget != null && potentialTarget.body != null && potentialTarget.health > 0) {
                     Vector2 directionToTarget = new Vector2(
                         potentialTarget.getPosition().x - currentPosition.x,
                         potentialTarget.getPosition().y - currentPosition.y
@@ -106,6 +119,8 @@ public class MissileSystem extends IteratingSystem {
 
                     if (angleDifference <= searchAngle && distance <= searchLength) {
                         if (missile.targetPosition == null ||
+                            missile.targetPosition.body == null ||
+                            missile.targetPosition.health <= 0 ||
                             distance < missile.targetPosition.getPosition().dst(currentPosition)) {
                             missile.targetPosition = potentialTarget;
                         }

@@ -18,11 +18,9 @@ public class CarSystem extends IteratingSystem {
     private final ComponentMapper<CarComponent> carMapper;
     private final ChunkComponent chunk;
     private final ComponentMapper<TransformComponent> transformMapper;
-    private final Engine engine;
 
-    public CarSystem(Engine engine, ChunkComponent chunk) {
+    public CarSystem(ChunkComponent chunk) {
         super(Family.all(CarComponent.class, TransformComponent.class).get());
-        this.engine = engine;
         this.chunk = chunk;
         carMapper = ComponentMapper.getFor(CarComponent.class);
         transformMapper = ComponentMapper.getFor(TransformComponent.class);
@@ -34,12 +32,11 @@ public class CarSystem extends IteratingSystem {
         TransformComponent transform = transformMapper.get(entity);
         Body body = transform.body;
 
-        // Check if in a valid chunk
-//        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition()))) {
-//            transform.dispose();
-//            engine.removeEntity(entity);
-//            return;
-//        }
+         //Check if in a valid chunk
+        if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition()))) {
+            transform.health = 0;
+            return;
+        }
         if(body == null) return;
         transform.velocity.setZero();
 
@@ -121,12 +118,10 @@ public class CarSystem extends IteratingSystem {
 
     private void handleRoadLogic(CarComponent car, TransformComponent transform,
                                  Rectangle horizontalRoad, Rectangle verticalRoad) {
-//        if (horizontalRoad == null && verticalRoad == null) {
-//            transform.dispose();
-//            if(transform.body != null && transform.body.getUserData() != null)
-//                engine.removeEntity((Entity) transform.body.getUserData());
-//            return;
-//        }
+        if (horizontalRoad == null && verticalRoad == null) {
+            transform.health = 0;
+            return;
+        }
 
         // Handle road changes and U-turns
         if (horizontalRoad != null && !car.horizontal) {

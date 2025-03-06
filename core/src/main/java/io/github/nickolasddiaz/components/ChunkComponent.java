@@ -1,6 +1,8 @@
 package io.github.nickolasddiaz.components;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
@@ -33,6 +35,13 @@ public class ChunkComponent implements Component {
     public float carWidth = 64/TILE_PER_METER;
     public WorldGraph pathfindingGraph;
     public CollisionCategory category;
+    private StatsComponent statsComponent;
+    private SettingsComponent settingsComponent;
+
+    private final Sound car_sound = Gdx.audio.newSound(Gdx.files.internal("sounds/destroy_car.mp3"));
+    private final Sound tank_sound = Gdx.audio.newSound(Gdx.files.internal("sounds/destroy_tank.mp3"));
+    private final Sound house_sound = Gdx.audio.newSound(Gdx.files.internal("sounds/house_destroy.mp3"));
+    private final Sound deflect_sound = Gdx.audio.newSound(Gdx.files.internal("sounds/tank_deflect.mp3"));
 
     public World world;
     // Store bodies for each chunk to manage cleanup
@@ -43,6 +52,10 @@ public class ChunkComponent implements Component {
         category = new CollisionCategory();
         world.setContactListener(GameContactListener);
         shapeRenderer.setAutoShapeType(true);
+    }
+    public void stats(StatsComponent statsComponent, SettingsComponent settingsComponent){
+        this.statsComponent = statsComponent;
+        this.settingsComponent = settingsComponent;
     }
     // Helper method to create a body for a rectangle object
     public Body createRectangleBody(World world, Rectangle rect, short category) {
@@ -92,18 +105,41 @@ public class ChunkComponent implements Component {
         return body;
     }
 
-    // Query methods for collision detection
-    public boolean isPointInside(Vector2 point, short categoryBits) {
-        final boolean[] result = {false};
+    public Vector2 getPointEnemySpawn(Vector2 playerPosition) {
+        float worldPercent = 2f;
+        float spawnDistance = worldPercent * chunkSize;
+
+        int randomIndex = random.nextInt(4);// 0 top 1 right 2 bottom 3 left
+
+        // Generate four random spawn locations (one on each side of a square)
+        Vector2 bottomPoint = new Vector2(
+            playerPosition.x + (randomIndex == 0 ? -chunkSize : randomIndex == 1 ? chunkSize : randomIndex == 2 ? -chunkSize : -spawnDistance),
+            playerPosition.y + (randomIndex == 0 ? chunkSize : randomIndex == 1 ? -chunkSize : randomIndex == 2 ? -spawnDistance : -chunkSize));
+
+        Vector2 topPoint = new Vector2(
+            playerPosition.x + (randomIndex == 0 ? chunkSize : randomIndex == 1 ? spawnDistance : randomIndex == 2 ? chunkSize : -chunkSize),
+            playerPosition.y + (randomIndex == 0 ? spawnDistance : randomIndex == 1 ? chunkSize : randomIndex == 2 ? -chunkSize : chunkSize));
+
+        // Array to store a valid spawn point
+        List<Vector2> result = new ArrayList<>();
+
         world.QueryAABB(fixture -> {
-            if ((fixture.getFilterData().categoryBits & categoryBits) != 0) {
-                result[0] = true;
+            if ((fixture.getFilterData().categoryBits & ROAD) != 0) {
                 return false;
             }
+            if(fixture.getBody().getPosition() != null)
+                result.add(new Vector2(fixture.getBody().getPosition()));
             return true;
-        }, point.x - 0.1f, point.y - 0.1f, point.x + 0.1f, point.y + 0.1f);
-        return result[0];
+        }, bottomPoint.x, bottomPoint.y, topPoint.x, topPoint.y);
+
+        // If no valid spawn found, return player's position as fallback
+        if(result.isEmpty()) {
+            return null;
+        }else{
+            return result.get(random.nextInt(result.size()));
+        }
     }
+
 
     public Body[] getBodiesInRect(Rectangle rect, short categoryBits) {
         ArrayList<Body> result = new ArrayList<>();
@@ -245,22 +281,34 @@ public class ChunkComponent implements Component {
             switch (categoryA) {
                 case CAR:
                     if ((categoryB & (P_BULLET | P_MISSILE | P_MINE | E_BULLET | E_MISSILE | E_MINE)) != 0) {
-                        handleDamage((TransformComponent) fixtureB.getBody().getUserData(), fixtureA.getBody());
-                    } else if ((categoryB & (ENEMY | PLAYER | ALLY)) != 0) {
+                        if(settingsComponent.is_Playing)
+                            car_sound.play(settingsComponent.sfxVolume);
                         ((TransformComponent) fixtureA.getBody().getUserData()).health = 0;
+                        ((TransformComponent) fixtureB.getBody().getUserData()).health = 0;
+                        if((categoryB & (P_BULLET | P_MISSILE | P_MINE)) != 0){
+                            statsComponent.addScore(2);
+                        }
+                    } else if ((categoryB & (ENEMY | PLAYER | ALLY)) != 0) {
+                        car_sound.play(settingsComponent.sfxVolume);
+                        ((TransformComponent) fixtureA.getBody().getUserData()).health = 0;
+                        if((categoryB & ENEMY) == 0){
+                            statsComponent.addScore(1);
+                        }
                     }
                     break;
-
                 case ENEMY:
                     if ((categoryB & (P_BULLET | P_MISSILE | P_MINE)) != 0) {
-                        handleDamage((TransformComponent) fixtureB.getBody().getUserData(), fixtureA.getBody());
+                        handleDamage((TransformComponent) fixtureB.getBody().getUserData(), ((TransformComponent) fixtureA.getBody().getUserData()));
+                        if(((TransformComponent) fixtureB.getBody().getUserData()).health <= 0){
+                            statsComponent.addScore(1);
+                        }
                     }
                     break;
 
                 case PLAYER:
                 case ALLY:
                     if ((categoryB & (E_BULLET | E_MISSILE | E_MINE)) != 0) {
-                        handleDamage((TransformComponent) fixtureB.getBody().getUserData(), fixtureA.getBody());
+                        handleDamage((TransformComponent) fixtureB.getBody().getUserData(), (TransformComponent) fixtureA.getBody().getUserData());
                     }
                     break;
 
@@ -293,9 +341,7 @@ public class ChunkComponent implements Component {
 
             // Ensure that the lower category bit is always `fixtureA` for consistent processing
             if (categoryA > categoryB) {
-                Fixture temp = fixtureA;
-                fixtureA = fixtureB;
-                fixtureB = temp;
+                fixtureB = fixtureA;
                 short tempCategory = categoryA;
                 categoryA = categoryB;
                 categoryB = tempCategory;
@@ -324,14 +370,26 @@ public class ChunkComponent implements Component {
 
     public void structure(TransformComponent transformB, Body bodyA){
         if(transformB.stats.CanDestroy) {
-               destroyStructure(bodyA.getPosition());
-               bodyA.setUserData(true);
+                house_sound.play(settingsComponent.sfxVolume);
+                destroyStructure(bodyA.getPosition());
+                bodyA.setUserData(true);
           }
     }
 
-    private void handleDamage(TransformComponent transform, Body bodyB) {
-        ((TransformComponent) bodyB.getUserData()).health -= transform.health;
-        transform.health = 0;
+    private void handleDamage(TransformComponent transformA, TransformComponent transformB) {
+        int armor = transformB.stats.reduceDamage;
+        if(armor > transformB.health){
+            transformA.health = 0;
+            deflect_sound.play(settingsComponent.sfxVolume);
+            return;
+        }
+        transformB.health -= transformA.health - armor;
+        if(transformB.health <= 0){
+            tank_sound.play(settingsComponent.sfxVolume);
+        }else{
+            deflect_sound.play(settingsComponent.sfxVolume);
+        }
+        transformA.health = 0;
     }
 
     private void handleSpeedBoost(boolean roadOrBush, TransformComponent transform, boolean apply) {

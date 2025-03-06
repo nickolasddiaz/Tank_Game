@@ -2,6 +2,7 @@ package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.Gdx;
 import io.github.nickolasddiaz.components.BulletComponent;
 import io.github.nickolasddiaz.components.ChunkComponent;
 import io.github.nickolasddiaz.components.TransformComponent;
@@ -29,14 +30,13 @@ public class BulletSystem extends IteratingSystem {
 
         // Check if bullet still exists
         if (transform.body == null) {
-            engine.removeEntity(entity);
+            transform.health = 0;
             return;
         }
 
         // Check if bullet is out of bounds
         if (!chunk.mapChunks.containsKey(chunk.getChunkPosition(transform.getPosition()))) {
-            transform.dispose();
-            engine.removeEntity(entity);
+            transform.health = 0;
             return;
         }
 

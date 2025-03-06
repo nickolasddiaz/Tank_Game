@@ -5,6 +5,11 @@ import com.badlogic.gdx.graphics.Color;
 import java.util.Random;
 
 public final class CollisionCategory {
+    public static final String GAME_SETTINGS = "game_settings";
+    public static final String SCORE_NAME = "game_leaderboard";
+    public static final String SCORES_KEY = "player_scores";
+    public static final String PLAYER_NAME = "player_name";
+
     public static final short HORIZONTAL_ROAD = 0x1;
     public static final short VERTICAL_ROAD =   0x1 << 1;
     public static final short STRUCTURE =       0x1 << 2;
@@ -69,9 +74,26 @@ public final class CollisionCategory {
         }
     }
     public static Color teamColor(boolean team){
-        return team ? new Color(0xc7fc92ff) : new Color(0xfaab8eff);
+        return team ? Color.FOREST : Color.FIREBRICK;
     }
-    public static int tankType(Random random){
-        return random.nextInt(14);
+    public static String Type(Random random, short category){
+        switch (category){
+            case ENEMY: case PLAYER: case ALLY:
+                return "" + random.nextInt(14);
+            case P_BULLET: case E_BULLET:
+                //return "bullet" + random.nextInt(10);
+                return "bullet";
+            case P_MISSILE: case E_MISSILE:
+                return "missile" + random.nextInt(6);
+            case P_MINE: case E_MINE:
+                return "mine" + random.nextInt(3);
+            case CAR:
+                return "car" + random.nextInt(20);
+            default: return "";
+        }
+    }
+    public static float getEnemySpawnRate(float stars){ //Power Law Decay for spawn rate in seconds, https://desmos.com/calculator/zgbmhyxujn
+        return Math.max(0.2f, 6f / (float) Math.pow(stars + 1, 0.3));
+
     }
 }

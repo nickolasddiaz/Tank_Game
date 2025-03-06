@@ -1,6 +1,6 @@
-# Tank Game
+# [Tank Game](https://github.com/nickolasddiaz/Tank_Game)
 
-A top-down shooter game built with LibGDX using box2d and Java featuring procedurally generated terrain, multiple biomes, and dynamic combat mechanics. Players aim to survive while maximizing their score in an infinite world filled with various enemies, powerups, and strategic challenges. Currently in development.
+A top-down shooter game built with LibGDX using box2d and Java featuring procedurally generated terrain, multiple biomes, and dynamic combat mechanics. Players aim to survive while maximizing their score in an infinite world filled with various enemies, power-ups, and strategic challenges..
 
 <p align="center">
     <img src="https://github.com/user-attachments/assets/1a796f92-9b00-48e9-a382-faf3afe9fafd">
@@ -25,8 +25,7 @@ A top-down shooter game built with LibGDX using box2d and Java featuring procedu
 #### Entities
 - Player-controlled tanks
 - Cars
-- Allied units
-- Enemy units
+- Enemy/Allied units controlled through ai pathfinding
 
 #### Combat System
 - Three weapon types:
@@ -36,12 +35,11 @@ A top-down shooter game built with LibGDX using box2d and Java featuring procedu
 - Strategic combat with various attack patterns
 - Dynamic difficulty scaling
 
-#### Powerup System
+#### Power-up System
 Combat Enhancements:
 - Increased bullet damage, size, and speed
 - Critical hit chances and damage multipliers
 - Fire rate improvements
-- Explosive damage boost
 
 Survival Mechanics:
 - Health regeneration
@@ -51,22 +49,19 @@ Survival Mechanics:
 
 Special Abilities:
 - Multi-directional shooting
-- Structure destruction capability
-- Environment manipulation
-- Freeze and burn effects
+- Structures destruction
 
 Score Mechanics:
 - Point multipliers
 - Wanted level system
-- High score tracking
-- Online leaderboards
+- High score tracking through a leaderboard
 
 ### Controls
 
 #### Desktop
 - WASD: Movement
 - Mouse Click: Shoot
-- P or Spacebar: Pause game
+- P or Space-bar: Pause game
 
 #### Mobile
 - Virtual joystick for movement
@@ -77,7 +72,7 @@ Score Mechanics:
 - Cross-platform compatibility (Desktop and Web)
 - Mobile-optimized controls
 - Debug mode for testing
-- Persistent leaderboard system
+- Leaderboard system
 
 ## Credits
 - Developed by Nickolas Diaz

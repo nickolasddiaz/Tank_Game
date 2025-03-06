@@ -43,8 +43,7 @@ public class EnemySystem extends IteratingSystem {
         // Check if enemy is in valid chunk and alive
         Vector2 chunkPosition = chunk.getChunkPosition(transform.getPosition());
         if (!chunk.mapChunks.containsKey(chunkPosition) || transform.health <= 0) {
-            transform.dispose();
-            engine.removeEntity(entity);
+            transform.health = 0;
             return;
         }
 
@@ -75,7 +74,8 @@ public class EnemySystem extends IteratingSystem {
     }
     private void end(EnemyComponent enemyComponent, TransformComponent transform, float deltaTime) {
         enemyComponent.stats.health = transform.health;
-        transform.velocity = enemyComponent.stats.emulate(deltaTime, transform.getPosition(), transform.turretRotation, transform.velocity, true);
+        transform.velocity = enemyComponent.stats.emulate(deltaTime, transform.getPosition(), transform.turretRotation, transform.velocity,
+            (Math.abs(player.getPosition().dst(transform.getPosition())) < chunkSize/3f));
         transform.health = enemyComponent.stats.health;
     }
 
@@ -162,26 +162,51 @@ public class EnemySystem extends IteratingSystem {
     }
 
     private void moveEnemy(TransformComponent transform, EnemyComponent enemyComponent, float deltaTime) {
-        Vector2 direction = new Vector2(enemyComponent.nextPathWorld).sub(transform.getPosition()).nor();
+        // Get current position and target position
+        Vector2 currentPos = transform.getPosition();
+        Vector2 targetPos = new Vector2(enemyComponent.nextPathWorld);
 
-        // Calculate target angle
-        float targetAngle = direction.angleDeg();
-        float angleDifference = ((targetAngle - transform.rotation + 540) % 360) - 180;
+        // Only change direction if we're not too close to the target
+        float distanceToTarget = currentPos.dst(targetPos);
+        if (distanceToTarget > 0.5f) { // Adjust this threshold as needed
+            // To Calculate direction vector to the target
+            Vector2 direction = new Vector2(targetPos).sub(currentPos).nor();
 
-        // Apply rotation
-        if (Math.abs(angleDifference) > 5) {
-            float turnSpeed = Math.min(enemyComponent.stats.spinSpeed * deltaTime, Math.abs(angleDifference) * 0.5f);
-            transform.rotation += Math.signum(angleDifference) * turnSpeed;
-        } else {
-            transform.rotation = targetAngle;
+            // Calculate target angle in degrees
+            float targetAngle = direction.angleDeg();
+
+            // Current rotation in degrees
+            float currentRotation = transform.rotation;
+
+            // Calculate the shortest angle difference (between -180 and 180)
+            float angleDifference = ((targetAngle - currentRotation + 180) % 360) - 180;
+
+            // Apply rotation with smoothing and dampening
+            float turnSpeed = enemyComponent.stats.spinSpeed;
+
+            // Gradually reduce turning speed as we get closer to the target angle
+            float turnFactor = Math.min(1.0f, Math.abs(angleDifference) / 45.0f);
+            float actualTurnSpeed = turnSpeed * turnFactor * deltaTime;
+
+            // Apply rotation with a minimum threshold to avoid micro-adjustments
+            if (Math.abs(angleDifference) > 1.0f) {
+                transform.rotation += Math.signum(angleDifference) * actualTurnSpeed;
+            } else {
+                transform.rotation = targetAngle; // Snap to exact angle when very close
+            }
+
+            // Normalize rotation to 0-360 range
+            transform.rotation = (transform.rotation + 360) % 360;
         }
-        transform.rotation = (transform.rotation + 360) % 360;
 
-        // Apply movement velocity
+        // Apply forward movement in the direction the entity is facing
+        float angleInRadians = (float) Math.toRadians(transform.rotation);
         transform.velocity = new Vector2(
-            (float) Math.cos(transform.rotation) * enemyComponent.stats.speed,
-            (float) Math.sin(transform.rotation) * enemyComponent.stats.speed
+            (float) Math.cos(angleInRadians) * enemyComponent.stats.speed,
+            (float) Math.sin(angleInRadians) * enemyComponent.stats.speed
         );
+        if(Math.abs(player.getPosition().dst(transform.getPosition())) > chunkSize/2f)
+            transform.velocity.scl(4);
     }
 
     private static class ManhattanDistance implements Heuristic<GraphNode> {

@@ -31,13 +31,18 @@ public class PowerUpScreen extends InputAdapter implements Screen {
     private final ImageTextButton reRollButton;
     private final Random random;
 
+    private float widthUnit;
+    private float heightUnit;
+    private float fontScaleLarge;
+    private float fontScaleMedium;
+
     // Enum for all possible upgrades with rarity
     public enum UpgradeType {
         // Player Attributes
         REGENERATION(Rarity.SILVER, "Regeneration", "Increases health regeneration"),
         SPEED(Rarity.BRONZE, "Speed Boost", "Increases player movement speed"),
         HEALTH_INCREASE(Rarity.BRONZE, "Health Boost", "multiplies and adds your current health"),
-        ALLY_SPAWNER(Rarity.GOLD, "Ally Spawner", "Spawns friendly allies more rappidly"),
+        ALLY_SPAWNER(Rarity.GOLD, "Ally Spawner", "Spawns friendly allies more rapidly"),
         EXTRA_SHOT(Rarity.GOLD, "Extra Shot", "Adds an additional bullet per shot"),
         BACK_SHOTS(Rarity.SILVER, "Back Shots", "Shoots additional bullets behind"),
         BETTER_ARMOR(Rarity.GOLD, "Improved Armor", "Reduces damage taken upon being hit"),
@@ -55,8 +60,8 @@ public class PowerUpScreen extends InputAdapter implements Screen {
         MINE(Rarity.JADE, "Mine Rate", "Gain the ability to drop mines"),
 
         // Special Effects
-        FREEZE_SHOT(Rarity.SILVER, "Freeze Shot", "Temporarily freezes enemies"),
-        BURN_DAMAGE(Rarity.BRONZE, "Burn Damage", "Adds burning damage over time"),
+        //FREEZE_SHOT(Rarity.SILVER, "Freeze Shot", "Temporarily freezes enemies"),
+        //BURN_DAMAGE(Rarity.BRONZE, "Burn Damage", "Adds burning damage over time"),
         EXPLOSIVE_INCREASE(Rarity.GOLD, "Explosive Power", "Increases explosion damage and radius"),
         POINT_MULTIPLIER(Rarity.GOLD, "Point Boost", "Increases points earned"),
         DECREASE_WANTED_LEVEL(Rarity.BRONZE, "Reduce Star Level", "Reduces enemy aggression"),
@@ -111,18 +116,23 @@ public class PowerUpScreen extends InputAdapter implements Screen {
         this.random = random;
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
-
         rollNumber = game.statsComponent.reRollNumber;
+
+        // Calculate responsive scaling factors
+        updateScalingFactors();
 
         // Initial upgrade selection
         selectUpgrades();
 
         // Re-roll button setup
         reRollButton = new ImageTextButton("Re-roll: " + rollNumber, game.skin, "re-roll");
-        reRollButton.setPosition(10, 0); // Bottom left position
+        reRollButton.getLabel().setFontScale(fontScaleMedium);
+        reRollButton.setPosition(widthUnit, heightUnit / 2); // Bottom left with padding
+        reRollButton.setSize(widthUnit * 4, heightUnit * 3);
         reRollButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                game.ui_sound();
                 if (rollNumber > 0) {
                     rollNumber--;
                     selectUpgrades();
@@ -132,6 +142,22 @@ public class PowerUpScreen extends InputAdapter implements Screen {
         });
 
         stage.addActor(reRollButton);
+    }
+
+    private void updateScalingFactors() {
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
+
+        // Base scale on the smaller dimension for consistency
+        // Responsive scaling factors
+
+        // Define units for responsive layout
+        widthUnit = screenWidth / 20f;
+        heightUnit = screenHeight / 20f;
+
+        // Font scales adjusted for different device sizes
+        fontScaleLarge = Math.max(0.6f, Math.min(1.5f, screenWidth / 800f));
+        fontScaleMedium = Math.max(0.5f, Math.min(1.2f, screenWidth / 900f));
     }
 
     private void selectUpgrades() {
@@ -199,38 +225,48 @@ public class PowerUpScreen extends InputAdapter implements Screen {
             threeXMulti = random.nextFloat() < 0.1f * game.statsComponent.luck/100;
 
         button = new Table();
-        button.setWidth(190); // Reduced width
-        button.setHeight(320); // Set a fixed height
-        button.pad(10); // Add padding
+
+        // Set responsive size for the button
+        float buttonWidth = widthUnit * 6;
+        float buttonHeight = heightUnit * 12;
+
+        button.setWidth(buttonWidth);
+        button.setHeight(buttonHeight);
+        button.pad(widthUnit * 0.5f);
 
         // Background and hover effect
         button.setBackground(game.skin.getDrawable("poweruppage"));
 
+        // Responsive text components
         Label label = new Label(upgrade.getName() + (threeXMulti ? " (x3)" : ""), game.skin, "title");
-        label.setFontScale(0.5f);
+        label.setFontScale(fontScaleLarge);
         label.setWrap(true);
-        button.add(label).expandX().fillX().center().padBottom(10);
+        button.add(label).expandX().fillX().center().padBottom(heightUnit * 0.5f);
 
         button.row();
         Label descLabel = new Label(upgrade.getDescription(), game.skin);
-        descLabel.setFontScale(0.8f);
+        descLabel.setFontScale(fontScaleMedium);
         descLabel.setWrap(true);
-        button.add(descLabel).expandX().fillX().center().padBottom(10);
+        button.add(descLabel).expandX().fillX().center().padBottom(heightUnit * 0.5f);
 
         button.row();
         Image image = new Image(game.skin.getDrawable(upgrade.getName()));
         image.setColor(getRarityStyle((threeXMulti ? upgrade.getUpgradedRarity() : upgrade.getRarity())));
-        button.add(image).size(120).center(); // Fixed image size
 
-        // Calculate button positioning
+        // Responsive image size
+        float imageSize = Math.min(buttonWidth * 0.7f, buttonHeight * 0.4f);
+        button.add(image).size(imageSize).center().padTop(heightUnit * 0.5f);
+
+        // Calculate button positioning - evenly spaced across screen
         float screenWidth = Gdx.graphics.getWidth();
-        float buttonWidth = 200;
-        float spacing = (screenWidth - (3 * buttonWidth)) / 4;
+        float totalButtonWidth = buttonWidth * 3;
+        float availableSpace = screenWidth - totalButtonWidth;
+        float spacing = availableSpace / 4; // 4 spaces (edges + between buttons)
 
-        button.setPosition(
-            spacing + (index * (buttonWidth + spacing)) + 10,
-            Gdx.graphics.getHeight() / 2f - 150 // Adjusted to center vertically
-        );
+        float posX = spacing + (index * (buttonWidth + spacing));
+        float posY = (Gdx.graphics.getHeight() - buttonHeight) / 2; // Center vertically
+
+        button.setPosition(posX, posY);
 
         // Hover effect
         Table finalButton = button;
@@ -238,6 +274,7 @@ public class PowerUpScreen extends InputAdapter implements Screen {
         button.addListener(new InputListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                game.ui_sound();
                 changed(upgrade, finalThreeXMulti);
                 return true;
             }
@@ -262,6 +299,7 @@ public class PowerUpScreen extends InputAdapter implements Screen {
             case 2: option3 = button; break;
         }
     }
+
     private void changed(UpgradeType upgrade, boolean finalThreeXMulti) {
         game.settings.paused = false;
         applyUpgrade(upgrade, (finalThreeXMulti ? 3 : 1));
@@ -277,24 +315,25 @@ public class PowerUpScreen extends InputAdapter implements Screen {
             default: return new Color(0xebccadFF); // BRONZE
         }
     }
+
     private void applyUpgrade(UpgradeType upgrade, int multiplier) {
         switch (upgrade) {
             case REGENERATION: game.playerComponent.stats.regeneration += multiplier;break;
-            case SPEED: game.playerComponent.stats.speed += itemSize * 10f * multiplier;break;
+            case SPEED: game.playerComponent.stats.speed += 1.2f * multiplier; break;
             case HEALTH_INCREASE: game.statsComponent.addHealthLevel(15 * multiplier);break;
-            case ALLY_SPAWNER: game.playerComponent.stats.allySpawnerRate /= 1.4f * multiplier;break;
+            case ALLY_SPAWNER: game.playerComponent.stats.allySpawnerRate /= 1.2f * multiplier; game.playerComponent.stats.canSpawnAlly = true; break;
             case EXTRA_SHOT: game.playerComponent.stats.amountOfBullets += multiplier;break;
             case BACK_SHOTS: game.playerComponent.stats.backShotsAmount += multiplier;break;
             case BETTER_ARMOR: game.playerComponent.stats.reduceDamage += multiplier;break;
             case LUCK: game.statsComponent.luck += multiplier;break;
-            case BULLET_SPEED: game.playerComponent.stats.bulletSpeed += 2f * itemSize * multiplier;break;
+            case BULLET_SPEED: game.playerComponent.stats.bulletSpeed *= 1.2f * multiplier;break;
             case BULLET_DAMAGE: game.playerComponent.stats.bulletDamage += 2 * multiplier;break;
             case BULLET_SIZE: game.playerComponent.stats.bulletSize += 0.4f * multiplier;break;
             case FIRE_RATE: game.playerComponent.stats.fireRate *= 0.8f * multiplier;break;
             case CRITICAL_DAMAGE: game.playerComponent.stats.criticalDamageMultiplier += .5f * multiplier;break;
             case CRITICAL_CHANCE: game.playerComponent.stats.criticalChance += 0.25f * multiplier;break;
-            case FREEZE_SHOT: game.playerComponent.stats.freezeDuration += 0.5f * multiplier;break;
-            case BURN_DAMAGE: game.playerComponent.stats.burnDuration += 2 *multiplier;break;
+            //case FREEZE_SHOT: game.playerComponent.stats.freezeDuration += 0.5f * multiplier;break;
+            //case BURN_DAMAGE: game.playerComponent.stats.burnDuration += 2 *multiplier;break;
             case EXPLOSIVE_INCREASE: game.playerComponent.stats.explosiveRadiusAndDamage += multiplier;break;
             case POINT_MULTIPLIER: game.statsComponent.pointMultiplier += 0.4f * multiplier;break;
             case DECREASE_WANTED_LEVEL: game.statsComponent.addStarLevel(-multiplier*3);break;
@@ -304,7 +343,7 @@ public class PowerUpScreen extends InputAdapter implements Screen {
             case MINE: game.playerComponent.stats.CanShootMine = true; game.playerComponent.stats.mineRate *= .7f * multiplier; break;
             case ALL_AROUND:
                 game.playerComponent.stats.regeneration += multiplier;
-                game.playerComponent.stats.speed += itemSize * 10f * multiplier;
+                game.playerComponent.stats.speed += 1.2f * multiplier;
                 game.statsComponent.addHealthLevel(15 * multiplier);
                 game.playerComponent.stats.bulletSpeed += 2f * itemSize * multiplier;
                 game.playerComponent.stats.bulletDamage += 2 * multiplier;
@@ -319,14 +358,27 @@ public class PowerUpScreen extends InputAdapter implements Screen {
 
     @Override
     public void render(float delta) {
+        game.updateChunk(delta);
         stage.act(delta);
         stage.draw();
-        game.updateChunk(delta);
     }
 
     @Override
     public void resize(int width, int height) {
+        game.stageViewport.update(width, height, true);
         stage.getViewport().update(width, height, true);
+        Gdx.input.setInputProcessor(stage);
+
+        // Update scaling factors when screen is resized
+        updateScalingFactors();
+
+        // Reposition and resize UI elements
+        reRollButton.setPosition(widthUnit, heightUnit / 2);
+        reRollButton.setSize(widthUnit * 4, heightUnit * 3);
+        reRollButton.getLabel().setFontScale(fontScaleMedium);
+
+        // Re-select upgrades to update their sizes and positions
+        selectUpgrades();
     }
 
     @Override

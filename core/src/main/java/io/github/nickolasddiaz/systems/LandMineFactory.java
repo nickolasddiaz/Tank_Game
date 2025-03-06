@@ -10,9 +10,8 @@ import io.github.nickolasddiaz.components.TransformComponent;
 
 import java.util.Random;
 
-import static io.github.nickolasddiaz.utils.CollisionCategory.E_MINE;
-import static io.github.nickolasddiaz.utils.CollisionCategory.P_MINE;
-import static io.github.nickolasddiaz.utils.CollisionCategory.teamColor;
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
+import static io.github.nickolasddiaz.utils.CollisionCategory.P_BULLET;
 import static io.github.nickolasddiaz.utils.MapGenerator.itemSize;
 
 public class LandMineFactory {
@@ -36,7 +35,7 @@ public class LandMineFactory {
 
         TransformComponent transform = new TransformComponent(
             world,
-            skin.getSprite("mine" + (random.nextInt(3) + 1)), // Random mine sprite from 1 to 3
+            skin.getSprite(Type(random, P_MINE)), // Random mine sprite from 1 to 3
             itemSize,
             itemSize,
             teamColor(team),
@@ -46,6 +45,7 @@ public class LandMineFactory {
             0,
             damage
         );
+        transform.timeToLive = 50f; //set mine time to live
         landMine.add(transform);
 
         LandMineComponent landMineComponent = new LandMineComponent(damage);

@@ -8,6 +8,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 
+import java.util.ArrayList;
+
 public class LeaderboardScreen implements Screen {
     private final yourgame game;
     private final Stage stage;
@@ -43,26 +45,46 @@ public class LeaderboardScreen implements Screen {
 
         rootTable.add(scrollPane).expand().fill().pad(20).row();
 
-        // Player data
-        String[] players = {"Player 1", "Player 2", "Player 3", "Player 4", "Player 5",
-            "Player 6", "Player 7", "Player 8", "Player 9", "Player 10", "Player 11"};
-        int[] scores = {1000, 850, 750, 600, 500, 450, 400, 350, 300, 250, 200};
+        // Add header row
+        Label rankHeaderLabel = new Label("Rank", game.skin);
+        Label playerHeaderLabel = new Label("Player", game.skin);
+        Label scoreHeaderLabel = new Label("Score", game.skin);
+
+        leaderboardTable.add(rankHeaderLabel).padRight(10).width(50).align(Align.left);
+        leaderboardTable.add(playerHeaderLabel).expandX().align(Align.left).padRight(20);
+        leaderboardTable.add(scoreHeaderLabel).align(Align.right).width(100).row();
+
+        // Add separator row
+        //leaderboardTable.add(new Image(game.skin.getDrawable("default-horizontal"))).colspan(3).fillX().padBottom(5).padTop(5).row();
+
+        // Load player scores from preferences
+        ArrayList<DeathScreen.PlayerScore> playerScores = DeathScreen.getScoresFromPreferences();
 
         // Add player leaderboard entries
-        for (int i = 0; i < players.length; i++) {
-            Label rankLabel = new Label((i + 1) + ".", game.skin);
-            Label playerLabel = new Label(players[i], game.skin);
-            Label scoreLabel = new Label(String.valueOf(scores[i]), game.skin);
+        if (playerScores.isEmpty()) {
+            // If no scores are saved yet, show a message
+            Label noScoresLabel = new Label("No scores yet. Play the game to set records!", game.skin);
+            leaderboardTable.add(noScoresLabel).colspan(3).padTop(20).row();
+        } else {
+            // Add all player scores
+            for (int i = 0; i < playerScores.size(); i++) {
+                DeathScreen.PlayerScore playerScore = playerScores.get(i);
 
-            leaderboardTable.add(rankLabel).padRight(10).width(50).align(Align.left);
-            leaderboardTable.add(playerLabel).expandX().align(Align.left).padRight(20);
-            leaderboardTable.add(scoreLabel).align(Align.right).width(100).row();
+                Label rankLabel = new Label((i + 1) + ".", game.skin);
+                Label playerLabel = new Label(playerScore.name, game.skin);
+                Label scoreLabel = new Label(String.valueOf(playerScore.score), game.skin);
+
+                leaderboardTable.add(rankLabel).padRight(10).width(50).align(Align.left);
+                leaderboardTable.add(playerLabel).expandX().align(Align.left).padRight(20);
+                leaderboardTable.add(scoreLabel).align(Align.right).width(100).row();
+            }
         }
 
         // Back button functionality
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                game.ui_sound();
                 game.setScreen(new MainMenuScreen(game));
                 dispose();
             }
@@ -85,8 +107,9 @@ public class LeaderboardScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        game.viewport.update(width, height, true);
+        game.stageViewport.update(width, height, true);
         stage.getViewport().update(width, height, true);
+        Gdx.input.setInputProcessor(stage);
     }
 
     @Override

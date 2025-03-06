@@ -31,7 +31,6 @@ public class StatsRenderSystem extends EntitySystem {
         settingsComponent = settingsMapper.get(player);
 
         stage = new Stage();
-        Gdx.input.setInputProcessor(stage);
 
         float iconSize = Gdx.graphics.getWidth() / 30f;
 
@@ -59,10 +58,13 @@ public class StatsRenderSystem extends EntitySystem {
         float padding = Gdx.graphics.getWidth() / 40f;
         float yOffset = Gdx.graphics.getHeight() - iconSize - 2 * padding;
 
+        float textSize = Gdx.graphics.getWidth() / 600f;
+
         // Create and position score label
-        statsComponent.scoreLabel = new Label("Score:\n0P", skin);
+        statsComponent.scoreLabel = new Label("Score:\n0", skin);
         statsComponent.scoreLabel.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 8f);
         statsComponent.scoreLabel.setPosition(padding, yOffset);
+        statsComponent.scoreLabel.setFontScale(textSize);
         stage.addActor(statsComponent.scoreLabel);
 
         // Calculate starting x position after score label
@@ -84,6 +86,7 @@ public class StatsRenderSystem extends EntitySystem {
         statsComponent.healthLabel = new Label("0H", skin);
         statsComponent.healthLabel.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 8f);
         statsComponent.healthLabel.setPosition(currentX, yOffset);
+        statsComponent.healthLabel.setFontScale(textSize);
         stage.addActor(statsComponent.healthLabel);
 
         // Position star images after health label
@@ -97,10 +100,11 @@ public class StatsRenderSystem extends EntitySystem {
         statsComponent.starsLabel = new Label("0S", skin);
         statsComponent.starsLabel.setSize(Gdx.graphics.getWidth() / 10f, Gdx.graphics.getHeight() / 8f);
         statsComponent.starsLabel.setPosition(currentX, yOffset);
+        statsComponent.starsLabel.setFontScale(textSize);
         stage.addActor(statsComponent.starsLabel);
 
-        statsComponent.addHealthLevel(3);
-        //statsComponent.addStarLevel(21);
+        statsComponent.addHealthLevel(0);
+        statsComponent.addStarLevel(0);// make sure it loads properly
     }
 
     @Override
@@ -109,7 +113,9 @@ public class StatsRenderSystem extends EntitySystem {
             statsComponent.setHealthLevel((int) statsComponent.player.health);
         }
 
-        stage.act(deltaTime);
-        stage.draw();
+        if(settingsComponent.is_Playing) {
+            stage.act(deltaTime);
+            stage.draw();
+        }
     }
 }

@@ -3,6 +3,7 @@ package io.github.nickolasddiaz;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -15,13 +16,15 @@ public class MainMenuScreen implements Screen {
     final yourgame game;
     private final Stage stage;
 
-
     public MainMenuScreen(final yourgame game) {
+        game.settings.is_Playing = false;
         float buttonHeight = Gdx.graphics.getHeight() / 10f;
         float buttonWidth = Gdx.graphics.getWidth() / 2f;
         float buttonSpacing = Gdx.graphics.getHeight() / 15f + buttonHeight;
         float buttonInitialY = Gdx.graphics.getHeight() / 2.2f - 2.5f * buttonHeight;
         float buttonInitialX = Gdx.graphics.getWidth() / 2f - buttonWidth / 2f;
+        float titleSize = Gdx.graphics.getWidth() / 400f;
+        float textSize = Gdx.graphics.getWidth() / 1000f;
 
         this.game = game;
         stage = new Stage();
@@ -35,7 +38,12 @@ public class MainMenuScreen implements Screen {
         titleLabel.setStyle(game.skin.get("title", Label.LabelStyle.class));
 
         titleLabel.setAlignment(1);
-        titleLabel.setFontScale(2);
+        titleLabel.setFontScale(titleSize);
+        startButton.getLabel().setFontScale(textSize);
+        optionsButton.getLabel().setFontScale(textSize);
+        leaderboardButton.getLabel().setFontScale(textSize);
+        aboutButton.getLabel().setFontScale(textSize);
+
         titleLabel.setSize(buttonWidth, buttonHeight);
         startButton.setSize(buttonWidth, buttonHeight);
         optionsButton.setSize(buttonWidth, buttonHeight);
@@ -58,6 +66,7 @@ public class MainMenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new GameScreen(game));
+                game.ui_sound();
                 dispose();
             }
         });
@@ -65,6 +74,7 @@ public class MainMenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new OptionsScreen(game, true));
+                game.ui_sound();
                 dispose();
             }
         });
@@ -73,6 +83,7 @@ public class MainMenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new LeaderboardScreen(game));
+                game.ui_sound();
                 dispose();
             }
         });
@@ -81,6 +92,7 @@ public class MainMenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new AboutScreen(game));
+                game.ui_sound();
                 dispose();
             }
         });

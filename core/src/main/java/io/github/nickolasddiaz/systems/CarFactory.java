@@ -9,8 +9,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.nickolasddiaz.components.*;
 
-import static io.github.nickolasddiaz.utils.CollisionCategory.CAR;
-import static io.github.nickolasddiaz.utils.CollisionCategory.HORIZONTAL_ROAD;
+import static io.github.nickolasddiaz.utils.CollisionCategory.*;
 import static io.github.nickolasddiaz.utils.MapGenerator.*;
 
 public class CarFactory {
@@ -18,15 +17,14 @@ public class CarFactory {
     private final Skin skin;
     CameraComponent cameraComponent;
     ChunkComponent chunkComponent;
-    Color[] carColors = new Color[]{Color.BLUE, Color.GREEN, Color.PURPLE, Color.YELLOW, Color.CHARTREUSE, Color.PINK, Color.WHITE, Color.GRAY, Color.RED, Color.ORANGE, Color.CYAN, Color.MAGENTA, Color.BROWN, Color.TEAL, Color.OLIVE, Color.SKY, Color.LIME, Color.MAROON, Color.NAVY, Color.TEAL, Color.TEAL, Color.VIOLET, Color.FOREST, Color.SALMON, Color.TAN,  Color.MAROON, Color.NAVY, Color.TEAL, Color.TEAL, Color.VIOLET, Color.FOREST, Color.SALMON, Color.TAN};
-
+    Color[] carColors = new Color[]{Color.BLUE, Color.GREEN, Color.PURPLE, Color.YELLOW, Color.CHARTREUSE, Color.PINK, Color.WHITE, Color.RED, Color.ORANGE, Color.CYAN, Color.MAGENTA, Color.BROWN, Color.GRAY, Color.VIOLET, Color.TAN};
     public CarFactory(Engine engine, Skin skin, CameraComponent cameraComponent, ChunkComponent chunkComponent) {
         this.engine = engine;
         this.skin = skin;
         this.cameraComponent = cameraComponent;
         this.chunkComponent = chunkComponent;
     }
-    public Entity createTank(TransformComponent transform){
+    public Entity createTank(TransformComponent transform) {
         Entity tank = engine.createEntity();
         CarComponent carComponent;
 
@@ -65,9 +63,9 @@ public class CarFactory {
         // Create transform component with Box2D body
         TransformComponent transformComponent = new TransformComponent(
             chunkComponent.world,
-            skin.getSprite("car"),
+            skin.getSprite(Type(chunkComponent.random, CAR)),
             (int) (itemSize * 1.80f),
-            (int) (itemSize * .78f),
+            (int) (itemSize * .90f),
             carColors[chunkComponent.random.nextInt(carColors.length)],
             true,  // isDynamic
             CAR,
