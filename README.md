@@ -1,6 +1,7 @@
 # [Tank Game](https://github.com/nickolasddiaz/Tank_Game)
 
-A top-down shooter game built with LibGDX using box2d and Java featuring procedurally generated terrain, multiple biomes, and dynamic combat mechanics. Players aim to survive while maximizing their score in an infinite world filled with various enemies, power-ups, and strategic challenges..
+A top-down shooter game built with LibGDX using box2d and Java featuring procedurally generated terrain, multiple biomes, and dynamic combat mechanics. Players aim to survive while maximizing their score in an infinite world filled with various enemies, power-ups, and strategic challenges.
+[Game Link](https://nickolasddiaz.github.io/Tank_Game/)
 
 <p align="center">
     <img src="https://github.com/user-attachments/assets/1a796f92-9b00-48e9-a382-faf3afe9fafd">
