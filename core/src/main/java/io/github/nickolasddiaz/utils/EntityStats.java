@@ -34,7 +34,7 @@ public class EntityStats{
     public float criticalChance = 0.1f;
     public int backShotsAmount = 0;
     public boolean CanDestroy = false;
-    public boolean CanShootMissile = true;
+    public boolean CanShootMissile = false;
     public float missileRate = 4f;
     public boolean CanShootMine = false;
     public float mineRate = 5f;
