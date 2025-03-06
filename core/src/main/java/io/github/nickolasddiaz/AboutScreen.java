@@ -88,26 +88,6 @@ public class AboutScreen implements Screen {
             }
         });
 
-        TypingButton playGameButton = new TypingButton("Game Website", game.skin);
-        playGameButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.ui_sound();
-                Gdx.net.openURI("https://locationofthegame");
-            }
-        });
-        playGameButton.addListener(new InputListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                playGameButton.setText("[/]Game Website");
-            }
-
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                playGameButton.setText("Game Website");
-            }
-        });
-
         // Credits Button
         ImageTextButton creditsButton = new ImageTextButton("Artwork Used", game.skin);
         creditsButton.addListener(new ClickListener() {
@@ -135,7 +115,6 @@ public class AboutScreen implements Screen {
         table.add(descriptionLabel).padBottom(10).row();
         table.add(websiteButton).padBottom(10).row();
         table.add(githubButton).padBottom(10).row();
-        table.add(playGameButton).padBottom(20).row();
         creditsButton.getLabel().setFontScale(Gdx.graphics.getWidth() / 1000f);
         table.add(creditsButton).padTop(20).size(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 10f).row();
         backButton.getLabel().setFontScale(Gdx.graphics.getWidth() / 1000f);

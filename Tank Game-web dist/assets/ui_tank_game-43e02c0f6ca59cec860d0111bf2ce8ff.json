@@ -1,0 +1,152 @@
+{
+com.badlogic.gdx.graphics.g2d.BitmapFont: {
+	chunq: {
+		file: ouLiJS4iu4ylyojldWZspG21.ttf.fnt
+		scaledSize: -1
+		markupEnabled: false
+		flip: false
+	}
+	inktank: {
+		file: U811sIwHbPWRhkkOdY3XvMr5.ttf.fnt
+		scaledSize: -1
+		markupEnabled: false
+		flip: false
+	}
+}
+com.badlogic.gdx.graphics.Color: {
+	BLACK: {
+		r: 0
+		g: 0
+		b: 0
+		a: 1
+	}
+	GREY: {
+		r: 0.7921569
+		g: 0.7921569
+		b: 0.7921569
+		a: 1
+	}
+	RED: {
+		r: 1
+		g: 0
+		b: 0
+		a: 1
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
+	home_hover: {
+		name: home
+		color: RED
+	}
+	pause_hover: {
+		name: pause
+		color: RED
+	}
+	play_hover: {
+		name: play
+		color: RED
+	}
+	redo_hover: {
+		name: redo
+		color: RED
+	}
+	silver_rectangle_hover: {
+		name: silver_rectangle
+		color: RED
+	}
+	powerupbuttonRed: {
+		name: powerupbutton
+		color: RED
+	}
+	poweruppagegrey: {
+		name: poweruppage
+		color: GREY
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.Button$ButtonStyle: {
+	default: {
+		up: home
+		over: home_hover
+		checked: home_hover
+	}
+	redo: {
+		up: redo
+		over: redo_hover
+		checked: redo_hover
+	}
+	pause: {
+		up: pause
+		over: pause_hover
+	}
+	play: {
+		up: play
+		over: play_hover
+		checked: play_hover
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.CheckBox$CheckBoxStyle: {
+	default: {
+		checkboxOn: check_mark
+		checkboxOff: unchecked_mark
+		font: inktank
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.ImageButton$ImageButtonStyle: {
+	default: {
+		up: powerupbutton
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle: {
+	default: {
+		font: inktank
+		up: silver_rectangle
+		over: silver_rectangle_hover
+		checked: silver_rectangle_hover
+	}
+	power-up: {
+		font: inktank
+		up: poweruppage
+		over: poweruppagegrey
+	}
+	re-roll: {
+		font: chunq
+		up: powerupbutton
+		over: powerupbuttonRed
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
+	default: {
+		font: inktank
+	}
+	title: {
+		font: chunq
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.ScrollPane$ScrollPaneStyle: {
+	default: {
+		background: silver_rectangle
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.Slider$SliderStyle: {
+	default-horizontal: {
+		background: slider
+		knob: slide_dot
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
+	default: {
+		font: chunq
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.TextField$TextFieldStyle: {
+	default: {
+		font: inktank
+		fontColor: BLACK
+	}
+}
+com.badlogic.gdx.scenes.scene2d.ui.TextTooltip$TextTooltipStyle: {
+	default: {
+		label: default
+	}
+}
+}

@@ -1,0 +1,741 @@
+
+ui_tank_game.png
+size: 1024, 1024
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+All Around
+  rotate: false
+  xy: 645, 921
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Ally Spawner
+  rotate: false
+  xy: 337, 773
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Back Shots
+  rotate: false
+  xy: 747, 921
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Bullet Damage
+  rotate: false
+  xy: 439, 773
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Bullet Size
+  rotate: false
+  xy: 541, 791
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Bullet Speed
+  rotate: false
+  xy: 178, 136
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Burn Damage
+  rotate: false
+  xy: 337, 671
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Critical Chance
+  rotate: false
+  xy: 439, 671
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Critical Damage
+  rotate: false
+  xy: 541, 689
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Destroy Houses
+  rotate: false
+  xy: 336, 569
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Explosive Power
+  rotate: false
+  xy: 438, 569
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Extra Shot
+  rotate: false
+  xy: 259, 394
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Fire Rate
+  rotate: false
+  xy: 259, 292
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Freeze Shot
+  rotate: false
+  xy: 178, 34
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Health Boost
+  rotate: false
+  xy: 361, 467
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Improved Armor
+  rotate: false
+  xy: 361, 365
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Lucky Charm
+  rotate: false
+  xy: 463, 467
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Mine Rate
+  rotate: false
+  xy: 463, 365
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Missile Rate
+  rotate: false
+  xy: 361, 263
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Point Boost
+  rotate: false
+  xy: 463, 263
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Re-roll
+  rotate: false
+  xy: 849, 819
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Reduce Star Level
+  rotate: false
+  xy: 645, 819
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Regeneration
+  rotate: false
+  xy: 747, 819
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+Speed Boost
+  rotate: false
+  xy: 643, 717
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+U811sIwHbPWRhkkOdY3XvMr5.ttf_0
+  rotate: false
+  xy: 387, 893
+  size: 256, 128
+  orig: 256, 128
+  offset: 0, 0
+  index: -1
+basePlate
+  rotate: false
+  xy: 849, 921
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+bottom_left_heart
+  rotate: false
+  xy: 280, 33
+  size: 24, 27
+  orig: 24, 27
+  offset: 0, 0
+  index: -1
+bottom_right_heart
+  rotate: false
+  xy: 318, 215
+  size: 24, 27
+  orig: 24, 27
+  offset: 0, 0
+  index: -1
+bullet
+  rotate: false
+  xy: 280, 108
+  size: 32, 20
+  orig: 32, 20
+  offset: 0, 0
+  index: -1
+car
+  rotate: false
+  xy: 565, 332
+  size: 60, 26
+  orig: 60, 26
+  offset: 0, 0
+  index: -1
+car0
+  rotate: false
+  xy: 631, 467
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car1
+  rotate: false
+  xy: 565, 300
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car10
+  rotate: false
+  xy: 103, 29
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car11
+  rotate: false
+  xy: 631, 435
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car12
+  rotate: false
+  xy: 951, 925
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car13
+  rotate: false
+  xy: 565, 424
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car14
+  rotate: false
+  xy: 951, 893
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car15
+  rotate: false
+  xy: 565, 392
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car16
+  rotate: false
+  xy: 627, 403
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car17
+  rotate: false
+  xy: 951, 861
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car18
+  rotate: false
+  xy: 565, 360
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car19
+  rotate: false
+  xy: 951, 829
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car2
+  rotate: false
+  xy: 565, 268
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car3
+  rotate: false
+  xy: 951, 797
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car4
+  rotate: false
+  xy: 949, 765
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car5
+  rotate: false
+  xy: 647, 595
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car6
+  rotate: false
+  xy: 647, 563
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car7
+  rotate: false
+  xy: 647, 531
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car8
+  rotate: false
+  xy: 647, 499
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+car9
+  rotate: false
+  xy: 259, 260
+  size: 60, 30
+  orig: 60, 30
+  offset: 0, 0
+  index: -1
+check_mark
+  rotate: false
+  xy: 951, 957
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
+handle
+  rotate: false
+  xy: 541, 604
+  size: 83, 83
+  orig: 83, 83
+  offset: 0, 0
+  index: -1
+handle_background
+  rotate: false
+  xy: 1, 61
+  size: 175, 175
+  orig: 175, 175
+  offset: 0, 0
+  index: -1
+home
+  rotate: false
+  xy: 847, 669
+  size: 88, 88
+  orig: 88, 88
+  offset: 0, 0
+  index: -1
+hull0
+  rotate: false
+  xy: 761, 583
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull1
+  rotate: false
+  xy: 627, 375
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull10
+  rotate: false
+  xy: 565, 240
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull11
+  rotate: false
+  xy: 617, 235
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull12
+  rotate: false
+  xy: 709, 583
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull13
+  rotate: false
+  xy: 709, 555
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull2
+  rotate: false
+  xy: 627, 347
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull3
+  rotate: false
+  xy: 627, 319
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull4
+  rotate: false
+  xy: 627, 291
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull5
+  rotate: false
+  xy: 103, 1
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull6
+  rotate: false
+  xy: 627, 263
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull7
+  rotate: false
+  xy: 949, 737
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull8
+  rotate: false
+  xy: 937, 709
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+hull9
+  rotate: false
+  xy: 937, 681
+  size: 50, 26
+  orig: 50, 26
+  offset: 0, 0
+  index: -1
+left_star
+  rotate: false
+  xy: 336, 527
+  size: 21, 40
+  orig: 21, 40
+  offset: 0, 0
+  index: -1
+mine0
+  rotate: false
+  xy: 540, 586
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+mine1
+  rotate: false
+  xy: 336, 509
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+mine2
+  rotate: false
+  xy: 823, 683
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+missile0
+  rotate: false
+  xy: 1, 696
+  size: 334, 195
+  orig: 334, 195
+  offset: 0, 0
+  index: -1
+missile1
+  rotate: false
+  xy: 1, 2
+  size: 100, 57
+  orig: 100, 57
+  offset: 0, 0
+  index: -1
+missile2
+  rotate: false
+  xy: 745, 761
+  size: 100, 56
+  orig: 100, 56
+  offset: 0, 0
+  index: -1
+missile3
+  rotate: false
+  xy: 847, 759
+  size: 100, 58
+  orig: 100, 58
+  offset: 0, 0
+  index: -1
+missile4
+  rotate: false
+  xy: 745, 701
+  size: 100, 58
+  orig: 100, 58
+  offset: 0, 0
+  index: -1
+missile5
+  rotate: false
+  xy: 1, 496
+  size: 333, 198
+  orig: 333, 198
+  offset: 0, 0
+  index: -1
+ouLiJS4iu4ylyojldWZspG21.ttf_0
+  rotate: false
+  xy: 1, 238
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+pause
+  rotate: false
+  xy: 643, 627
+  size: 88, 88
+  orig: 88, 88
+  offset: 0, 0
+  index: -1
+play
+  rotate: false
+  xy: 733, 611
+  size: 88, 88
+  orig: 88, 88
+  offset: 0, 0
+  index: -1
+powerupbutton
+  rotate: false
+  xy: 565, 522
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
+poweruppage
+  rotate: false
+  xy: 913, 558
+  size: 87, 109
+  orig: 87, 109
+  offset: 0, 0
+  index: -1
+redo
+  rotate: false
+  xy: 823, 579
+  size: 88, 88
+  orig: 88, 88
+  offset: 0, 0
+  index: -1
+right_star
+  rotate: false
+  xy: 318, 173
+  size: 20, 40
+  orig: 20, 40
+  offset: 0, 0
+  index: -1
+silver_rectangle
+  rotate: false
+  xy: 1, 893
+  size: 384, 128
+  orig: 384, 128
+  offset: 0, 0
+  index: -1
+slide_dot
+  rotate: false
+  xy: 280, 130
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+slider
+  rotate: false
+  xy: 337, 875
+  size: 192, 16
+  orig: 192, 16
+  offset: 0, 0
+  index: -1
+top_left_heart
+  rotate: false
+  xy: 280, 85
+  size: 24, 21
+  orig: 24, 21
+  offset: 0, 0
+  index: -1
+top_right_heart
+  rotate: false
+  xy: 280, 62
+  size: 24, 21
+  orig: 24, 21
+  offset: 0, 0
+  index: -1
+turret0
+  rotate: false
+  xy: 280, 164
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret1
+  rotate: false
+  xy: 321, 276
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret10
+  rotate: false
+  xy: 280, 228
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret11
+  rotate: false
+  xy: 280, 212
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret12
+  rotate: false
+  xy: 280, 196
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret13
+  rotate: false
+  xy: 280, 180
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret2
+  rotate: false
+  xy: 259, 244
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret3
+  rotate: false
+  xy: 709, 539
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret4
+  rotate: false
+  xy: 761, 567
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret5
+  rotate: false
+  xy: 321, 260
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret6
+  rotate: false
+  xy: 297, 244
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret7
+  rotate: false
+  xy: 709, 523
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret8
+  rotate: false
+  xy: 709, 507
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+turret9
+  rotate: false
+  xy: 761, 551
+  size: 36, 14
+  orig: 36, 14
+  offset: 0, 0
+  index: -1
+unchecked_mark
+  rotate: false
+  xy: 565, 456
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
