@@ -19,7 +19,7 @@ A top-down shooter game built with LibGDX using box2d and Java featuring procedu
     - Wild West
     - Desert
 - Unique structures and obstacles for each biome
-- Road networks and building placement using Wave Function Collapse algorithm
+- Road networks and building placement using Wave Function Collapse algorithm inspired by [sea5kg](https://github.com/sea5kg/Roads2DGenerator) and [The Coding Train](https://www.youtube.com/watch?v=rI_y2GAlQFM)
 
 ### Gameplay Elements
 
