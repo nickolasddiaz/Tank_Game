@@ -96,16 +96,16 @@ public class MapGenerator {
     }
 
     private int assignTileType(double noiseValue) {
-        if (noiseValue < -0.70) {//switch statement not possible because of the java version
-            return TileType.OCEAN.ordinal();    // 15% for Ocean
-        } else if (noiseValue < -0.30) {
-            return TileType.WILD_WEST.ordinal();// 20% for Wild West
-        } else if (noiseValue < 0.10) {
-            return TileType.TUNDRA.ordinal();   // 20% for Tundra
-        } else if (noiseValue < 0.60) {
-            return TileType.PLAINS.ordinal();   // 25% for Plains
+        if (noiseValue < -0.86) {//switch statement not possible because of the java version
+            return TileType.OCEAN.ordinal();    // 7% for Ocean
+        } else if (noiseValue < -0.42) {
+            return TileType.WILD_WEST.ordinal();// 22% for Wild West
+        } else if (noiseValue < 0.02) {
+            return TileType.TUNDRA.ordinal();   // 22% for Tundra
+        } else if (noiseValue < 0.56) {
+            return TileType.PLAINS.ordinal();   // 27% for Plains
         } else {
-            return TileType.DESSERT.ordinal();  // 20% for Desert
+            return TileType.DESSERT.ordinal();  // 22% for Desert
         }
     }
 
@@ -251,60 +251,148 @@ public class MapGenerator {
     }
 
     private float[] addOceanVectors(Stack<Vector2> points, int[][] biomeMap, boolean[][] visited, float xOffset, float yOffset) {
-        ArrayList<Float> vertices = new ArrayList<>();
-        int[][] directions = {
-            {0, 1},   // top
-            {1, 1},   // top-right
-            {1, 0},   // right
-            {1, -1},  // bottom-right
-            {0, -1},  // bottom
-            {-1, -1}, // bottom-left
-            {-1, 0},  // left
-            {-1, 1}   // top-left
-        };
+        ArrayList<Vector2> boundaryTiles = new ArrayList<>();
 
+        // First pass: collect all boundary ocean tiles
         while (!points.empty()) {
             Vector2 current = points.pop();
             int x = (int) current.x;
             int y = (int) current.y;
 
-            vertices.add((x * itemSize) + xOffset);
-            vertices.add((y * itemSize) + yOffset);
+            boundaryTiles.add(new Vector2(x, y));
 
-            boolean foundNext = false;
+            // Search for adjacent boundary tiles
+            int[][] directions = {
+                {0, 1}, {1, 1}, {1, 0}, {1, -1},
+                {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}
+            };
+
             for (int[] dir : directions) {
                 int newX = x + dir[0];
                 int newY = y + dir[1];
 
-                if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
-                    if (biomeMap[newX][newY] == TileType.OCEAN.ordinal() && !visited[newX][newY]) {
-                        boolean isBoundary = false;
-                        for (int[] checkDir : directions) {
-                            int checkX = newX + checkDir[0];
-                            int checkY = newY + checkDir[1];
+                if (newX < 0 || newX >= MAP_SIZE || newY < 0 || newY >= MAP_SIZE)
+                    continue;
 
-                                if (!(checkX >= 0 && checkX < MAP_SIZE && checkY >= 0 && checkY < MAP_SIZE) || biomeMap[checkX][checkY] != TileType.OCEAN.ordinal()) {
-                                    isBoundary = true;
-                                    break;
+                if (biomeMap[newX][newY] == TileType.OCEAN.ordinal() && !visited[newX][newY]) {
+                    boolean isBoundary = false;
+                    for (int[] checkDir : directions) {
+                        int checkX = newX + checkDir[0];
+                        int checkY = newY + checkDir[1];
 
-                            }
-                        }
-
-                        if (isBoundary) {
-                            points.push(new Vector2(newX, newY));
-                            visited[newX][newY] = true;
-                            foundNext = true;
+                        if (!(checkX >= 0 && checkX < MAP_SIZE && checkY >= 0 && checkY < MAP_SIZE) ||
+                            biomeMap[checkX][checkY] != TileType.OCEAN.ordinal()) {
+                            isBoundary = true;
                             break;
                         }
                     }
+
+                    if (isBoundary) {
+                        points.push(new Vector2(newX, newY));
+                        visited[newX][newY] = true;
+                    }
+                }
+            }
+        }
+
+        if (boundaryTiles.isEmpty()) {
+            return new float[0];
+        }
+
+        // Second pass: trace the contour by walking around the perimeter
+        ArrayList<Float> vertices = new ArrayList<>();
+        HashSet<String> addedVertices = new HashSet<>();
+
+        // Start from the leftmost, then bottommost tile
+        Vector2 start = boundaryTiles.get(0);
+        for (Vector2 tile : boundaryTiles) {
+            if (tile.x < start.x || (tile.x == start.x && tile.y < start.y)) {
+                start = tile;
+            }
+        }
+
+        // Walk around the perimeter clockwise
+        int startX = (int) start.x;
+        int startY = (int) start.y;
+        int x = startX;
+        int y = startY;
+
+        // Direction vectors: right, down, left, up
+        int[][] dirs = {{1, 0}, {0, -1}, {-1, 0}, {0, 1}};
+        int dir = 0; // Start facing right
+
+        int maxIterations = boundaryTiles.size() * 4 + 100;
+        int iterations = 0;
+
+        do {
+            iterations++;
+            if (iterations > maxIterations) break;
+
+            // Determine which corners of this tile are on the boundary
+            boolean leftEdge = !isOcean(x - 1, y, biomeMap);
+            boolean rightEdge = !isOcean(x + 1, y, biomeMap);
+            boolean bottomEdge = !isOcean(x, y - 1, biomeMap);
+            boolean topEdge = !isOcean(x, y + 1, biomeMap);
+
+            // Add corner vertices based on which edges are boundaries
+            // We need to add corners in clockwise order as we trace
+
+            if (dir == 0) { // Moving right
+                if (bottomEdge) {
+                    addVertex(x, y, vertices, addedVertices, xOffset, yOffset);
+                }
+                if (rightEdge && bottomEdge) {
+                    addVertex(x + 1, y, vertices, addedVertices, xOffset, yOffset);
+                }
+            } else if (dir == 1) { // Moving down
+                if (rightEdge) {
+                    addVertex(x + 1, y + 1, vertices, addedVertices, xOffset, yOffset);
+                }
+                if (rightEdge && bottomEdge) {
+                    addVertex(x + 1, y, vertices, addedVertices, xOffset, yOffset);
+                }
+            } else if (dir == 2) { // Moving left
+                if (topEdge) {
+                    addVertex(x + 1, y + 1, vertices, addedVertices, xOffset, yOffset);
+                }
+                if (leftEdge && topEdge) {
+                    addVertex(x, y + 1, vertices, addedVertices, xOffset, yOffset);
+                }
+            } else { // Moving up
+                if (leftEdge) {
+                    addVertex(x, y, vertices, addedVertices, xOffset, yOffset);
+                }
+                if (leftEdge && topEdge) {
+                    addVertex(x, y + 1, vertices, addedVertices, xOffset, yOffset);
                 }
             }
 
-            if (!foundNext && !points.empty()) {
-                vertices.add(Float.NaN);
-                vertices.add(Float.NaN);
+            // Try to turn left first (follow wall on right side)
+            int leftDir = (dir + 3) % 4;
+            int nextX = x + dirs[leftDir][0];
+            int nextY = y + dirs[leftDir][1];
+
+            if (isOcean(nextX, nextY, biomeMap) && isBoundaryTile(nextX, nextY, biomeMap)) {
+                dir = leftDir;
+                x = nextX;
+                y = nextY;
+            } else {
+                // Try straight
+                nextX = x + dirs[dir][0];
+                nextY = y + dirs[dir][1];
+
+                if (isOcean(nextX, nextY, biomeMap) && isBoundaryTile(nextX, nextY, biomeMap)) {
+                    x = nextX;
+                    y = nextY;
+                } else {
+                    // Turn right
+                    dir = (dir + 1) % 4;
+                }
             }
-        }
+
+        } while (x != startX || y != startY || iterations < 4);
+
+        // Convert to float array
         float[] result = new float[vertices.size()];
         for (int i = 0; i < vertices.size(); i++) {
             result[i] = vertices.get(i);
@@ -313,6 +401,41 @@ public class MapGenerator {
         return result;
     }
 
+    private void addVertex(int x, int y, ArrayList<Float> vertices, HashSet<String> added, float xOffset, float yOffset) {
+        String key = x + "," + y;
+        if (!added.contains(key)) {
+            added.add(key);
+            vertices.add(x * itemSize + xOffset);
+            vertices.add(y * itemSize + yOffset);
+        }
+    }
+
+    private boolean isOcean(int x, int y, int[][] biomeMap) {
+        if (x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE) {
+            return false;
+        }
+        return biomeMap[x][y] == TileType.OCEAN.ordinal();
+    }
+
+    private boolean isBoundaryTile(int x, int y, int[][] biomeMap) {
+        if (!isOcean(x, y, biomeMap)) {
+            return false;
+        }
+
+        int[][] directions = {
+            {0, 1}, {1, 1}, {1, 0}, {1, -1},
+            {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}
+        };
+
+        for (int[] dir : directions) {
+            int nx = x + dir[0];
+            int ny = y + dir[1];
+            if (!isOcean(nx, ny, biomeMap)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private void initializeBiomes() {
         TileType[] types = TileType.values();

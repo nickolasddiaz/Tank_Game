@@ -10,8 +10,7 @@ import io.github.nickolasddiaz.systems.EnemyFactory;
 import io.github.nickolasddiaz.systems.LandMineFactory;
 import io.github.nickolasddiaz.systems.MissileFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Random;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.*;
@@ -26,8 +25,6 @@ public class EntityStats{
     public float allySpawnerRate = 20f;
     public boolean canSpawnAlly = false;
     public int amountOfBullets = 1;
-    public float freezeDuration = 2;
-    public float burnDuration = 2;
     public int explosiveRadiusAndDamage = 1;
     public float bulletSize = 1.0f;
     public float criticalDamageMultiplier = 1.2f;
@@ -38,10 +35,10 @@ public class EntityStats{
     public float missileRate = 4f;
     public boolean CanShootMine = false;
     public float mineRate = 5f;
-    public float speed = itemSize * 5f;
+    public float speed = itemSize * 10f;
     public float fireRate = 2f;
     public float timeSinceLastShot = 2f;
-    public float bulletSpeed = 15f * itemSize;
+    public float bulletSpeed = 12f * itemSize;
     public int bulletDamage = 1;
 
     public float spinSpeed = speed / 2f * TILE_PER_METER;
@@ -56,8 +53,8 @@ public class EntityStats{
     private float landMineSpawnTime = 0f;
     private float missileSpawnTime = 0f;
 
-    public boolean onRoad = false;
-    public boolean onBush = false;
+    public int onRoad = 0;
+    public int onBush = 0;
     public float isOnFire = 0;
     public float isFrozen = 0;
 
@@ -160,7 +157,7 @@ public class EntityStats{
         }
 
         // Handle speed boost
-        velocity.scl(1f + (onRoad ? 0.5f : 0) + (onBush ? -0.5f : 0));
+        velocity.scl(1f + (onRoad >=1 ? 0.3f : 0) + (onBush >= 1 ? -0.3f : 0));
 
         // Handle missile shooting
         if (CanShootMissile) {

@@ -393,7 +393,9 @@ public class ChunkComponent implements Component {
     }
 
     private void handleSpeedBoost(boolean roadOrBush, TransformComponent transform, boolean apply) {
-            if(roadOrBush) transform.stats.onRoad = apply;
-            else transform.stats.onBush = apply;
+            if(roadOrBush)
+                transform.stats.onRoad +=  apply? 1:-1 ;
+            else
+                transform.stats.onBush += apply? 1:-1;
     }
 }
