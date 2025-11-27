@@ -1,15 +1,15 @@
-package io.github.nickolasddiaz;
+package io.github.nickolasddiaz.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
+import io.github.nickolasddiaz.yourgame;
 
 public class MainMenuScreen implements Screen {
 
@@ -17,13 +17,15 @@ public class MainMenuScreen implements Screen {
     private final Stage stage;
 
     public MainMenuScreen(final yourgame game) {
+        game.settings.paused = false;
+
         game.settings.is_Playing = false;
         float buttonHeight = Gdx.graphics.getHeight() / 10f;
         float buttonWidth = Gdx.graphics.getWidth() / 2f;
-        float buttonSpacing = Gdx.graphics.getHeight() / 15f + buttonHeight;
-        float buttonInitialY = Gdx.graphics.getHeight() / 2.2f - 2.5f * buttonHeight;
+        float buttonSpacing = Gdx.graphics.getHeight() / 30f + buttonHeight;
+        float buttonInitialY = Gdx.graphics.getHeight() / 2f - 2.5f * buttonHeight;
         float buttonInitialX = Gdx.graphics.getWidth() / 2f - buttonWidth / 2f;
-        float titleSize = Gdx.graphics.getWidth() / 400f;
+        float titleSize = Gdx.graphics.getWidth() / 250f;
         float textSize = Gdx.graphics.getWidth() / 1000f;
 
         this.game = game;
@@ -35,6 +37,7 @@ public class MainMenuScreen implements Screen {
         ImageTextButton optionsButton = new ImageTextButton("Options", game.skin);
         ImageTextButton leaderboardButton = new ImageTextButton("Leaderboard", game.skin);
         ImageTextButton aboutButton = new ImageTextButton("About", game.skin);
+        ImageTextButton quitButton = new ImageTextButton("Quit", game.skin);
         titleLabel.setStyle(game.skin.get("title", Label.LabelStyle.class));
 
         titleLabel.setAlignment(1);
@@ -43,24 +46,28 @@ public class MainMenuScreen implements Screen {
         optionsButton.getLabel().setFontScale(textSize);
         leaderboardButton.getLabel().setFontScale(textSize);
         aboutButton.getLabel().setFontScale(textSize);
+        quitButton.getLabel().setFontScale(textSize);
 
         titleLabel.setSize(buttonWidth, buttonHeight);
         startButton.setSize(buttonWidth, buttonHeight);
         optionsButton.setSize(buttonWidth, buttonHeight);
         leaderboardButton.setSize(buttonWidth, buttonHeight);
         aboutButton.setSize(buttonWidth, buttonHeight);
+        quitButton.setSize(buttonWidth, buttonHeight);
 
-        titleLabel.setPosition(buttonInitialX, buttonInitialY + buttonSpacing * 3);
+        titleLabel.setPosition(buttonInitialX, buttonInitialY + buttonSpacing * 3.5f);
         startButton.setPosition(buttonInitialX, buttonInitialY + buttonSpacing * 2);
         optionsButton.setPosition(buttonInitialX, buttonInitialY + buttonSpacing);
         leaderboardButton.setPosition(buttonInitialX, buttonInitialY);
         aboutButton.setPosition(buttonInitialX, buttonInitialY - buttonSpacing);
+        quitButton.setPosition(buttonInitialX, buttonInitialY - buttonSpacing * 2);
 
         stage.addActor(titleLabel);
         stage.addActor(startButton);
         stage.addActor(optionsButton);
         stage.addActor(leaderboardButton);
         stage.addActor(aboutButton);
+        stage.addActor(quitButton);
 
         startButton.addListener(new ClickListener() {
             @Override
@@ -94,6 +101,12 @@ public class MainMenuScreen implements Screen {
                 game.setScreen(new AboutScreen(game));
                 game.ui_sound();
                 dispose();
+            }
+        });
+        quitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.exit();
             }
         });
     }
@@ -137,6 +150,9 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void dispose() {
+        if (stage != null) {
+            stage.dispose();
+        }
 
     }
 

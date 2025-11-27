@@ -1,4 +1,4 @@
-package io.github.nickolasddiaz;
+package io.github.nickolasddiaz.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import io.github.nickolasddiaz.systems.JoystickInputSystem;
+import io.github.nickolasddiaz.yourgame;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.GAME_SETTINGS;
 
@@ -69,6 +70,7 @@ public class OptionsScreen implements Screen {
         mobileCheckBox.setChecked(game.settings.IS_MOBILE);
         debugCheckBox.setChecked(game.settings.DEBUG);
         autoFireCheckBox.setChecked(game.settings.AUTO_FIRE);
+        fullscreenCheckBox.setChecked(game.settings.FULLSCREEN);
 
         mobileContainer.add(mobileCheckBox).center().padBottom(5);
         mobileContainer.row();
@@ -151,7 +153,7 @@ public class OptionsScreen implements Screen {
                     cleanupGame();
                     game.settings.paused = false;
                     game.statsComponent.setHealthLevel(0);
-                    game.setScreen(new DeathScreen(game, game.statsComponent.getScore()));
+                    game.setScreen(new MainMenuScreen(game));
                     dispose();
                 }
             }
@@ -223,12 +225,16 @@ public class OptionsScreen implements Screen {
         fullscreenCheckBox.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.ui_sound();
                 if(fullscreenCheckBox.isChecked()){
                     Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
                 }else{
                     Gdx.graphics.setWindowedMode(800, 600);
+
                 }
+                game.settings.FULLSCREEN = fullscreenCheckBox.isChecked();
+                pref.putBoolean("FULLSCREEN", game.settings.FULLSCREEN);
+                pref.flush();
+                resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             }
         });
     }

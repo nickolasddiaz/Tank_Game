@@ -1,4 +1,4 @@
-package io.github.nickolasddiaz;
+package io.github.nickolasddiaz.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import io.github.nickolasddiaz.yourgame;
 
 import java.util.ArrayList;
 import java.util.Arrays;

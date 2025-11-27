@@ -1,4 +1,4 @@
-package io.github.nickolasddiaz;
+package io.github.nickolasddiaz.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
@@ -11,6 +11,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
+import io.github.nickolasddiaz.yourgame;
+
 import java.util.ArrayList;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.*;

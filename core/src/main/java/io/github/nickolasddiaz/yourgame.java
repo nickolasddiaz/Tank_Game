@@ -15,6 +15,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.github.tommyettinger.textra.FWSkin;
 import io.github.nickolasddiaz.components.*;
+import io.github.nickolasddiaz.screens.MainMenuScreen;
 import io.github.nickolasddiaz.systems.*;
 import io.github.nickolasddiaz.utils.EntityStats;
 
@@ -102,7 +103,10 @@ public class yourgame extends Game {
         engine.addSystem(new StatsRenderSystem(skin));
 
         Gdx.input.setCatchKey(Input.Keys.SPACE, true);
-        //Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+
+        if (settings.FULLSCREEN){
+            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+        }
     }
 
     public void render() {

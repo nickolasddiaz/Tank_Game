@@ -1,4 +1,4 @@
-package io.github.nickolasddiaz;
+package io.github.nickolasddiaz.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import io.github.nickolasddiaz.systems.*;
 import io.github.nickolasddiaz.utils.EntityStats;
+import io.github.nickolasddiaz.yourgame;
 
 import static io.github.nickolasddiaz.utils.CollisionCategory.getEnemySpawnRate;
 
@@ -112,7 +113,9 @@ public class GameScreen implements Screen {
         stage.act(delta);
         if(!game.settings.paused)
             game.updateGame(delta);
-        stage.draw();
+
+        if (!isZooming)
+            stage.draw();
 
         if (game.statsComponent.getHealth() <= 0) {
             game.statsComponent.setHealthLevel(0);
