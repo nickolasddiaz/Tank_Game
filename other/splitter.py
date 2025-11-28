@@ -34,7 +34,7 @@ if len(TILE_NAMES) != TILES_TOTAL:
     raise ValueError(f"Expected {TILES_TOTAL} names, but got {len(TILE_NAMES)}.")
 
 # Load the tile atlas
-atlas_path = "C:\\Users\\nicko\\Documents\\game\\other\\tank_game.png"
+atlas_path = "tank_game.png"
 atlas_image = Image.open(atlas_path)
 
 # Validate dimensions
@@ -46,7 +46,7 @@ if width < expected_width or height < expected_height:
     raise ValueError("Atlas image dimensions are smaller than expected.")
 
 
-output_dir = r"C:\Users\nicko\Documents\game\other\temp"
+output_dir = r"temp/"
 os.makedirs(output_dir, exist_ok=True)
 
 # Save the tiles

@@ -1,3 +1,5 @@
+# remove 192 pngs for the tank_game atlas
+/other/temp/
 ## Gradle:
 .gradle/
 gradle-app.setting
