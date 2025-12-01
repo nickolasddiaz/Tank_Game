@@ -624,38 +624,58 @@ public class FastNoiseLite
     private static final int PrimeY = 1136930381;
     private static final int PrimeZ = 1720413743;
 
+    // MODIFIED FOR WEB TRANSPILATION COMPATIBILITY
     private static int Hash(int seed, int xPrimed, int yPrimed)
     {
-        int hash = seed ^ xPrimed ^ yPrimed;
+        // Use long to prevent overflow issues in JS-transpiled code
+        long hash = seed;
+        hash ^= xPrimed;
+        hash ^= yPrimed;
 
         hash *= 0x27d4eb2d;
-        return hash;
+        return (int)hash; // Cast to int to get 32-bit wrapping
     }
 
+    // MODIFIED FOR WEB TRANSPILATION COMPATIBILITY
     private static int Hash(int seed, int xPrimed, int yPrimed, int zPrimed)
     {
-        int hash = seed ^ xPrimed ^ yPrimed ^ zPrimed;
+        // Use long to prevent overflow issues in JS-transpiled code
+        long hash = seed;
+        hash ^= xPrimed;
+        hash ^= yPrimed;
+        hash ^= zPrimed;
 
         hash *= 0x27d4eb2d;
-        return hash;
+        return (int)hash; // Cast to int to get 32-bit wrapping
     }
 
+    // MODIFIED FOR WEB TRANSPILATION COMPATIBILITY
     private static float ValCoord(int seed, int xPrimed, int yPrimed)
     {
         int hash = Hash(seed, xPrimed, yPrimed);
 
-        hash *= hash;
-        hash ^= hash << 19;
-        return hash * (1 / 2147483648.0f);
+        // Use long for multiplications to prevent overflow issues in JS-transpiled code
+        long longHash = hash;
+        longHash *= longHash;
+        longHash ^= longHash << 19;
+
+        // Cast back to int to get 32-bit wrapping before converting to float
+        return (int)longHash * (1 / 2147483648.0f);
     }
 
+
+    // MODIFIED FOR WEB TRANSPILATION COMPATIBILITY
     private static float ValCoord(int seed, int xPrimed, int yPrimed, int zPrimed)
     {
         int hash = Hash(seed, xPrimed, yPrimed, zPrimed);
 
-        hash *= hash;
-        hash ^= hash << 19;
-        return hash * (1 / 2147483648.0f);
+        // Use long for multiplications to prevent overflow issues in JS-transpiled code
+        long longHash = hash;
+        longHash *= longHash;
+        longHash ^= longHash << 19;
+
+        // Cast back to int to get 32-bit wrapping before converting to float
+        return (int)longHash * (1 / 2147483648.0f);
     }
 
     private static float GradCoord(int seed, int xPrimed, int yPrimed, float xd, float yd)

@@ -1,5 +1,6 @@
 package io.github.nickolasddiaz.gwt;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationListener;
 
 

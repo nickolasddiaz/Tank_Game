@@ -1,5 +1,7 @@
 package io.github.nickolasddiaz.utils;
 
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.MapLayer;
@@ -96,13 +98,13 @@ public class MapGenerator {
     }
 
     private int assignTileType(double noiseValue) {
-        if (noiseValue < -0.86) {//switch statement not possible because of the java version
+        if (noiseValue < -0.86d) {//switch statement not possible because of the java version
             return TileType.OCEAN.ordinal();    // 7% for Ocean
-        } else if (noiseValue < -0.42) {
+        } else if (noiseValue < -0.42d) {
             return TileType.WILD_WEST.ordinal();// 22% for Wild West
-        } else if (noiseValue < 0.02) {
+        } else if (noiseValue < 0.02d) {
             return TileType.TUNDRA.ordinal();   // 22% for Tundra
-        } else if (noiseValue < 0.56) {
+        } else if (noiseValue < 0.56d) {
             return TileType.PLAINS.ordinal();   // 27% for Plains
         } else {
             return TileType.DESSERT.ordinal();  // 22% for Desert

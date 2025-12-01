@@ -1,6 +1,7 @@
 package io.github.nickolasddiaz.systems;
 
 import com.badlogic.ashley.core.*;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
@@ -9,10 +10,8 @@ import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Polygon;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.utils.TimeUtils;
 import io.github.nickolasddiaz.components.*;
 import io.github.nickolasddiaz.utils.MapGenerator;
 
@@ -51,7 +50,7 @@ public class ChunkSystem extends EntitySystem {
 
         // Initialize rendering tools
         chunkRenderer = new OrthogonalTiledMapRenderer(null, TILE_SIZE/TILE_PER_METER);
-        mapGenerator = new MapGenerator((int)System.currentTimeMillis());
+        mapGenerator = new MapGenerator(MathUtils.random.nextInt());
         tempMatrix = new Matrix4();
     }
 
