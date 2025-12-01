@@ -80,3 +80,5 @@ Score Mechanics:
 - Has no previous game development knowledge
 - Code located at https://github.com/nickolasddiaz/Tank_Game/tree/master/core/src/main/java/io/github/nickolasddiaz
 - Assets located at https://github.com/nickolasddiaz/Tank_Game/tree/master/other
+- [itch.io](https://nickolasdan.itch.io/tank-game)
+- [newgrounds](https://www.newgrounds.com/portal/view/971494)
