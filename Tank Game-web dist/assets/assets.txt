@@ -1,9 +1,7 @@
 d:assets:assets:0:application/unknown:1
-t:assets.txt:assets-4942ae46577dd259a9a7eba40d097572.txt:400:text/plain:1
+t:assets.txt:assets-730c867788a9f4970545d0e20f7bcde8.txt:362:text/plain:1
 t:Chunq.fnt:Chunq-5b9db0efd99949ba6d94250b10858cc6.fnt:10931:application/unknown:1
-b:hs_err_pid11032.log:hs_err_pid11032-aac3b6414d658b76fad8012b6c58357f.log:134061:application/unknown:1
-b:hs_err_pid5200.log:hs_err_pid5200-6557f91b558bf34f17d2427b93ed50fb.log:176970:application/unknown:1
-b:hs_err_pid9676.log:hs_err_pid9676-a8b5a6a17ceaff96f0ab82535fd5a19c.log:180368:application/unknown:1
+b:hs_err_pid46436.log:hs_err_pid46436-aa292e1506e57e75866b70fce9448538.log:79057:application/unknown:1
 t:inktank.fnt:inktank-63c63b2a387e9e8f7071f1da96c6bf79.fnt:7663:application/unknown:1
 t:ouLiJS4iu4ylyojldWZspG21.ttf.fnt:ouLiJS4iu4ylyojldWZspG21.ttf-5b9db0efd99949ba6d94250b10858cc6.fnt:10931:application/unknown:1
 d:sounds:sounds:0:application/unknown:1
@@ -14,8 +12,8 @@ a:sounds/house_destroy.mp3:sounds/house_destroy-16979aa11b8a8349f4f72d16c4ac615a
 a:sounds/shoot_bullet.mp3:sounds/shoot_bullet-84cc5f17267400b8c4b8ba53695fb3a7.mp3:19431:audio/mpeg:1
 a:sounds/shoot_rpg.mp3:sounds/shoot_rpg-ca4c37c2c703c6cee84f10adad9451e4.mp3:21938:audio/mpeg:1
 a:sounds/tank_deflect.mp3:sounds/tank_deflect-f21e3d8a6fff5862afc0147b4f80cc0a.mp3:10480:audio/mpeg:1
-t:tank_game.atlas:tank_game-5754e4b1f9a93b90beb13b275d8bb936.atlas:6026:application/unknown:1
-i:tank_game.png:tank_game-cf9870b1e9d3f5497f0536d2e3a9b4fd.png:8819:image/png:1
+t:tank_game.atlas:tank_game-5417c68a6ac97472a2fae306d7095414.atlas:6042:application/unknown:1
+i:tank_game.png:tank_game-58ff7e51687ca90177f1b88d70af6998.png:5808:image/png:1
 t:U811sIwHbPWRhkkOdY3XvMr5.ttf.fnt:U811sIwHbPWRhkkOdY3XvMr5.ttf-63c63b2a387e9e8f7071f1da96c6bf79.fnt:7663:application/unknown:1
 t:ui_tank_game.atlas:ui_tank_game-47485f0cde50376d3039a1825778cf88.atlas:10440:application/unknown:1
 t:ui_tank_game.json:ui_tank_game-43e02c0f6ca59cec860d0111bf2ce8ff.json:2430:application/json:1
