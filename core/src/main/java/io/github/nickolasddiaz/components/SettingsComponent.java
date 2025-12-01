@@ -15,7 +15,6 @@ public class SettingsComponent implements Component {
     public boolean paused = false;
     public boolean AUTO_FIRE;
     public boolean is_Playing = false;
-    public boolean FULLSCREEN;
 
     public SettingsComponent(){
         Preferences pref = Gdx.app.getPreferences(GAME_SETTINGS);
@@ -25,6 +24,5 @@ public class SettingsComponent implements Component {
         IS_MOBILE = pref.getBoolean("IS_MOBILE", mobile);
         AUTO_FIRE = pref.getBoolean("AUTO_FIRE", mobile);
         DEBUG = pref.getBoolean("DEBUG", false);
-        FULLSCREEN = pref.getBoolean("FULLSCREEN", false);
     }
 }

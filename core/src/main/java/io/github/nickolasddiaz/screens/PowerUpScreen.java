@@ -70,10 +70,10 @@ public class PowerUpScreen extends InputAdapter implements Screen {
         DESTROY_HOUSES(Rarity.JADE, "Destroy Houses", "Gain the ability to destroy houses");
 
         public enum Rarity {
-            BRONZE(50),
+            BRONZE(40),
             SILVER(30),
             GOLD(15),
-            JADE(5);
+            JADE(15);
 
             private final int probability;
 
@@ -174,7 +174,6 @@ public class PowerUpScreen extends InputAdapter implements Screen {
         List<UpgradeType> selectedUpgrades = new ArrayList<>();
 
         while (selectedUpgrades.size() < 3) {
-            // Adjust probabilities based on luck
             UpgradeType upgrade = getWeightedRandomUpgrade(luck);
 
             // Ensure no duplicates
@@ -187,34 +186,55 @@ public class PowerUpScreen extends InputAdapter implements Screen {
     }
 
     private UpgradeType getWeightedRandomUpgrade(int luck) {
-        // Luck modifies the probability distribution
-        List<UpgradeType> upgrades = Arrays.stream(UpgradeType.values())
-            .sorted((a, b) -> {
-                // Adjust probabilities based on luck
-                int luckMultiplier = Math.max(1, luck);
-                return Integer.compare(
-                    b.getRarity().getProbability() * luckMultiplier,
-                    a.getRarity().getProbability() * luckMultiplier
-                );
-            })
+        // Clamp luck to 0-10 range
+        int clampedLuck = Math.max(0, Math.min(10, luck));
+
+        // Determine allowed rarities based on luck level
+        List<UpgradeType.Rarity> allowedRarities = new ArrayList<>();
+
+        if (clampedLuck >= 10) {
+            // Luck 10: guarantee jade cards only
+            allowedRarities.add(UpgradeType.Rarity.JADE);
+        } else if (clampedLuck >= 6) {
+            // Luck 6-9: guarantee gold or jade cards
+            allowedRarities.add(UpgradeType.Rarity.GOLD);
+            allowedRarities.add(UpgradeType.Rarity.JADE);
+        } else if (clampedLuck >= 3) {
+            // Luck 3-5: silver, gold, or jade cards
+            allowedRarities.add(UpgradeType.Rarity.SILVER);
+            allowedRarities.add(UpgradeType.Rarity.GOLD);
+            allowedRarities.add(UpgradeType.Rarity.JADE);
+        } else {
+            // Luck 0-2: all rarities possible
+            allowedRarities.add(UpgradeType.Rarity.BRONZE);
+            allowedRarities.add(UpgradeType.Rarity.SILVER);
+            allowedRarities.add(UpgradeType.Rarity.GOLD);
+            allowedRarities.add(UpgradeType.Rarity.JADE);
+        }
+
+        // Filter upgrades by allowed rarities
+        List<UpgradeType> availableUpgrades = Arrays.stream(UpgradeType.values())
+            .filter(u -> allowedRarities.contains(u.getRarity()))
             .collect(Collectors.toList());
 
-        int totalWeight = upgrades.stream()
-            .mapToInt(u -> u.getRarity().getProbability() * Math.max(1, luck))
+        // Calculate total weight based on available upgrades
+        int totalWeight = availableUpgrades.stream()
+            .mapToInt(u -> u.getRarity().getProbability())
             .sum();
 
+        // Select weighted random upgrade
         int randomValue = random.nextInt(totalWeight);
         int cumulativeWeight = 0;
 
-        for (UpgradeType upgrade : upgrades) {
-            cumulativeWeight += upgrade.getRarity().getProbability() * Math.max(1, luck);
+        for (UpgradeType upgrade : availableUpgrades) {
+            cumulativeWeight += upgrade.getRarity().getProbability();
             if (randomValue < cumulativeWeight) {
                 return upgrade;
             }
         }
 
-        // Fallback
-        return upgrades.get(0);
+        // Fallback to last available upgrade
+        return availableUpgrades.get(availableUpgrades.size() - 1);
     }
 
     private void setupUpgradeButton(Table button, UpgradeType upgrade, int index) {
@@ -222,8 +242,11 @@ public class PowerUpScreen extends InputAdapter implements Screen {
             stage.getActors().removeValue(button, true);
         }
         boolean threeXMulti = false;
-        if(upgrade.rarity != UpgradeType.Rarity.JADE)
-            threeXMulti = random.nextFloat() < 0.1f * game.statsComponent.luck/100;
+        // Adjusted 3x multiplier chance based on luck (0-10 scale)
+        if(upgrade.rarity != UpgradeType.Rarity.JADE) {
+            // 1% chance per luck point (10% max at luck 10)
+            threeXMulti = random.nextFloat() < 0.01f * game.statsComponent.luck;
+        }
 
         button = new Table();
 
@@ -326,15 +349,16 @@ public class PowerUpScreen extends InputAdapter implements Screen {
             case EXTRA_SHOT: game.playerComponent.stats.amountOfBullets += multiplier;break;
             case BACK_SHOTS: game.playerComponent.stats.backShotsAmount += multiplier;break;
             case BETTER_ARMOR: game.playerComponent.stats.reduceDamage += multiplier;break;
-            case LUCK: game.statsComponent.luck += multiplier;break;
+            case LUCK:
+                // Add to luck with a maximum cap of 10
+                game.statsComponent.luck = Math.min(10, game.statsComponent.luck + multiplier);
+                break;
             case BULLET_SPEED: game.playerComponent.stats.bulletSpeed *= 1.2f * multiplier;break;
             case BULLET_DAMAGE: game.playerComponent.stats.bulletDamage += 2 * multiplier;break;
             case BULLET_SIZE: game.playerComponent.stats.bulletSize += 0.4f * multiplier;break;
             case FIRE_RATE: game.playerComponent.stats.fireRate *= 0.8f * multiplier;break;
             case CRITICAL_DAMAGE: game.playerComponent.stats.criticalDamageMultiplier += .5f * multiplier;break;
             case CRITICAL_CHANCE: game.playerComponent.stats.criticalChance += 0.25f * multiplier;break;
-            //case FREEZE_SHOT: game.playerComponent.stats.freezeDuration += 0.5f * multiplier;break;
-            //case BURN_DAMAGE: game.playerComponent.stats.burnDuration += 2 *multiplier;break;
             case EXPLOSIVE_INCREASE: game.playerComponent.stats.explosiveRadiusAndDamage += multiplier;break;
             case POINT_MULTIPLIER: game.statsComponent.pointMultiplier += 0.4f * multiplier;break;
             case DECREASE_WANTED_LEVEL: game.statsComponent.addStarLevel(-multiplier*3);break;

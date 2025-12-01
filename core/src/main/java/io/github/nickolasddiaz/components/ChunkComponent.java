@@ -9,6 +9,7 @@ import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -105,40 +106,38 @@ public class ChunkComponent implements Component {
         return body;
     }
 
-    public Vector2 getPointEnemySpawn(Vector2 playerPosition) {
-        float worldPercent = 2f;
-        float spawnDistance = worldPercent * chunkSize;
+public Vector2 getPointEnemySpawn(Vector2 playerPosition) {
+    // Assuming itemSize and chunkSize are class member variables or available in scope
+    final float querySize = itemSize * 2;
 
-        int randomIndex = random.nextInt(4);// 0 top 1 right 2 bottom 3 left
+    for (int attempts = 0; attempts < 12; attempts++) {
 
-        // Generate four random spawn locations (one on each side of a square)
-        Vector2 bottomPoint = new Vector2(
-            playerPosition.x + (randomIndex == 0 ? -chunkSize : randomIndex == 1 ? chunkSize : randomIndex == 2 ? -chunkSize : -spawnDistance),
-            playerPosition.y + (randomIndex == 0 ? chunkSize : randomIndex == 1 ? -chunkSize : randomIndex == 2 ? -spawnDistance : -chunkSize));
+        float randomAngleRadians = MathUtils.random(MathUtils.PI2);
+        Vector2 potentialSpawnPoint = new Vector2(1, 0);
+        potentialSpawnPoint.setAngleRad(randomAngleRadians);
+        potentialSpawnPoint.setLength(chunkSize / 3f); // Distance from player
+        potentialSpawnPoint.add(playerPosition);
 
-        Vector2 topPoint = new Vector2(
-            playerPosition.x + (randomIndex == 0 ? chunkSize : randomIndex == 1 ? spawnDistance : randomIndex == 2 ? chunkSize : -chunkSize),
-            playerPosition.y + (randomIndex == 0 ? spawnDistance : randomIndex == 1 ? chunkSize : randomIndex == 2 ? -chunkSize : chunkSize));
+        final boolean[] foundWrapper = {false};
 
-        // Array to store a valid spawn point
-        List<Vector2> result = new ArrayList<>();
+        float lowerX = potentialSpawnPoint.x - querySize;
+        float lowerY = potentialSpawnPoint.y - querySize;
+        float upperX = potentialSpawnPoint.x + querySize;
+        float upperY = potentialSpawnPoint.y + querySize;
+
 
         world.QueryAABB(fixture -> {
-            if ((fixture.getFilterData().categoryBits & ROAD) != 0) {
-                return false;
-            }
-            if(fixture.getBody().getPosition() != null)
-                result.add(new Vector2(fixture.getBody().getPosition()));
-            return true;
-        }, bottomPoint.x, bottomPoint.y, topPoint.x, topPoint.y);
+            foundWrapper[0] = ((fixture.getFilterData().categoryBits & OCEAN) == 0);
+            return false;
+        }, lowerX, lowerY, upperX, upperY);
 
-        // If no valid spawn found, return player's position as fallback
-        if(result.isEmpty()) {
-            return null;
-        }else{
-            return result.get(random.nextInt(result.size()));
+        if (foundWrapper[0]) {
+            return potentialSpawnPoint;
         }
     }
+
+    return playerPosition;
+}
 
 
     public Body[] getBodiesInRect(Rectangle rect, short categoryBits) {

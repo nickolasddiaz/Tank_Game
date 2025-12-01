@@ -14,7 +14,7 @@ public class EnemyComponent implements Component {
     public EntityStats stats;
 
     public float enemyType;
-    public float minDistance = 6f*itemSize;
+    public float minDistance = 4f*itemSize;
     public GraphPath<GraphNode> path;
     public GraphPath<GraphNode> previousPath;
     public final Rectangle lazyPath = new Rectangle();

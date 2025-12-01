@@ -93,7 +93,7 @@ public final class CollisionCategory {
         }
     }
     public static float getEnemySpawnRate(float stars){ //Power Law Decay for spawn rate in seconds, https://desmos.com/calculator/zgbmhyxujn
-        return Math.max(0.2f, 6f / (float) Math.pow(stars + 1, 0.3));
+        return Math.max(0.15f, 5f / (float) Math.pow(stars + 1, 0.3));
 
     }
 }

@@ -51,12 +51,10 @@ public class OptionsScreen implements Screen {
         Table mobileContainer = new Table();
         Table debugContainer = new Table();
         Table autoFireContainer = new Table();
-        Table fullscreenContainer = new Table();
 
         CheckBox mobileCheckBox = new CheckBox("", game.skin); // Remove text from checkbox
         CheckBox debugCheckBox = new CheckBox("", game.skin);
         CheckBox autoFireCheckBox = new CheckBox("", game.skin);
-        CheckBox fullscreenCheckBox = new CheckBox("", game.skin);
 
         Label mobileLabel = new Label("Mobile Controls", game.skin);
         mobileLabel.setFontScale(textSize);
@@ -64,13 +62,10 @@ public class OptionsScreen implements Screen {
         debugLabel.setFontScale(textSize);
         Label autoFireLabel = new Label("Auto Fire", game.skin);
         autoFireLabel.setFontScale(textSize);
-        Label fullscreenLabel = new Label("Fullscreen", game.skin);
-        fullscreenLabel.setFontScale(textSize);
 
         mobileCheckBox.setChecked(game.settings.IS_MOBILE);
         debugCheckBox.setChecked(game.settings.DEBUG);
         autoFireCheckBox.setChecked(game.settings.AUTO_FIRE);
-        fullscreenCheckBox.setChecked(game.settings.FULLSCREEN);
 
         mobileContainer.add(mobileCheckBox).center().padBottom(5);
         mobileContainer.row();
@@ -84,11 +79,6 @@ public class OptionsScreen implements Screen {
         autoFireContainer.row();
         autoFireContainer.add(autoFireLabel).center();
 
-        fullscreenContainer.add(fullscreenCheckBox).center().padBottom(5);
-        fullscreenContainer.row();
-        fullscreenContainer.add(fullscreenLabel).center();
-
-
 
         float containerWidth = buttonWidth / 3;
         float containerHeight = buttonHeight * 1.5f;
@@ -96,21 +86,18 @@ public class OptionsScreen implements Screen {
         mobileContainer.setSize(containerWidth, containerHeight);
         debugContainer.setSize(containerWidth, containerHeight);
         autoFireContainer.setSize(containerWidth, containerHeight);
-        fullscreenContainer.setSize(containerWidth, containerHeight);
 
         // Position the containers
         float containerY = buttonInitialY - buttonHeight/2;
 
-        mobileContainer.setPosition(buttonInitialX -25f, containerY);
-        debugContainer.setPosition(buttonInitialX + containerWidth/2f + buttonSpacing/2f, containerY);
-        autoFireContainer.setPosition(buttonInitialX + containerWidth*1.5f - buttonSpacing/2f, containerY);
-        fullscreenContainer.setPosition(buttonInitialX + 2f * (containerWidth + buttonSpacing) -25f, containerY);
+        mobileContainer.setPosition(buttonInitialX, containerY);
+        debugContainer.setPosition(buttonInitialX + containerWidth - buttonSpacing/4f, containerY);
+        autoFireContainer.setPosition(buttonInitialX + containerWidth*2f - buttonSpacing/2f, containerY);
 
         // Add containers to stage instead of individual checkboxes
         stage.addActor(mobileContainer);
         stage.addActor(debugContainer);
         stage.addActor(autoFireContainer);
-        stage.addActor(fullscreenContainer);
 
         Button continueButton = new Button(game.skin);
         Button mainMenuButton = new Button(game.skin);
@@ -129,7 +116,6 @@ public class OptionsScreen implements Screen {
         musicVolumeSlider.setPosition(buttonInitialX, buttonInitialY + buttonHeight*2 * 2);
         sxfVolumeLabel.setPosition(buttonInitialX, buttonInitialY + buttonHeight *2 + 10);
         sxfVolumeSlider.setPosition(buttonInitialX, buttonInitialY + buttonHeight + 20);
-
 
 
         mainMenuButton.setPosition((float) Gdx.graphics.getWidth() / 2 - 6*buttonSpacing, buttonInitialY - buttonHeight - buttonSpacing * 3);
@@ -222,21 +208,7 @@ public class OptionsScreen implements Screen {
                 pref.flush();
             }
         });
-        fullscreenCheckBox.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                if(fullscreenCheckBox.isChecked()){
-                    Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-                }else{
-                    Gdx.graphics.setWindowedMode(800, 600);
 
-                }
-                game.settings.FULLSCREEN = fullscreenCheckBox.isChecked();
-                pref.putBoolean("FULLSCREEN", game.settings.FULLSCREEN);
-                pref.flush();
-                resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            }
-        });
     }
 
     private void setSFXVolume(int value) {

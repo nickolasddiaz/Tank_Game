@@ -38,7 +38,7 @@ public class EntityStats{
     public float speed = itemSize * 10f;
     public float fireRate = 2f;
     public float timeSinceLastShot = 2f;
-    public float bulletSpeed = 12f * itemSize;
+    public float bulletSpeed = 16f * itemSize;
     public int bulletDamage = 1;
 
     public float spinSpeed = speed / 2f * TILE_PER_METER;
@@ -157,7 +157,12 @@ public class EntityStats{
         }
 
         // Handle speed boost
-        velocity.scl(1f + (onRoad >=1 ? 0.3f : 0) + (onBush >= 1 ? -0.3f : 0));
+        float speedMultiplier = 1f + (onRoad >= 1 ? 0.4f : 0) + (onBush >= 1 ? -0.3f : 0);
+
+        // Normalize the velocity (keep direction, length 1) and then apply the base speed * multiplier
+        if (velocity.len2() > 0) { // Check if moving to avoid divide by zero
+            velocity.nor().scl(speed * speedMultiplier);
+        }
 
         // Handle missile shooting
         if (CanShootMissile) {

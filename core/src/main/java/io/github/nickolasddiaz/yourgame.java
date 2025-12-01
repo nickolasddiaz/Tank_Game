@@ -104,9 +104,6 @@ public class yourgame extends Game {
 
         Gdx.input.setCatchKey(Input.Keys.SPACE, true);
 
-        if (settings.FULLSCREEN){
-            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-        }
     }
 
     public void render() {

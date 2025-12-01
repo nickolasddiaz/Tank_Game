@@ -32,14 +32,14 @@ public class StatsComponent implements Component {
     public Label scoreLabel, healthLabel, starsLabel;
 
     public float pointMultiplier = 1f;
-    public int luck = 10;
+    public int luck = 2;
     public int reRollNumber = 1;
     private int addStar = 0;
 
     public int getScore() { return score; }
     public void addScore(int score) {
         addStar++;
-        if(addStar >= 18 * (1/getEnemySpawnRate(getStars()))){
+        if(addStar >= 3 * (1/getEnemySpawnRate(getStars()))){
             addStar = 0;
             addStarLevel(1);
         }
